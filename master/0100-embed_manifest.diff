@@ -1,0 +1,44 @@
+# HG changeset patch
+# Parent ae0837c7cccd3790f2ea18bd8e3e1e16495275e4
+embed manifest file to EXE and DLL when available (for MSVC9)
+
+diff -r ae0837c7cccd src/Make_mvc.mak
+--- a/src/Make_mvc.mak	Sat Jun 07 12:36:38 2014 +0900
++++ b/src/Make_mvc.mak	Sat Jun 07 12:38:27 2014 +0900
+@@ -988,14 +988,17 @@
+ 
+ uninstal.exe: uninstal.c
+ 	$(CC) /nologo -DNDEBUG -DWIN32 uninstal.c shell32.lib advapi32.lib
++	IF EXIST $@.manifest mt -nologo -manifest $@.manifest -outputresource:$@;1
+ 
+ vimrun.exe: vimrun.c
+ 	$(CC) /nologo -DNDEBUG vimrun.c
++	IF EXIST $@.manifest mt -nologo -manifest $@.manifest -outputresource:$@;1
+ 
+ xxd/xxd.exe: xxd/xxd.c
+ 	cd xxd
+ 	$(MAKE) /NOLOGO -f Make_mvc.mak
+ 	cd ..
++	IF EXIST $@.manifest mt -nologo -manifest $@.manifest -outputresource:$@;1
+ 
+ GvimExt/gvimext.dll: GvimExt/gvimext.cpp GvimExt/gvimext.rc GvimExt/gvimext.h
+ 	cd GvimExt
+@@ -1013,6 +1016,7 @@
+ 	- if exist $(OUTDIR)/nul $(DEL_TREE) $(OUTDIR)
+ 	- if exist *.obj del *.obj
+ 	- if exist $(VIM).exe del $(VIM).exe
++	- if exist $(VIM).exe.manifest del $(VIM).exe.manifest
+ 	- if exist $(VIM).ilk del $(VIM).ilk
+ 	- if exist $(VIM).pdb del $(VIM).pdb
+ 	- if exist $(VIM).map del $(VIM).map
+diff -r ae0837c7cccd src/xxd/Make_mvc.mak
+--- a/src/xxd/Make_mvc.mak	Sat Jun 07 12:36:38 2014 +0900
++++ b/src/xxd/Make_mvc.mak	Sat Jun 07 12:38:27 2014 +0900
+@@ -5,6 +5,7 @@
+ 
+ xxd.exe: xxd.c
+      cl /nologo -DWIN32 xxd.c
++     IF EXIST $@.manifest mt -nologo -manifest $@.manifest -outputresource:$@;1
+ 
+ # This was for an older compiler
+ #    cl /nologo -DWIN32 xxd.c /link setargv.obj

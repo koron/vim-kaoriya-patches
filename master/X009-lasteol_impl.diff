@@ -1,0 +1,251 @@
+# HG changeset patch
+# Parent 96d3c423f42a3a460a6a268231e08129028e5990
+# Parent  e40e171ec57e358ee67626b02856abebde433c6b
+implement 'lasteol' option
+
+diff -r e40e171ec57e runtime/doc/options.txt
+--- a/runtime/doc/options.txt	Sat Jul 04 11:24:49 2015 +0900
++++ b/runtime/doc/options.txt	Sat Jul 04 11:24:53 2015 +0900
+@@ -4613,6 +4613,17 @@
+ 	This option defaults to off for backwards compatibility.  Set it on if
+ 	that works for you to avoid mappings to break.
+ 
++					*'lasteol'* *'leol'*
++'lasteol' 'leol'	boolean (default on)
++			local to buffer
++			{not in Vi}
++	If 'lasteol' is off ('nolasteol'), Vim does't output last line EOL
++	when writing the buffer to a file.
++
++	Similar to 'endofline' but it works when 'binary' option is off.
++
++	For Windows user, files without EOL on last line are very usual.
++
+ 					*'laststatus'* *'ls'*
+ 'laststatus' 'ls'	number	(default 1)
+ 			global
+diff -r e40e171ec57e src/buffer.c
+--- a/src/buffer.c	Sat Jul 04 11:24:49 2015 +0900
++++ b/src/buffer.c	Sat Jul 04 11:24:53 2015 +0900
+@@ -573,6 +573,8 @@
+ #endif
+     buf->b_p_eol = TRUE;
+     buf->b_start_eol = TRUE;
++    buf->b_p_lasteol = TRUE;
++    buf->b_start_lasteol = TRUE;
+ #ifdef FEAT_MBYTE
+     buf->b_p_bomb = FALSE;
+     buf->b_start_bomb = FALSE;
+diff -r e40e171ec57e src/fileio.c
+--- a/src/fileio.c	Sat Jul 04 11:24:49 2015 +0900
++++ b/src/fileio.c	Sat Jul 04 11:24:53 2015 +0900
+@@ -905,6 +905,8 @@
+ 	{
+ 	    curbuf->b_p_eol = TRUE;
+ 	    curbuf->b_start_eol = TRUE;
++            curbuf->b_p_lasteol = TRUE;
++            curbuf->b_start_lasteol = TRUE;
+ 	}
+ #ifdef FEAT_MBYTE
+ 	curbuf->b_p_bomb = FALSE;
+@@ -1558,7 +1560,8 @@
+ 				{
+ 				    /* When the last line didn't have an
+ 				     * end-of-line don't add it now either. */
+-				    if (!curbuf->b_p_eol)
++				    if (!curbuf->b_p_eol
++					    || !curbuf->b_p_lasteol)
+ 					--tlen;
+ 				    size = tlen;
+ 				    break;
+@@ -2543,7 +2546,10 @@
+     {
+ 	/* remember for when writing */
+ 	if (set_options)
++	{
+ 	    curbuf->b_p_eol = FALSE;
++	    curbuf->b_p_lasteol = FALSE;
++	}
+ 	*ptr = NUL;
+ 	len = (colnr_T)(ptr - line_start + 1);
+ 	if (ml_append(lnum, line_start, len, newfile) == FAIL)
+@@ -4794,9 +4800,11 @@
+ 	/* write failed or last line has no EOL: stop here */
+ 	if (end == 0
+ 		|| (lnum == end
+-		    && write_bin
+-		    && (lnum == buf->b_no_eol_lnum
+-			|| (lnum == buf->b_ml.ml_line_count && !buf->b_p_eol))))
++		    && (write_bin
++			&& (lnum == buf->b_no_eol_lnum
++			    || (lnum == buf->b_ml.ml_line_count
++				&& !buf->b_p_eol)))
++		    || (lnum == buf->b_ml.ml_line_count && !buf->b_p_lasteol)))
+ 	{
+ 	    ++lnum;			/* written the line, count it */
+ 	    no_eol = TRUE;
+diff -r e40e171ec57e src/memline.c
+--- a/src/memline.c	Sat Jul 04 11:24:49 2015 +0900
++++ b/src/memline.c	Sat Jul 04 11:24:53 2015 +0900
+@@ -5362,7 +5362,7 @@
+ 	    size += lnum - 1;
+ 
+ 	/* Don't count the last line break if 'bin' and 'noeol'. */
+-	if (buf->b_p_bin && !buf->b_p_eol)
++	if ((buf->b_p_bin && !buf->b_p_eol) || !buf->b_p_lasteol)
+ 	    size -= ffdos + 1;
+     }
+ 
+diff -r e40e171ec57e src/netbeans.c
+--- a/src/netbeans.c	Sat Jul 04 11:24:49 2015 +0900
++++ b/src/netbeans.c	Sat Jul 04 11:24:53 2015 +0900
+@@ -3802,7 +3802,7 @@
+ 	    }
+ 	}
+ 	/* Correction for when last line doesn't have an EOL. */
+-	if (!bufp->b_p_eol && bufp->b_p_bin)
++	if ((!bufp->b_p_eol && bufp->b_p_bin) || !bufp->b_p_lasteol)
+ 	    char_count -= eol_size;
+     }
+ 
+diff -r e40e171ec57e src/ops.c
+--- a/src/ops.c	Sat Jul 04 11:24:49 2015 +0900
++++ b/src/ops.c	Sat Jul 04 11:24:53 2015 +0900
+@@ -6988,8 +6988,8 @@
+ 		    byte_count_cursor += line_count_info(s, &word_count_cursor,
+ 					   &char_count_cursor, len, eol_size);
+ 		    if (lnum == curbuf->b_ml.ml_line_count
+-			    && !curbuf->b_p_eol
+-			    && curbuf->b_p_bin
++			    && ((!curbuf->b_p_eol && curbuf->b_p_bin)
++				|| !curbuf->b_p_lasteol)
+ 			    && (long)STRLEN(s) < len)
+ 			byte_count_cursor -= eol_size;
+ 		}
+@@ -7013,7 +7013,7 @@
+ 	}
+ 
+ 	/* Correction for when last line doesn't have an EOL. */
+-	if (!curbuf->b_p_eol && curbuf->b_p_bin)
++	if ((!curbuf->b_p_eol && curbuf->b_p_bin) || !curbuf->b_p_lasteol)
+ 	    byte_count -= eol_size;
+ 
+ 	if (VIsual_active)
+diff -r e40e171ec57e src/option.c
+--- a/src/option.c	Sat Jul 04 11:24:49 2015 +0900
++++ b/src/option.c	Sat Jul 04 11:24:53 2015 +0900
+@@ -133,6 +133,7 @@
+ # define PV_KMAP	OPT_BUF(BV_KMAP)
+ #endif
+ #define PV_KP		OPT_BOTH(OPT_BUF(BV_KP))
++#define PV_LEOL		OPT_BUF(BV_LEOL)
+ #ifdef FEAT_LISP
+ # define PV_LISP	OPT_BUF(BV_LISP)
+ # define PV_LW		OPT_BOTH(OPT_BUF(BV_LW))
+@@ -336,6 +337,7 @@
+ #ifdef FEAT_CRYPT
+ static char_u	*p_key;
+ #endif
++static int	p_leol;
+ #ifdef FEAT_LISP
+ static int	p_lisp;
+ #endif
+@@ -1765,6 +1767,9 @@
+ 			    {(char_u *)0L, (char_u *)0L}
+ #endif
+ 			    SCRIPTID_INIT},
++    {"lasteol",	    "lol",  P_BOOL|P_NO_MKRC|P_VI_DEF|P_RSTAT,
++			    (char_u *)&p_leol, PV_LEOL,
++			    {(char_u *)TRUE, (char_u *)0L} SCRIPTID_INIT},
+     {"lisp",	    NULL,   P_BOOL|P_VI_DEF,
+ #ifdef FEAT_LISP
+ 			    (char_u *)&p_lisp, PV_LISP,
+@@ -7823,6 +7828,11 @@
+     {
+ 	redraw_titles();
+     }
++    /* when 'lasteol' is changed, redraw the window title */
++    else if ((int *)varp == &curbuf->b_p_lasteol)
++    {
++        redraw_titles();
++    }
+ # ifdef FEAT_MBYTE
+     /* when 'bomb' is changed, redraw the window title and tab page text */
+     else if ((int *)varp == &curbuf->b_p_bomb)
+@@ -10256,6 +10266,7 @@
+ #ifdef FEAT_CRYPT
+ 	case PV_KEY:	return (char_u *)&(curbuf->b_p_key);
+ #endif
++	case PV_LEOL:	return (char_u *)&(curbuf->b_p_lasteol);
+ #ifdef FEAT_LISP
+ 	case PV_LISP:	return (char_u *)&(curbuf->b_p_lisp);
+ #endif
+@@ -11935,6 +11946,7 @@
+ {
+     buf->b_start_ffc = *buf->b_p_ff;
+     buf->b_start_eol = buf->b_p_eol;
++    buf->b_start_lasteol = buf->b_p_lasteol;
+ #ifdef FEAT_MBYTE
+     buf->b_start_bomb = buf->b_p_bomb;
+ 
+@@ -11973,6 +11985,8 @@
+ 	return TRUE;
+     if (buf->b_p_bin && buf->b_start_eol != buf->b_p_eol)
+ 	return TRUE;
++    if (buf->b_start_lasteol != buf->b_p_lasteol)
++	return TRUE;
+ #ifdef FEAT_MBYTE
+     if (!buf->b_p_bin && buf->b_start_bomb != buf->b_p_bomb)
+ 	return TRUE;
+diff -r e40e171ec57e src/option.h
+--- a/src/option.h	Sat Jul 04 11:24:49 2015 +0900
++++ b/src/option.h	Sat Jul 04 11:24:53 2015 +0900
+@@ -1007,6 +1007,7 @@
+     , BV_KMAP
+ #endif
+     , BV_KP
++    , BV_LEOL
+ #ifdef FEAT_LISP
+     , BV_LISP
+     , BV_LW
+diff -r e40e171ec57e src/os_unix.c
+--- a/src/os_unix.c	Sat Jul 04 11:24:49 2015 +0900
++++ b/src/os_unix.c	Sat Jul 04 11:24:53 2015 +0900
+@@ -4645,6 +4645,7 @@
+ 			    {
+ 				/* Finished a line, add a NL, unless this line
+ 				 * should not have one. */
++                                /* TODO: check curbuf->b_p_lasteol */
+ 				if (lnum != curbuf->b_op_end.lnum
+ 					|| !curbuf->b_p_bin
+ 					|| (lnum != curbuf->b_no_eol_lnum
+diff -r e40e171ec57e src/os_win32.c
+--- a/src/os_win32.c	Sat Jul 04 11:24:49 2015 +0900
++++ b/src/os_win32.c	Sat Jul 04 11:24:53 2015 +0900
+@@ -4194,6 +4194,7 @@
+ 	{
+ 	    /* Finished a line, add a NL, unless this line should not have
+ 	     * one. */
++            /* TODO: check curbuf->b_p_lasteol */
+ 	    if (lnum != curbuf->b_op_end.lnum
+ 		|| !curbuf->b_p_bin
+ 		|| (lnum != curbuf->b_no_eol_lnum
+diff -r e40e171ec57e src/structs.h
+--- a/src/structs.h	Sat Jul 04 11:24:49 2015 +0900
++++ b/src/structs.h	Sat Jul 04 11:24:53 2015 +0900
+@@ -1656,6 +1656,7 @@
+     char_u	*b_p_key;	/* 'key' */
+ #endif
+     char_u	*b_p_kp;	/* 'keywordprg' */
++    int		b_p_lasteol;	/* 'lasteol' */
+ #ifdef FEAT_LISP
+     int		b_p_lisp;	/* 'lisp' */
+ #endif
+@@ -1768,6 +1769,7 @@
+ 				 * write should not have an end-of-line */
+ 
+     int		b_start_eol;	/* last line had eol when it was read */
++    int		b_start_lasteol;/* last lien had eol when it was read */
+     int		b_start_ffc;	/* first char of 'ff' when edit started */
+ #ifdef FEAT_MBYTE
+     char_u	*b_start_fenc;	/* 'fileencoding' when edit started or NULL */

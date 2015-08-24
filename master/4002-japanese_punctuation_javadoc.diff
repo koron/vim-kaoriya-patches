@@ -1,0 +1,21 @@
+# HG changeset patch
+# Parent 2b45e83464651d74f64fe7f02ec4a871afbd84e5
+Add Japanese punctuation character as terminator for javadoc comment title.
+
+diff -r 2b45e8346465 -r eed2b816f924 runtime/syntax/java.vim
+--- a/runtime/syntax/java.vim	Sat Apr 13 22:39:11 2013 +0900
++++ b/runtime/syntax/java.vim	Sat Apr 13 22:41:49 2013 +0900
+@@ -1,3 +1,4 @@
++scriptencoding utf-8
+ " Vim syntax file
+ " Language:	Java
+ " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
+@@ -164,7 +165,7 @@
+   syntax spell default
+ 
+   syn region  javaDocComment	start="/\*\*"  end="\*/" keepend contains=javaCommentTitle,@javaHtml,javaDocTags,javaDocSeeTag,javaTodo,@Spell
+-  syn region  javaCommentTitle	contained matchgroup=javaDocComment start="/\*\*"   matchgroup=javaCommentTitle keepend end="\.$" end="\.[ \t\r<&]"me=e-1 end="[^{]@"me=s-2,he=s-1 end="\*/"me=s-1,he=s-1 contains=@javaHtml,javaCommentStar,javaTodo,@Spell,javaDocTags,javaDocSeeTag
++  syn region  javaCommentTitle	contained matchgroup=javaDocComment start="/\*\*"   matchgroup=javaCommentTitle keepend end="。" end="\.$" end="\.[ \t\r<&]"me=e-1 end="[^{]@"me=s-2,he=s-1 end="\*/"me=s-1,he=s-1 contains=@javaHtml,javaCommentStar,javaTodo,@Spell,javaDocTags,javaDocSeeTag
+ 
+   syn region javaDocTags	 contained start="{@\(code\|link\|linkplain\|inherit[Dd]oc\|doc[rR]oot\|value\)" end="}"
+   syn match  javaDocTags	 contained "@\(param\|exception\|throws\|since\)\s\+\S\+" contains=javaDocParam

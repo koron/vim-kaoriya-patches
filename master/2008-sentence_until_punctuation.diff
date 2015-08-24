@@ -1,0 +1,44 @@
+# HG changeset patch
+# Parent bf0b31d6c719c20d5b5e98b66e6d6f77c601a333
+diff -r bf0b31d6c719 -r 451a729f2a68 src/search.c
+--- a/src/search.c	Sat Apr 13 22:29:12 2013 +0900
++++ b/src/search.c	Sat Apr 13 22:34:35 2013 +0900
+@@ -2570,7 +2570,12 @@
+ 	/* go back to the previous non-blank char */
+ 	found_dot = FALSE;
+ 	while ((c = gchar_pos(&pos)) == ' ' || c == '\t' ||
+-	     (dir == BACKWARD && vim_strchr((char_u *)".!?)]\"'", c) != NULL))
++	     (dir == BACKWARD && vim_strchr((char_u *)".!?)]\"'", c) != NULL)
++#ifdef FEAT_MBYTE
++	     || (dir == BACKWARD && (*mb_char2len)(c) > 1
++		 && mb_get_class(ml_get_pos(&pos)) == 1)
++#endif
++	     )
+ 	{
+ 	    if (vim_strchr((char_u *)".!?", c) != NULL)
+ 	    {
+@@ -2620,6 +2625,24 @@
+ 		    break;
+ 		}
+ 	    }
++#ifdef FEAT_MBYTE
++	    if (has_mbyte && (*mb_char2len)(c) > 1
++		    && mb_get_class(ml_get_pos(&pos)) == 1)
++	    {
++		tpos = pos;
++		for (;;)
++		{
++		    c = inc(&tpos);
++		    if (c == -1 || (*mb_char2len)(c) <= 1
++			    || mb_get_class(ml_get_pos(&tpos)) != 1)
++			break;
++		}
++		pos = tpos;
++		if (gchar_pos(&pos) == NUL)
++		    inc(&pos);
++		break;
++	    }
++#endif
+ 	    if ((*func)(&pos) == -1)
+ 	    {
+ 		if (count)

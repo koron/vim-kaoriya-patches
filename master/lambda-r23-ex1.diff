@@ -1,0 +1,107 @@
+# HG changeset patch
+# Parent c3593e7ce4753f7b06238c5af43f970d2c6be35e
+# Parent  230a2578b0b86ba755a6b86ac6d2df20ab9cb164
+
+diff -r 230a2578b0b8 src/eval.c
+--- a/src/eval.c	Sat Jul 04 11:56:54 2015 +0900
++++ b/src/eval.c	Sat Jul 04 12:02:14 2015 +0900
+@@ -259,6 +259,9 @@
+     /* for lambda */
+     int		ref_by_lambda;
+     int		lambda_copyID;	/* for garbage collection */
++
++    funccall_T	*prev;
++    funccall_T	*next;
+ };
+ 
+ /*
+@@ -1004,6 +1007,9 @@
+  * item in it is still being used. */
+ funccall_T *previous_funccal = NULL;
+ 
++funccall_T *all_funccal_last = NULL;
++int all_funccal_count = 0;
++
+ /*
+  * Return TRUE when a function was ended by a ":return" command.
+  */
+@@ -23909,6 +23915,14 @@
+     fc->ref_by_lambda = FALSE;
+     fc->lambda_copyID = current_copyID;
+ 
++    /* Append a funccall_T to all list. */
++    ++all_funccal_count;
++    fc->prev = all_funccal_last;
++    fc->next = NULL;
++    if (all_funccal_last != NULL)
++	all_funccal_last->next = fc;
++    all_funccal_last = fc;
++
+     /*
+      * Note about using fc->fixvar[]: This is an array of FIXVAR_CNT variables
+      * with names up to VAR_SHORT_LEN long.  This avoids having to alloc/free
+@@ -24248,6 +24262,15 @@
+ {
+     listitem_T	*li;
+ 
++    /* Remove it from all funccall_T list. */
++    if (fc->prev != NULL)
++	fc->prev->next = fc->next;
++    if (fc->next != NULL)
++	fc->next->prev = fc->prev;
++    else
++	all_funccal_last = fc->prev;
++    --all_funccal_count;
++
+     /* The a: variables typevals may not have been allocated, only free the
+      * allocated variables. */
+     vars_clear_ext(&fc->l_avars.dv_hashtab, free_val);
+@@ -24911,6 +24934,24 @@
+     }
+ }
+ 
++    void
++ex_dumpfunccall(eap)
++    exarg_T	*eap UNUSED;
++{
++    char_u	buf[999];
++    funccall_T	*fc;
++
++    msg_start();
++    sprintf(buf, "%d funccall alive.\n", all_funccal_count);
++    MSG_PUTS(buf);
++    for (fc = all_funccal_last; fc != NULL; fc = fc->prev)
++    {
++	sprintf(buf, "  %s (%d)\n", fc->func->uf_name, fc->ref_by_lambda);
++	MSG_PUTS(buf);
++    }
++    msg_clr_eos();
++}
++
+ #endif /* FEAT_EVAL */
+ 
+ 
+diff -r 230a2578b0b8 src/ex_cmds.h
+--- a/src/ex_cmds.h	Sat Jul 04 11:56:54 2015 +0900
++++ b/src/ex_cmds.h	Sat Jul 04 12:02:14 2015 +0900
+@@ -462,6 +462,9 @@
+ EX(CMD_dsplit,		"dsplit",	ex_findpat,
+ 			BANG|RANGE|DFLALL|WHOLEFOLD|EXTRA,
+ 			ADDR_LINES),
++EX(CMD_dumpfunccall,    "dumpfunccall", ex_dumpfunccall,
++                        0,
++                        ADDR_LINES),
+ EX(CMD_edit,		"edit",		ex_edit,
+ 			BANG|FILE1|EDITCMD|ARGOPT|TRLBAR,
+ 			ADDR_LINES),
+diff -r 230a2578b0b8 src/proto/eval.pro
+--- a/src/proto/eval.pro	Sat Jul 04 11:56:54 2015 +0900
++++ b/src/proto/eval.pro	Sat Jul 04 12:02:14 2015 +0900
+@@ -132,6 +132,7 @@
+ int store_session_globals __ARGS((FILE *fd));
+ void last_set_msg __ARGS((scid_T scriptID));
+ void ex_oldfiles __ARGS((exarg_T *eap));
++void ex_dumpfunccall __ARGS((exarg_T *eap));
+ int modify_fname __ARGS((char_u *src, int *usedlen, char_u **fnamep, char_u **bufp, int *fnamelen));
+ char_u *do_string_sub __ARGS((char_u *str, char_u *pat, char_u *sub, char_u *flags));
+ /* vim: set ft=c : */

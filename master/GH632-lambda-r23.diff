@@ -1,0 +1,815 @@
+# HG changeset patch
+# Parent ff01f45a3d9dc130f87041b6d0d97e25023e9a48
+# Parent  70bd621b7bd51bebdc62c42301e11d14feb30972
+
+diff -r 70bd621b7bd5 runtime/doc/eval.txt
+--- a/runtime/doc/eval.txt	Sat Jul 04 11:27:28 2015 +0900
++++ b/runtime/doc/eval.txt	Sat Jul 04 11:51:01 2015 +0900
+@@ -1870,6 +1870,7 @@
+ join( {list} [, {sep}])		String	join {list} items into one String
+ keys( {dict})			List	keys in {dict}
+ len( {expr})			Number	the length of {expr}
++lambda( {expr})			Create lambda function constructed with {expr}
+ libcall( {lib}, {func}, {arg})	String	call {func} in library {lib} with {arg}
+ libcallnr( {lib}, {func}, {arg})  Number  idem, but return a Number
+ line( {expr})			Number	line nr of cursor, last line or mark
+@@ -4075,6 +4076,62 @@
+ 		|Dictionary| is returned.
+ 		Otherwise an error is given.
+ 
++							*lambda()*
++lambda({expr})
++		Create new lambda function with constructed with {expr}.
++		The result is function reference. So you can call it like.
++		Example:
++		    :let F = lambda("return 1+2")
++		    :echo F()
++
++		Lambda function allow to be given variadic arguments.
++		Example:
++		    :let F = lambda("return a:1+2")
++		    :echo F(2)
++
++		|sort()|, |map()|, |filter()| can be used with |lambda()|
++		Example:
++		    :echo map([1, 2, 3], lambda("return a:1 + 1"))
++		    :echo sort([3,7,2,1,4], lambda("return a:1 - a:2"))
++
++		Lambda function is possible to reference the variables in the
++		defined scope.
++		Example:
++		    :let s:x = 2
++		    :echo filter([1, 2, 3], lambda("return a:1 >= s:x"))
++
++		    :function! Foo()
++		    :  let x = 1
++		    :  return lambda("return x")
++		    :endfunction
++		    :echo Foo()()
++
++		And if let new variable, it will be stored in the parent
++		scope.
++		Example:
++		    :function! Foo()
++		    :  call lambda("let x = 1")()
++		    :  echo x
++		    :  call lambda("unlet x")()
++		    :  return x " Should be error
++		    :endfunction
++
++		For example, you can create counter generator.
++
++		    function! s:counter(x)
++		      let x = a:x
++		      return lambda("
++		      \ let x += 1 \n
++		      \ return x
++		      \")
++		    endfunction
++		
++		    let F = s:counter(0)
++		    echo F() | " 1
++		    echo F() | " 2
++		    echo F() | " 3
++		    echo F() | " 4
++
+ 						*libcall()* *E364* *E368*
+ libcall({libname}, {funcname}, {argument})
+ 		Call function {funcname} in the run-time library {libname}
+diff -r 70bd621b7bd5 src/Makefile
+--- a/src/Makefile	Sat Jul 04 11:27:28 2015 +0900
++++ b/src/Makefile	Sat Jul 04 11:51:01 2015 +0900
+@@ -1910,6 +1910,7 @@
+ 	test_erasebackword \
+ 	test_eval \
+ 	test_insertcount \
++	test_lambda \
+ 	test_listchars \
+ 	test_listlbr \
+ 	test_listlbr_utf8 \
+diff -r 70bd621b7bd5 src/eval.c
+--- a/src/eval.c	Sat Jul 04 11:27:28 2015 +0900
++++ b/src/eval.c	Sat Jul 04 11:51:01 2015 +0900
+@@ -165,6 +165,7 @@
+  * Structure to hold info for a user function.
+  */
+ typedef struct ufunc ufunc_T;
++typedef struct funccall_S funccall_T;
+ 
+ struct ufunc
+ {
+@@ -193,6 +194,7 @@
+     scid_T	uf_script_ID;	/* ID of script where function was defined,
+ 				   used for s: variables */
+     int		uf_refcount;	/* for numbered function: reference count */
++    funccall_T	*uf_scoped;	/* l: local function variables */
+     char_u	uf_name[1];	/* name of function (actually longer); can
+ 				   start with <SNR>123_ (<SNR> is K_SPECIAL
+ 				   KS_EXTRA KE_SNR) */
+@@ -229,8 +231,6 @@
+ #define FIXVAR_CNT	12	/* number of fixed variables */
+ 
+ /* structure to hold info for a function that is currently being executed. */
+-typedef struct funccall_S funccall_T;
+-
+ struct funccall_S
+ {
+     ufunc_T	*func;		/* function being called */
+@@ -255,6 +255,12 @@
+     proftime_T	prof_child;	/* time spent in a child */
+ #endif
+     funccall_T	*caller;	/* calling function or NULL */
++
++    /* for lambda */
++    int		ref_by_lambda;
++    funccall_T	*lambda_next;	/* for garbage collection */
++    int		lambda_copyID;	/* for garbage collection */
++    int		lambda_free_val;
+ };
+ 
+ /*
+@@ -603,6 +609,7 @@
+ static void f_items __ARGS((typval_T *argvars, typval_T *rettv));
+ static void f_join __ARGS((typval_T *argvars, typval_T *rettv));
+ static void f_keys __ARGS((typval_T *argvars, typval_T *rettv));
++static void f_lambda __ARGS((typval_T *argvars, typval_T *rettv));
+ static void f_last_buffer_nr __ARGS((typval_T *argvars, typval_T *rettv));
+ static void f_len __ARGS((typval_T *argvars, typval_T *rettv));
+ static void f_libcall __ARGS((typval_T *argvars, typval_T *rettv));
+@@ -999,6 +1006,9 @@
+  * item in it is still being used. */
+ funccall_T *previous_funccal = NULL;
+ 
++/* pointer to list of funccal binded to lambda as scope. */
++funccall_T *scoped_funccal = NULL;
++
+ /*
+  * Return TRUE when a function was ended by a ":return" command.
+  */
+@@ -3719,6 +3729,7 @@
+     char_u	*varname;
+     dict_T	*d;
+     dictitem_T	*di;
++    funccall_T	*old_current_funccal;
+ 
+     ht = find_var_ht(name, &varname);
+     if (ht != NULL && *varname != NUL)
+@@ -3734,6 +3745,27 @@
+ 	    d = di->di_tv.vval.v_dict;
+ 	}
+ 	hi = hash_find(ht, varname);
++
++	/* Search in parent scope for lambda */
++	if (HASHITEM_EMPTY(hi) && current_funccal != NULL &&
++		current_funccal->func->uf_scoped != NULL)
++	{
++	    old_current_funccal = current_funccal;
++	    current_funccal = current_funccal->func->uf_scoped;
++	    while (current_funccal)
++	    {
++		ht = find_var_ht(name, &varname);
++		if (ht != NULL && *varname != NUL)
++		{
++		    hi = hash_find(ht, varname);
++		    if (!HASHITEM_EMPTY(hi))
++			break;
++		}
++		current_funccal = current_funccal->func->uf_scoped;
++	    }
++	    current_funccal = old_current_funccal;
++	}
++
+ 	if (!HASHITEM_EMPTY(hi))
+ 	{
+ 	    di = HI2DI(hi);
+@@ -6946,6 +6978,24 @@
+ 	    else
+ 		pfc = &(*pfc)->caller;
+ 	}
++
++	/*
++	 * 4. Check if any lambda scoped funccal can be freed now.
++	 */
++	for (pfc = &scoped_funccal; *pfc != NULL; )
++	{
++	    if ((*pfc)->lambda_copyID != copyID)
++	    {
++		fc = *pfc;
++		*pfc = fc->lambda_next;
++		free_funccal(fc, fc->lambda_free_val);
++		did_free = TRUE;
++		did_free_funccal = TRUE;
++	    }
++	    else
++		pfc = &(*pfc)->lambda_next;
++	}
++
+ 	if (did_free_funccal)
+ 	    /* When a funccal was freed some more items might be garbage
+ 	     * collected, so run again. */
+@@ -7117,6 +7167,8 @@
+     dict_T	*dd;
+     list_T	*ll;
+     int		abort = FALSE;
++    ufunc_T	*fp;
++    funccall_T	*fc;
+ 
+     switch (tv->v_type)
+     {
+@@ -7171,6 +7223,27 @@
+ 		}
+ 	    }
+ 	    break;
++	case VAR_FUNC:
++	    fp = find_func(tv->vval.v_string);
++	    if (fp != NULL)
++	    {
++		for (fc = fp->uf_scoped; fc != NULL; fc = fc->func->uf_scoped)
++		{
++		    if (fc->lambda_copyID != copyID)
++		    {
++			fc->lambda_copyID = copyID;
++			fc->l_varlist.lv_copyID = copyID;
++			fc->l_vars.dv_copyID = copyID;
++			fc->l_avars.dv_copyID = copyID;
++			set_ref_in_list(&fc->l_varlist, copyID, ht_stack);
++			set_ref_in_ht(&fc->l_vars.dv_hashtab, copyID,
++				list_stack);
++			set_ref_in_ht(&fc->l_avars.dv_hashtab, copyID,
++				list_stack);
++		    }
++		}
++	    }
++	    break;
+     }
+     return abort;
+ }
+@@ -8199,6 +8272,7 @@
+     {"items",		1, 1, f_items},
+     {"join",		1, 2, f_join},
+     {"keys",		1, 1, f_keys},
++    {"lambda",		1, 1, f_lambda},
+     {"last_buffer_nr",	0, 0, f_last_buffer_nr},/* obsolete */
+     {"len",		1, 1, f_len},
+     {"libcall",		3, 3, f_libcall},
+@@ -8683,7 +8757,7 @@
+ 	rettv->vval.v_number = 0;
+ 	error = ERROR_UNKNOWN;
+ 
+-	if (!builtin_function(rfname, -1))
++	if (!builtin_function(rfname, -1) || !STRNICMP(rfname, "<LAMBDA>", 8))
+ 	{
+ 	    /*
+ 	     * User defined function.
+@@ -10803,7 +10877,7 @@
+ }
+ 
+ static void filter_map __ARGS((typval_T *argvars, typval_T *rettv, int map));
+-static int filter_map_one __ARGS((typval_T *tv, char_u *expr, int map, int *remp));
++static int filter_map_one __ARGS((typval_T *tv, typval_T *expr, int map, int *remp));
+ 
+ /*
+  * Implementation of map() and filter().
+@@ -10814,8 +10888,7 @@
+     typval_T	*rettv;
+     int		map;
+ {
+-    char_u	buf[NUMBUFLEN];
+-    char_u	*expr;
++    typval_T	*expr;
+     listitem_T	*li, *nli;
+     list_T	*l = NULL;
+     dictitem_T	*di;
+@@ -10850,14 +10923,13 @@
+ 	return;
+     }
+ 
+-    expr = get_tv_string_buf_chk(&argvars[1], buf);
++    expr = &argvars[1];
+     /* On type errors, the preceding call has already displayed an error
+      * message.  Avoid a misleading error message for an empty string that
+      * was not passed as argument. */
+-    if (expr != NULL)
++    if (expr->v_type != VAR_UNKNOWN)
+     {
+ 	prepare_vimvar(VV_VAL, &save_val);
+-	expr = skipwhite(expr);
+ 
+ 	/* We reset "did_emsg" to be able to detect whether an error
+ 	 * occurred during evaluation of the expression. */
+@@ -10931,23 +11003,35 @@
+     static int
+ filter_map_one(tv, expr, map, remp)
+     typval_T	*tv;
+-    char_u	*expr;
++    typval_T	*expr;
+     int		map;
+     int		*remp;
+ {
+     typval_T	rettv;
+     char_u	*s;
+     int		retval = FAIL;
++    int		dummy;
+ 
+     copy_tv(tv, &vimvars[VV_VAL].vv_tv);
+-    s = expr;
+-    if (eval1(&s, &rettv, TRUE) == FAIL)
+-	goto theend;
+-    if (*s != NUL)  /* check for trailing chars after expr */
+-    {
+-	EMSG2(_(e_invexpr2), s);
+-	clear_tv(&rettv);
+-	goto theend;
++    s = expr->vval.v_string;
++    s = expr->vval.v_string;
++    if (expr->v_type == VAR_FUNC)
++    {
++	if (call_func(s, (int)STRLEN(s),
++		    &rettv, 1, tv, 0L, 0L, &dummy, TRUE, NULL) == FALSE)
++	    goto theend;
++    }
++    else
++    {
++	s = skipwhite(s);
++	if (eval1(&s, &rettv, TRUE) == FAIL)
++	    goto theend;
++	if (*s != NUL)  /* check for trailing chars after expr */
++	{
++	    EMSG2(_(e_invexpr2), s);
++	    clear_tv(&rettv);
++	    goto theend;
++	}
+     }
+     if (map)
+     {
+@@ -14009,6 +14093,93 @@
+ }
+ 
+ /*
++ * "lambda()" function.
++ */
++    static void
++f_lambda(argvars, rettv)
++    typval_T	*argvars UNUSED;
++    typval_T	*rettv;
++{
++    char_u	*s, *e;
++    garray_T	newargs;
++    garray_T	newlines;
++    ufunc_T	*fp;
++    char_u	name[20];
++    static int	lambda_no = 0;
++    funccall_T	*fc;
++
++    if (check_secure())
++	return;
++
++    s = get_tv_string_chk(&argvars[0]);
++    if (s == NULL)
++	goto erret;
++
++    fp = (ufunc_T *)alloc((unsigned)(sizeof(ufunc_T) + 20));
++    if (fp == NULL)
++	goto erret;
++
++    sprintf(name, "<LAMBDA>%d", ++lambda_no);
++    rettv->vval.v_string = vim_strsave(name);
++
++    ga_init2(&newargs, (int)sizeof(char_u *), 1);
++    ga_init2(&newlines, (int)sizeof(char_u *), 1);
++
++    while (*s)
++    {
++	s = skipwhite(s);
++	e = s;
++	while (*e && *e != '\n')
++	    e++;
++	if (ga_grow(&newlines, 1) == FAIL)
++	    goto erret;
++	((char_u **)(newlines.ga_data))[newlines.ga_len++] = vim_strnsave(s, e - s);
++	s = *e == 0 ? e : e + 1;
++    }
++
++    fp->uf_refcount = 1;
++    STRCPY(fp->uf_name, name);
++    hash_add(&func_hashtab, UF2HIKEY(fp));
++    fp->uf_args = newargs;
++    fp->uf_lines = newlines;
++#ifdef FEAT_PROFILE
++    fp->uf_tml_count = NULL;
++    fp->uf_tml_total = NULL;
++    fp->uf_tml_self = NULL;
++    fp->uf_profiling = FALSE;
++    if (prof_def_func())
++	func_do_profile(fp);
++#endif
++    fp->uf_varargs = TRUE;
++    fp->uf_flags = 0;
++    fp->uf_calls = 0;
++    fp->uf_script_ID = current_SID;
++    if (current_funccal)
++    {
++	fp->uf_scoped = current_funccal;
++	for (fc = fp->uf_scoped; fc != NULL; fc = fc->func->uf_scoped)
++	{
++	    if (fc->ref_by_lambda == FALSE)
++	    {
++		/* funccall_T which be used by lambda, is managed under
++		 * scoped_funccal. */
++		fc->ref_by_lambda = TRUE;
++		fc->lambda_next = scoped_funccal;
++		scoped_funccal = fc;
++	    }
++	}
++    }
++    else
++	fp->uf_scoped = NULL;
++    rettv->v_type = VAR_FUNC;
++    return;
++
++erret:
++    ga_clear_strings(&newargs);
++    ga_clear_strings(&newlines);
++}
++
++/*
+  * "last_buffer_nr()" function.
+  */
+     static void
+@@ -21143,6 +21314,37 @@
+     return NULL;
+ }
+ 
++
++    static dictitem_T*
++find_var_in_scoped_ht(name, varname, no_autoload)
++    char_u	*name;
++    char_u	**varname;
++    int		no_autoload;
++{
++    dictitem_T	*v = NULL;
++    funccall_T	*old_current_funccal = current_funccal;
++    hashtab_T	*ht;
++
++    /* Search in parent scope which is possible to reference from lambda */
++    current_funccal = current_funccal->func->uf_scoped;
++    while (current_funccal)
++    {
++	ht = find_var_ht(name, varname ? &(*varname) : NULL);
++	if (ht != NULL)
++	{
++	    v = find_var_in_ht(ht, *name,
++		    varname ? *varname : NULL, no_autoload);
++	    if (v != NULL)
++		break;
++	}
++	current_funccal = current_funccal->func->uf_scoped;
++    }
++    current_funccal = old_current_funccal;
++
++    return v;
++}
++
++
+ /*
+  * Find variable "name" in the list of variables.
+  * Return a pointer to it if found, NULL if not found.
+@@ -21158,13 +21360,23 @@
+ {
+     char_u	*varname;
+     hashtab_T	*ht;
++    dictitem_T	*ret = NULL;
+ 
+     ht = find_var_ht(name, &varname);
+     if (htp != NULL)
+ 	*htp = ht;
+     if (ht == NULL)
+ 	return NULL;
+-    return find_var_in_ht(ht, *name, varname, no_autoload || htp != NULL);
++    ret = find_var_in_ht(ht, *name, varname, no_autoload || htp != NULL);
++    if (ret != NULL)
++	return ret;
++
++    /* Search in parent scope for lambda */
++    if (current_funccal != NULL && current_funccal->func->uf_scoped != NULL)
++	return find_var_in_scoped_ht(name, varname ? &varname : NULL,
++		no_autoload || htp != NULL);
++
++    return NULL;
+ }
+ 
+ /*
+@@ -21515,6 +21727,24 @@
+     }
+     v = find_var_in_ht(ht, 0, varname, TRUE);
+ 
++    /* Search in parent scope which is possible to reference from lambda */
++    if (v == NULL && current_funccal != NULL &&
++	    current_funccal->func->uf_scoped != NULL)
++    {
++	v = find_var_in_scoped_ht(name, varname ? &varname : NULL, TRUE);
++
++	/* When the variable is not found, let scope should be parent of the
++	 * lambda.
++	 */
++	if (v == NULL)
++	{
++	    hashtab_T	*ht_tmp;
++	    ht_tmp = find_var_ht(name, &varname);
++	    if (ht_tmp != NULL)
++		ht = ht_tmp;
++	}
++    }
++
+     if (tv->v_type == VAR_FUNC && var_check_func_name(name, v == NULL))
+ 	return;
+ 
+@@ -22768,6 +22998,7 @@
+     fp->uf_flags = flags;
+     fp->uf_calls = 0;
+     fp->uf_script_ID = current_SID;
++    fp->uf_scoped = NULL;
+     goto ret_free;
+ 
+ erret:
+@@ -23599,7 +23830,9 @@
+ {
+     ufunc_T *fp;
+ 
+-    if (name != NULL && isdigit(*name))
++    if (name == NULL)
++	return;
++    else if (isdigit(*name))
+     {
+ 	fp = find_func(name);
+ 	if (fp == NULL)
+@@ -23612,6 +23845,18 @@
+ 		func_free(fp);
+ 	}
+     }
++    else if (!STRNICMP(name, "<LAMBDA>", 8))
++    {
++	/* fail silently, when lambda function isn't found. */
++	fp = find_func(name);
++	if (fp != NULL && --fp->uf_refcount <= 0)
++	{
++	    /* Only delete it when it's not being used.  Otherwise it's done
++	     * when "uf_calls" becomes zero. */
++	    if (fp->uf_calls == 0)
++		func_free(fp);
++	}
++    }
+ }
+ 
+ /*
+@@ -23623,7 +23868,9 @@
+ {
+     ufunc_T *fp;
+ 
+-    if (name != NULL && isdigit(*name))
++    if (name == NULL)
++	return;
++    else if (isdigit(*name))
+     {
+ 	fp = find_func(name);
+ 	if (fp == NULL)
+@@ -23631,6 +23878,13 @@
+ 	else
+ 	    ++fp->uf_refcount;
+     }
++    else if (!STRNICMP(name, "<LAMBDA>", 8))
++    {
++	/* fail silently, when lambda function isn't be found. */
++	fp = find_func(name);
++	if (fp != NULL)
++	    ++fp->uf_refcount;
++    }
+ }
+ 
+ /*
+@@ -23687,6 +23941,11 @@
+     /* Check if this function has a breakpoint. */
+     fc->breakpoint = dbg_find_breakpoint(FALSE, fp->uf_name, (linenr_T)0);
+     fc->dbg_tick = debug_tick;
++    /* Set up fields for lambda. */
++    fc->ref_by_lambda = FALSE;
++    fc->lambda_copyID = current_copyID;
++    fc->lambda_next = NULL;
++    fc->lambda_free_val = FALSE;
+ 
+     /*
+      * Note about using fc->fixvar[]: This is an array of FIXVAR_CNT variables
+@@ -23969,7 +24228,9 @@
+ 	    && fc->l_vars.dv_refcount == DO_NOT_FREE_CNT
+ 	    && fc->l_avars.dv_refcount == DO_NOT_FREE_CNT)
+     {
+-	free_funccal(fc, FALSE);
++	/* funccall_T be used by lambda, is managed separately. */
++	if (!fc->ref_by_lambda)
++	    free_funccal(fc, FALSE);
+     }
+     else
+     {
+@@ -23977,11 +24238,17 @@
+ 	listitem_T	*li;
+ 	int		todo;
+ 
+-	/* "fc" is still in use.  This can happen when returning "a:000" or
+-	 * assigning "l:" to a global variable.
+-	 * Link "fc" in the list for garbage collection later. */
+-	fc->caller = previous_funccal;
+-	previous_funccal = fc;
++	/* funccall_T be used by lambda, is managed separately. */
++	if (!fc->ref_by_lambda)
++	{
++	    /* "fc" is still in use.  This can happen when returning "a:000" or
++	     * assigning "l:" to a global variable.
++	     * Link "fc" in the list for garbage collection later. */
++	    fc->caller = previous_funccal;
++	    previous_funccal = fc;
++	}
++	else
++	    fc->lambda_free_val = TRUE;
+ 
+ 	/* Make a copy of the a: variables, since we didn't do that above. */
+ 	todo = (int)fc->l_avars.dv_hashtab.ht_used;
+diff -r 70bd621b7bd5 src/testdir/Make_dos.mak
+--- a/src/testdir/Make_dos.mak	Sat Jul 04 11:27:28 2015 +0900
++++ b/src/testdir/Make_dos.mak	Sat Jul 04 11:51:01 2015 +0900
+@@ -46,6 +46,7 @@
+ 		test_eval.out \
+ 		test_increment.out \
+ 		test_insertcount.out \
++		test_lambda.out \
+ 		test_listchars.out \
+ 		test_listlbr.out \
+ 		test_listlbr_utf8.out \
+diff -r 70bd621b7bd5 src/testdir/Make_ming.mak
+--- a/src/testdir/Make_ming.mak	Sat Jul 04 11:27:28 2015 +0900
++++ b/src/testdir/Make_ming.mak	Sat Jul 04 11:51:01 2015 +0900
+@@ -68,6 +68,7 @@
+ 		test_eval.out \
+ 		test_increment.out \
+ 		test_insertcount.out \
++		test_lambda.out \
+ 		test_listchars.out \
+ 		test_listlbr.out \
+ 		test_listlbr_utf8.out \
+diff -r 70bd621b7bd5 src/testdir/Makefile
+--- a/src/testdir/Makefile	Sat Jul 04 11:27:28 2015 +0900
++++ b/src/testdir/Makefile	Sat Jul 04 11:51:01 2015 +0900
+@@ -44,6 +44,7 @@
+ 		test_eval.out \
+ 		test_increment.out \
+ 		test_insertcount.out \
++		test_lambda.out \
+ 		test_listchars.out \
+ 		test_listlbr.out \
+ 		test_listlbr_utf8.out \
+diff -r 70bd621b7bd5 src/testdir/test_lambda.in
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/src/testdir/test_lambda.in	Sat Jul 04 11:51:01 2015 +0900
+@@ -0,0 +1,123 @@
++Tests for lambda     vim: set ft=vim :
++
++STARTTEST
++:source small.vim
++:%delete _
++:let tab="\t"
++:command -nargs=1 Put :let expr=<q-args> | $put =expr.tab.strtrans(string(eval(expr)))
++:
++:Put map([1, 2, 3], lambda('return a:1 + 1'))
++:Put sort([3,7,2,1,4], lambda('return a:1 - a:2'))
++:let g:x = 2
++:Put filter([1, 2, 3], lambda('return a:1 >= g:x'))
++:unlet x
++:
++:let X = lambda("let x = 1 | return x + a:1")
++:Put g:X(1)
++:Put g:X(2)
++:unlet X
++:
++:let g:X = 1
++:let F = lambda('return a:1 + g:X')
++:let g:X = 2
++:Put F(10)
++:unlet g:X
++:
++:function! UpdateReturn(arr)
++:  let a:arr[1] = 5
++:  return a:arr
++:endfunction
++:function! Foo(arr)
++:  return lambda('return UpdateReturn(a:arr)')
++:endfunction
++:let arr = [3,2,1]
++:Put Foo(arr)()
++:unlet arr
++:delfunction UpdateReturn
++:delfunction Foo
++:
++:function! Foo(X)
++:  return a:X()
++:endfunction
++:function! Bar()
++:  let x = 123
++:  return Foo(lambda('return x'))
++:endfunction
++:Put Bar()
++:delfunction Foo
++:delfunction Bar
++:
++:function! Foo()
++:  function! DefineFuncs()
++:    return [lambda('let a = 111 | return a'), lambda('return exists("a") ? a : "no"')]
++:  endfunction
++:  let F = DefineFuncs()
++:  return [F[1](), F[0](), F[1]()]
++:endfunction
++:Put Foo()
++:delfunction DefineFuncs
++:delfunction Foo
++:
++:function! Foo()
++:  let x = 0
++:  return lambda("let x += 1 | return x")
++:endfunction
++:let F = Foo()
++:Put g:F()
++:Put g:F()
++:Put g:F()
++:unlet F
++:delfunction Foo
++:
++:function! Foo()
++:  let x = 2
++:  return lambda('return a:000 + [x]')
++:endfunction
++:function! Bar()
++:  return Foo()(1)
++:endfunction
++:Put Bar()
++:delfunction Foo
++:delfunction Bar
++:
++:function! Foo()
++:  let c = 0
++:  return lambda('let c += 1 | return c')
++:endfunction
++:let F = Foo()
++:call garbagecollect()
++:Put g:F()
++:call garbagecollect()
++:Put g:F()
++:call garbagecollect()
++:Put g:F()
++:unlet F
++:delfunction Foo
++:
++:function! Foo() abort
++:  let pl= l:
++:  let Bar = lambda('return get(pl, "Bar", get(pl, "Baz", lambda("")))')
++:  let Baz = Bar
++:  delfunction Bar
++:  return Baz
++:endfunction
++:let F = Foo()
++:try
++:  echo F()
++:  Put "Shouldn't pass"
++:catch /^Vim\%((\a\+)\)\=:E117/
++:endtry
++:unlet F
++:delfunction Foo
++:
++:try
++:  sandbox let F = lambda('')
++:  Put "Shouldn't pass"
++:catch /^Vim\%((\a\+)\)\=:E48/
++:endtry
++:
++:1 delete _
++:w! test.out
++:qa!
++ENDTEST
++
+diff -r 70bd621b7bd5 src/testdir/test_lambda.ok
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/src/testdir/test_lambda.ok	Sat Jul 04 11:51:01 2015 +0900
+@@ -0,0 +1,16 @@
++map([1, 2, 3], lambda('return a:1 + 1'))	[2, 3, 4]
++sort([3,7,2,1,4], lambda('return a:1 - a:2'))	[1, 2, 3, 4, 7]
++filter([1, 2, 3], lambda('return a:1 >= g:x'))	[2, 3]
++g:X(1)	2
++g:X(2)	3
++F(10)	12
++Foo(arr)()	[3, 5, 1]
++Bar()	123
++Foo()	['no', 111, 'no']
++g:F()	1
++g:F()	2
++g:F()	3
++Bar()	[1, 2]
++g:F()	1
++g:F()	2
++g:F()	3

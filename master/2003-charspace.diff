@@ -1,0 +1,56 @@
+# HG changeset patch
+# Parent 4788b87d17786243e3d3b6fca78c4ff73026644b
+implement 'charspace' for Windows GUI
+
+diff -r 4788b87d1778 src/gui_w48.c
+--- a/src/gui_w48.c	Sat Apr 13 21:51:28 2013 +0900
++++ b/src/gui_w48.c	Sat Apr 13 21:57:00 2013 +0900
+@@ -1306,7 +1306,7 @@
+     TEXTMETRIC tm;
+ 
+     GetTextMetrics(hdc, &tm);
+-    gui.char_width = tm.tmAveCharWidth + tm.tmOverhang;
++    gui.char_width = tm.tmAveCharWidth + tm.tmOverhang + p_charspace;
+ 
+     gui.char_height = tm.tmHeight
+ #ifndef MSWIN16_FASTTEXT
+diff -r 4788b87d1778 src/option.c
+--- a/src/option.c	Sat Apr 13 21:51:28 2013 +0900
++++ b/src/option.c	Sat Apr 13 21:57:00 2013 +0900
+@@ -713,6 +713,14 @@
+ 			    {(char_u *)0L, (char_u *)0L}
+ #endif
+ 			    SCRIPTID_INIT},
++    {"charspace",   "csp",  P_NUM|P_NODEFAULT|P_VIM|P_RCLR,
++#ifdef FEAT_GUI
++			    (char_u *)&p_charspace, PV_NONE,
++#else
++			    (char_u *)NULL, PV_NONE,
++#endif
++			    {(char_u *)0L, (char_u *)0L}
++			    SCRIPTID_INIT},
+     {"cindent",	    "cin",  P_BOOL|P_VI_DEF|P_VIM,
+ #ifdef FEAT_CINDENT
+ 			    (char_u *)&p_cin, PV_CIN,
+@@ -8299,7 +8307,7 @@
+ #endif
+ 
+ #ifdef FEAT_GUI
+-    else if (pp == &p_linespace)
++    else if (pp == &p_linespace || pp == &p_charspace)
+     {
+ 	/* Recompute gui.char_height and resize the Vim window to keep the
+ 	 * same number of lines. */
+diff -r 4788b87d1778 src/option.h
+--- a/src/option.h	Sat Apr 13 21:51:28 2013 +0900
++++ b/src/option.h	Sat Apr 13 21:57:00 2013 +0900
+@@ -376,6 +376,9 @@
+ EXTERN char_u	*p_ccv;		/* 'charconvert' */
+ # endif
+ #endif
++#ifdef FEAT_GUI
++EXTERN long	p_charspace;	/* 'charspace' */
++#endif
+ #ifdef FEAT_CMDWIN
+ EXTERN char_u	*p_cedit;	/* 'cedit' */
+ EXTERN long	p_cwh;		/* 'cmdwinheight' */

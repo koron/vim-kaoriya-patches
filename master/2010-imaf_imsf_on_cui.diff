@@ -1,0 +1,50 @@
+# HG changeset patch
+# Parent 2dc301ac8f6bbe176e0f4415a22996b02d525362
+
+diff -r 2dc301ac8f6b src/mbyte.c
+--- a/src/mbyte.c	Mon Jul 29 08:54:36 2013 +0900
++++ b/src/mbyte.c	Mon Jul 29 08:56:18 2013 +0900
+@@ -4464,7 +4464,22 @@
+     im_is_active = (active && !p_imdisable);
+ 
+     if (im_is_active != was_active)
++    {
++#  ifdef FEAT_EVAL
++	if (p_imaf[0] != NUL)
++	{
++	    char_u *argv[1];
++
++	    if (active)
++		argv[0] = (char_u *)"1";
++	    else
++		argv[0] = (char_u *)"0";
++	    (void)call_func_retnr(p_imaf, 1, argv, FALSE);
++	    return;
++	}
++#  endif
+ 	xim_reset();
++    }
+ }
+ 
+     void
+diff -r 2dc301ac8f6b src/ui.c
+--- a/src/ui.c	Mon Jul 29 08:54:36 2013 +0900
++++ b/src/ui.c	Mon Jul 29 08:56:18 2013 +0900
+@@ -3262,6 +3262,17 @@
+ im_save_status(psave)
+     long *psave;
+ {
++# if defined(FEAT_EVAL) && defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
++    if (!p_imdisable && KeyTyped && !KeyStuffed && p_imsf[0] != NUL)
++    {
++	if (vgetc_im_active)
++	    *psave = B_IMODE_IM;
++	else if (*psave == B_IMODE_IM)
++	    *psave = B_IMODE_NONE;
++	return;
++    }
++# endif
++
+     /* Don't save when 'imdisable' is set or "xic" is NULL, IM is always
+      * disabled then (but might start later).
+      * Also don't save when inside a mapping, vgetc_im_active has not been set

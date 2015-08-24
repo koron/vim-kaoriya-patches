@@ -1,0 +1,154 @@
+# HG changeset patch
+# Parent b310fc3abf0bd107728295980e4090a7573dea3d
+add 'auto' for 'ambiwidth'
+
+diff -r b310fc3abf0b -r 5a2d7f302b1d runtime/doc/options.txt
+--- a/runtime/doc/options.txt	Sat Apr 13 22:05:04 2013 +0900
++++ b/runtime/doc/options.txt	Sat Apr 13 22:11:26 2013 +0900
+@@ -680,6 +680,9 @@
+ 	"single":	Use the same width as characters in US-ASCII.  This is
+ 			expected by most users.
+ 	"double":	Use twice the width of ASCII characters.
++	"auto":		Use obtained width from system.
++			{only for Win NT/2K systems, currently}
++
+ 							*E834* *E835*
+ 	The value "double" cannot be used if 'listchars' or 'fillchars'
+ 	contains a character that would be double width.
+@@ -703,6 +706,10 @@
+ 	compiled with the |+termresponse| feature and if |t_u7| is set to the
+ 	escape sequence to request cursor position report.
+ 
++	On some systems, we can use width for a character which defined by
++	font design.  If you use such a system try "auto" for this option.
++	It will give you more nice result for a font which you select.
++
+ 			*'antialias'* *'anti'* *'noantialias'* *'noanti'*
+ 'antialias' 'anti'	boolean (default: off)
+ 			global
+diff -r b310fc3abf0b -r 5a2d7f302b1d src/gui_w32.c
+--- a/src/gui_w32.c	Sat Apr 13 22:05:04 2013 +0900
++++ b/src/gui_w32.c	Sat Apr 13 22:11:26 2013 +0900
+@@ -4924,3 +4924,54 @@
+ 	WSInitialized = TRUE;
+ }
+ #endif
++
++#ifdef USE_AMBIWIDTH_AUTO
++#define CHARWIDE_CACHESIZE 65536
++static GuiFont last_font = 0;
++
++    int
++gui_mch_get_charwidth(int c)
++{
++    static char cache[CHARWIDE_CACHESIZE];
++    GuiFont usingfont = gui.wide_font ? gui.wide_font : gui.norm_font;
++
++    /* Check validity of charwide cache */
++    if (last_font != usingfont)
++    {
++	/* Update cache. -1 is mark for uninitialized cell */
++	TRACE("Charwide cache will be updated (base=%d)\n", gui.char_width);
++	last_font = usingfont;
++	memset(cache, -1, sizeof(cache));
++    }
++    if (usingfont && 0 <= c && c < CHARWIDE_CACHESIZE)
++    {
++	if (cache[c] >= 0)
++	    return cache[c]; /* Use cached value */
++	else
++	{
++	    /* 
++	     * Get true character width in dot, convert to cells and save
++	     * it.
++	     */
++	    int	    len;
++	    ABC	    fontABC;
++	    HFONT   hfntOld = SelectFont(s_hdc, usingfont);
++
++	    if (!GetCharABCWidthsW(s_hdc, c, c, &fontABC) ||
++		    (len = fontABC.abcA + fontABC.abcB + fontABC.abcC) <= 0)
++	    {
++		TRACE("GetCharABCWidthsW() failed for %08X\n", c);
++		cache[c] = 0;
++	    }
++	    else
++		cache[c] = (char)((len + (gui.char_width >> 1))
++			/ gui.char_width);
++	    SelectFont(s_hdc, hfntOld);
++
++	    return cache[c];
++	}
++    }
++    else
++	return 0;
++}
++#endif
+diff -r b310fc3abf0b -r 5a2d7f302b1d src/mbyte.c
+--- a/src/mbyte.c	Sat Apr 13 22:05:04 2013 +0900
++++ b/src/mbyte.c	Sat Apr 13 22:11:26 2013 +0900
+@@ -1460,6 +1460,19 @@
+ 	{0x100000, 0x10fffd}
+     };
+ 
++#ifdef USE_AMBIWIDTH_AUTO
++    if (gui.in_use && *p_ambw == 'a')
++    {
++	int cell;
++
++	/* This is required by screen.c implicitly. */
++	if (c == 0)
++	    return 1;
++	if ((cell = gui_mch_get_charwidth(c)) > 0)
++	    return cell;
++    }
++#endif
++
+     if (c >= 0x100)
+     {
+ #ifdef USE_WCHAR_FUNCTIONS
+diff -r b310fc3abf0b -r 5a2d7f302b1d src/option.c
+--- a/src/option.c	Sat Apr 13 22:05:04 2013 +0900
++++ b/src/option.c	Sat Apr 13 22:11:26 2013 +0900
+@@ -2954,7 +2954,11 @@
+ #define PARAM_COUNT (sizeof(options) / sizeof(struct vimoption))
+ 
+ #ifdef FEAT_MBYTE
+-static char *(p_ambw_values[]) = {"single", "double", NULL};
++static char *(p_ambw_values[]) = {"single", "double",
++# ifdef USE_AMBIWIDTH_AUTO
++    "auto",
++# endif
++    NULL};
+ #endif
+ static char *(p_bg_values[]) = {"light", "dark", NULL};
+ static char *(p_nf_values[]) = {"octal", "hex", "alpha", NULL};
+diff -r b310fc3abf0b -r 5a2d7f302b1d src/proto/gui_w32.pro
+--- a/src/proto/gui_w32.pro	Sat Apr 13 22:05:04 2013 +0900
++++ b/src/proto/gui_w32.pro	Sat Apr 13 22:11:26 2013 +0900
+@@ -76,6 +76,7 @@
+ int im_get_status __ARGS((void));
+ void gui_mch_draw_string __ARGS((int row, int col, char_u *text, int len, int flags));
+ void gui_mch_flush __ARGS((void));
++int gui_mch_get_charwidth __ARGS((int c));
+ void gui_mch_get_screen_dimensions __ARGS((int *screen_w, int *screen_h));
+ void gui_mch_add_menu __ARGS((vimmenu_T *menu, int pos));
+ void gui_mch_show_popupmenu __ARGS((vimmenu_T *menu));
+diff -r b310fc3abf0b -r 5a2d7f302b1d src/vim.h
+--- a/src/vim.h	Sat Apr 13 22:05:04 2013 +0900
++++ b/src/vim.h	Sat Apr 13 22:11:26 2013 +0900
+@@ -553,6 +553,14 @@
+ #endif
+ 
+ /*
++ * Whether 'ambiwidth' supports "auto".  Currently, only for Win32.
++ */
++#if defined(FEAT_MBYTE) && defined(FEAT_GUI) && \
++    (defined(FEAT_GUI_W32))
++# define USE_AMBIWIDTH_AUTO
++#endif
++
++/*
+  * For dynamically loaded gettext library.  Currently, only for Win32.
+  */
+ #ifdef DYNAMIC_GETTEXT

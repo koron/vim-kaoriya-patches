@@ -1,0 +1,148 @@
+# HG changeset patch
+# Parent 0fc8712ef505c7b50974f472fde6facfb0854919
+# Parent  5547fbc1b0234e08a660f62d978024fc7b162af7
+
+diff -r 5547fbc1b023 src/eval.c
+--- a/src/eval.c	Sat Jul 04 11:51:01 2015 +0900
++++ b/src/eval.c	Sat Jul 04 11:56:54 2015 +0900
+@@ -258,9 +258,7 @@
+ 
+     /* for lambda */
+     int		ref_by_lambda;
+-    funccall_T	*lambda_next;	/* for garbage collection */
+     int		lambda_copyID;	/* for garbage collection */
+-    int		lambda_free_val;
+ };
+ 
+ /*
+@@ -1006,9 +1004,6 @@
+  * item in it is still being used. */
+ funccall_T *previous_funccal = NULL;
+ 
+-/* pointer to list of funccal binded to lambda as scope. */
+-funccall_T *scoped_funccal = NULL;
+-
+ /*
+  * Return TRUE when a function was ended by a ":return" command.
+  */
+@@ -6902,6 +6897,7 @@
+ 									NULL);
+ 	abort = abort || set_ref_in_ht(&fc->l_avars.dv_hashtab, copyID + 1,
+ 									NULL);
++	fc->lambda_copyID = copyID + 1;
+     }
+ 
+     /* script-local variables */
+@@ -6978,24 +6974,6 @@
+ 	    else
+ 		pfc = &(*pfc)->caller;
+ 	}
+-
+-	/*
+-	 * 4. Check if any lambda scoped funccal can be freed now.
+-	 */
+-	for (pfc = &scoped_funccal; *pfc != NULL; )
+-	{
+-	    if ((*pfc)->lambda_copyID != copyID)
+-	    {
+-		fc = *pfc;
+-		*pfc = fc->lambda_next;
+-		free_funccal(fc, fc->lambda_free_val);
+-		did_free = TRUE;
+-		did_free_funccal = TRUE;
+-	    }
+-	    else
+-		pfc = &(*pfc)->lambda_next;
+-	}
+-
+ 	if (did_free_funccal)
+ 	    /* When a funccal was freed some more items might be garbage
+ 	     * collected, so run again. */
+@@ -7232,10 +7210,6 @@
+ 		    if (fc->lambda_copyID != copyID)
+ 		    {
+ 			fc->lambda_copyID = copyID;
+-			fc->l_varlist.lv_copyID = copyID;
+-			fc->l_vars.dv_copyID = copyID;
+-			fc->l_avars.dv_copyID = copyID;
+-			set_ref_in_list(&fc->l_varlist, copyID, ht_stack);
+ 			set_ref_in_ht(&fc->l_vars.dv_hashtab, copyID,
+ 				list_stack);
+ 			set_ref_in_ht(&fc->l_avars.dv_hashtab, copyID,
+@@ -14157,17 +14131,7 @@
+     if (current_funccal)
+     {
+ 	fp->uf_scoped = current_funccal;
+-	for (fc = fp->uf_scoped; fc != NULL; fc = fc->func->uf_scoped)
+-	{
+-	    if (fc->ref_by_lambda == FALSE)
+-	    {
+-		/* funccall_T which be used by lambda, is managed under
+-		 * scoped_funccal. */
+-		fc->ref_by_lambda = TRUE;
+-		fc->lambda_next = scoped_funccal;
+-		scoped_funccal = fc;
+-	    }
+-	}
++	current_funccal->ref_by_lambda = TRUE;
+     }
+     else
+ 	fp->uf_scoped = NULL;
+@@ -23944,8 +23908,6 @@
+     /* Set up fields for lambda. */
+     fc->ref_by_lambda = FALSE;
+     fc->lambda_copyID = current_copyID;
+-    fc->lambda_next = NULL;
+-    fc->lambda_free_val = FALSE;
+ 
+     /*
+      * Note about using fc->fixvar[]: This is an array of FIXVAR_CNT variables
+@@ -24226,11 +24188,10 @@
+      * free the funccall_T and what's in it. */
+     if (fc->l_varlist.lv_refcount == DO_NOT_FREE_CNT
+ 	    && fc->l_vars.dv_refcount == DO_NOT_FREE_CNT
+-	    && fc->l_avars.dv_refcount == DO_NOT_FREE_CNT)
+-    {
+-	/* funccall_T be used by lambda, is managed separately. */
+-	if (!fc->ref_by_lambda)
+-	    free_funccal(fc, FALSE);
++	    && fc->l_avars.dv_refcount == DO_NOT_FREE_CNT
++	    && !fc->ref_by_lambda)
++    {
++	free_funccal(fc, FALSE);
+     }
+     else
+     {
+@@ -24238,17 +24199,11 @@
+ 	listitem_T	*li;
+ 	int		todo;
+ 
+-	/* funccall_T be used by lambda, is managed separately. */
+-	if (!fc->ref_by_lambda)
+-	{
+-	    /* "fc" is still in use.  This can happen when returning "a:000" or
+-	     * assigning "l:" to a global variable.
+-	     * Link "fc" in the list for garbage collection later. */
+-	    fc->caller = previous_funccal;
+-	    previous_funccal = fc;
+-	}
+-	else
+-	    fc->lambda_free_val = TRUE;
++	/* "fc" is still in use.  This can happen when returning "a:000" or
++	 * assigning "l:" to a global variable.
++	 * Link "fc" in the list for garbage collection later. */
++	fc->caller = previous_funccal;
++	previous_funccal = fc;
+ 
+ 	/* Make a copy of the a: variables, since we didn't do that above. */
+ 	todo = (int)fc->l_avars.dv_hashtab.ht_used;
+@@ -24279,7 +24234,8 @@
+ {
+     return (fc->l_varlist.lv_copyID != copyID
+ 	    && fc->l_vars.dv_copyID != copyID
+-	    && fc->l_avars.dv_copyID != copyID);
++	    && fc->l_avars.dv_copyID != copyID
++	    && fc->lambda_copyID != copyID);
+ }
+ 
+ /*

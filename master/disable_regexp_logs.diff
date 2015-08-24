@@ -1,0 +1,38 @@
+# HG changeset patch
+# Parent 2897c22ff88041aa524ff35562386afad83a46a2
+disable regexp debug log.  use BT regexp engine as default.
+
+diff -r 2897c22ff880 src/regexp.c
+--- a/src/regexp.c	Mon Aug 26 23:26:18 2013 +0900
++++ b/src/regexp.c	Mon Aug 26 23:26:30 2013 +0900
+@@ -48,10 +48,10 @@
+ 
+ #ifdef DEBUG
+ /* show/save debugging data when BT engine is used */
+-# define BT_REGEXP_DUMP
++/*# define BT_REGEXP_DUMP*/
+ /* save the debugging data to a file instead of displaying it */
+-# define BT_REGEXP_LOG
+-# define BT_REGEXP_DEBUG_LOG
++/*# define BT_REGEXP_LOG*/
++/*# define BT_REGEXP_DEBUG_LOG*/
+ # define BT_REGEXP_DEBUG_LOG_NAME	"bt_regexp_debug.log"
+ #endif
+ 
+diff -r 2897c22ff880 src/regexp_nfa.c
+--- a/src/regexp_nfa.c	Mon Aug 26 23:26:18 2013 +0900
++++ b/src/regexp_nfa.c	Mon Aug 26 23:26:30 2013 +0900
+@@ -22,11 +22,13 @@
+  * regexp.c
+  */
+ #ifdef DEBUG
++/*
+ # define NFA_REGEXP_ERROR_LOG	"nfa_regexp_error.log"
+ # define ENABLE_LOG
+ # define NFA_REGEXP_DUMP_LOG	"nfa_regexp_dump.log"
+ # define NFA_REGEXP_RUN_LOG	"nfa_regexp_run.log"
+ # define NFA_REGEXP_DEBUG_LOG	"nfa_regexp_debug.log"
++*/
+ #endif
+ 
+ /* Added to NFA_ANY - NFA_NUPPER_IC to include a NL. */

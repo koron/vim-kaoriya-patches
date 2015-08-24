@@ -1,0 +1,347 @@
+# HG changeset patch
+# Parent 3707ea421d58321d823956563eb9c4524b1eab3b
+# Parent  2e92269ec226fe8c45d73226fe3ebc7b0aba816f
+
+diff -r 2e92269ec226 runtime/doc/eval.txt
+--- a/runtime/doc/eval.txt	Sat Jul 04 11:24:53 2015 +0900
++++ b/runtime/doc/eval.txt	Sat Jul 04 11:25:00 2015 +0900
+@@ -1711,6 +1711,8 @@
+ abs( {expr})			Float or Number  absolute value of {expr}
+ acos( {expr})			Float	arc cosine of {expr}
+ add( {list}, {item})		List	append {item} to |List| {list}
++alcget( )			Dict	get copy |Dict| of autoload cache
++alcreset( )			none	reset autoload cache
+ and( {expr}, {expr})		Number  bitwise AND
+ append( {lnum}, {string})	Number	append {string} below line {lnum}
+ append( {lnum}, {list})		Number	append lines {list} below line {lnum}
+@@ -2089,6 +2091,16 @@
+ 		Use |insert()| to add an item at another position.
+ 
+ 
++alcget()						*alcget()*
++		Get a |Dict| which have copy of autoload cache.  It has no
++		effects for autoload cache when modify returned |Dict|.
++
++
++alcreset()						*alcreset()*
++		Reset autoload cache forcibly.  Call this function when add or
++		remove *.vim files into/from your autoload directories.
++
++
+ and({expr}, {expr})					*and()*
+ 		Bitwise AND on the two arguments.  The arguments are converted
+ 		to a number.  A List, Dict or Float argument causes an error.
+diff -r 2e92269ec226 src/eval.c
+--- a/src/eval.c	Sat Jul 04 11:24:53 2015 +0900
++++ b/src/eval.c	Sat Jul 04 11:25:00 2015 +0900
+@@ -124,6 +124,12 @@
+  */
+ static hashtab_T	compat_hashtab;
+ 
++/* autoload cache table.  contains map from scriptname to file path. */
++static hashtab_T	autoload_cache;
++
++/* built flat for autoload cache table.  see also autoload_cache_build(). */
++static int		autoload_cache_built = FALSE;
++
+ /*
+  * When recursively copying lists and dicts we need to remember which ones we
+  * have done to avoid endless recursiveness.  This unique ID is used for that.
+@@ -471,6 +477,8 @@
+ static void f_acos __ARGS((typval_T *argvars, typval_T *rettv));
+ #endif
+ static void f_add __ARGS((typval_T *argvars, typval_T *rettv));
++static void f_alcget __ARGS((typval_T *argvars, typval_T *rettv));
++static void f_alcreset __ARGS((typval_T *argvars, typval_T *rettv));
+ static void f_and __ARGS((typval_T *argvars, typval_T *rettv));
+ static void f_append __ARGS((typval_T *argvars, typval_T *rettv));
+ static void f_argc __ARGS((typval_T *argvars, typval_T *rettv));
+@@ -885,6 +893,7 @@
+     init_var_dict(&vimvardict, &vimvars_var, VAR_SCOPE);
+     vimvardict.dv_lock = VAR_FIXED;
+     hash_init(&compat_hashtab);
++    hash_init(&autoload_cache);
+     hash_init(&func_hashtab);
+ #if defined(FEAT_JOB_BASE) && defined(FEAT_JOB_EVAL)
+     init_var_dict(&jobvardict, &jobvars_var);
+@@ -946,6 +955,8 @@
+     hash_init(&vimvarht);  /* garbage_collect() will access it */
+     hash_clear(&compat_hashtab);
+ 
++    hash_clear_all(&autoload_cache, 0);
++
+     free_scriptnames();
+ # if defined(FEAT_CMDL_COMPL)
+     free_locales();
+@@ -8082,6 +8093,8 @@
+     {"acos",		1, 1, f_acos},	/* WJMc */
+ #endif
+     {"add",		2, 2, f_add},
++    {"alcget",		0, 0, f_alcget},
++    {"alcreset",	0, 0, f_alcreset},
+     {"and",		2, 2, f_and},
+     {"append",		2, 2, f_append},
+     {"argc",		0, 0, f_argc},
+@@ -23661,6 +23674,215 @@
+ #endif
+ 
+ /*
++ * Delete autoload cache.
++ */
++    void
++autoload_cache_clear()
++{
++    hash_clear_all(&autoload_cache, 0);
++    hash_init(&autoload_cache);
++    autoload_cache_built = FALSE;
++}
++
++/*
++ * Split scriptname from file full path.
++ *
++ * Return value must be allocated memory when succeeded.
++ */
++    static char_u *
++autoload_cache_split_scriptname(fname)
++    char_u	*fname;
++{
++    char_u	*p, *q, *r;
++
++    /* Find start of package name. */
++    p = (char_u *)strstr((char *)fname, "/autoload/");
++    if (!p)
++	p = (char_u *)strstr((char *)fname, "\\autoload\\");
++    if (!p)
++	return NULL;
++    p += 10;
++
++    /* Replace '\\' with '/'. */
++    r = vim_strnsave(p, (int)STRLEN(p));
++    for (q = r; *q != NUL; mb_ptr_adv(q))
++	if (*q == '\\')
++	    *q = '/';
++
++    return r;
++}
++
++/*
++ * Concatenate key (scriptname) and fname in allocated memory.
++ *
++ * Ex: sprintf("%s\0%s\0", key, fname)
++ */
++    static char_u *
++autoload_cache_new_item(key, fname)
++    char_u	*key;
++    char_u	*fname;
++{
++    size_t	len;
++    char_u	*item;
++
++    len = STRLEN(key);
++    item = alloc((unsigned int)(len + STRLEN(fname) + 2));
++    if (item)
++    {
++	STRCPY(item, key);
++	STRCPY(item + len + 1, fname);
++    }
++    return item;
++}
++
++/*
++ * Add an entry to autoload_cache.
++ */
++    static void
++autoload_cache_add(fname)
++    char_u	*fname;
++{
++    char_u	*key;
++    hashitem_T	*hi;
++
++    key = autoload_cache_split_scriptname(fname);
++    if (key)
++    {
++	/* check duplication of key (scriptname). */
++	hi = hash_find(&autoload_cache, key);
++	if (HASHITEM_EMPTY(hi))
++	    hash_add(&autoload_cache, autoload_cache_new_item(key, fname));
++	vim_free(key);
++    }
++}
++
++static void autoload_cache_add_callback __ARGS((char_u *fname, void *cookie));
++
++/*
++ * Glue function between do_in_runtimepath() and autoload_cache_add().
++ */
++    static void
++autoload_cache_add_callback(fname, cookie)
++    char_u	*fname;
++    void	*cookie UNUSED;
++{
++    autoload_cache_add(fname);
++}
++
++/*
++ * Build autoload cache.
++ */
++    static void
++autoload_cache_build()
++{
++    if (autoload_cache_built == TRUE)
++	return;
++    do_in_runtimepath("autoload/**/*.vim", TRUE, autoload_cache_add_callback,
++	    NULL);
++    autoload_cache_built = TRUE;
++}
++
++/*
++ * Get full path of a script for package name.
++ *
++ * "scriptname" is package name.
++ */
++    static char_u *
++autoload_cache_find(scriptname)
++    char_u	*scriptname;
++{
++    char_u	*r = NULL;
++    hashitem_T	*hi;
++    size_t	len;
++
++    autoload_cache_build();
++    len = STRLEN(scriptname);
++    hi = hash_find(&autoload_cache, scriptname);
++    if (HASHITEM_EMPTY(hi))
++    {
++	/* show error message. */
++	if (p_verbose > 0)
++	{
++	    verbose_enter();
++	    /* FIXME: consider message */
++	    smsg((char_u *)_("no autoloads found: \"%s\""), scriptname);
++	    verbose_leave();
++	}
++    }
++    else
++	r = hi->hi_key + STRLEN(hi->hi_key) + 1;
++    return r;
++}
++
++/*
++ * Convert to package name.
++ *
++ * package name is "foo#bar#baz" for "foo/bar/baz.vim".
++ */
++    static char_u *
++autoload_to_pkgname(scriptname)
++    char_u	*scriptname;
++{
++    char_u	*pkgname;
++    char_u	*p;
++
++    pkgname = vim_strnsave(scriptname, (int)STRLEN(scriptname) - 4);
++    if (pkgname)
++    {
++	for (p = pkgname; *p != NUL; mb_ptr_adv(p))
++	    if (*p == '/' || *p == '\\')
++		*p = '#';
++    }
++    return pkgname;
++}
++
++/*
++ * "alcget()" function
++ */
++    static void
++f_alcget(argvars, rettv)
++    typval_T	*argvars;
++    typval_T	*rettv;
++{
++    dict_T	*dict;
++    int		todo;
++    hashitem_T	*hi;
++    char_u	*pkgname;
++
++    autoload_cache_build();
++    if (rettv_dict_alloc(rettv) == FAIL)
++	return;
++
++    dict = rettv->vval.v_dict;
++    todo = (int)autoload_cache.ht_used;
++    for (hi = autoload_cache.ht_array; todo > 0; ++hi)
++    {
++	if (HASHITEM_EMPTY(hi))
++	    continue;
++	--todo;
++	pkgname = autoload_to_pkgname(hi->hi_key);
++	if (pkgname)
++	{
++	    dict_add_nr_str(dict, pkgname, 0,
++		    hi->hi_key + STRLEN(hi->hi_key) + 1);
++	    vim_free(pkgname);
++	}
++    }
++}
++
++/*
++ * "alcreset()" function
++ */
++    static void
++f_alcreset(argvars, rettv)
++    typval_T	*argvars;
++    typval_T	*rettv;
++{
++    autoload_cache_clear();
++    rettv->v_type = VAR_UNKNOWN;
++}
++
++/*
+  * If "name" has a package name try autoloading the script for it.
+  * Return TRUE if a package was loaded.
+  */
+@@ -23673,6 +23895,7 @@
+     char_u	*scriptname, *tofree;
+     int		ret = FALSE;
+     int		i;
++    char_u	*scriptpath;
+ 
+     /* If there is no '#' after name[0] there is no package name. */
+     p = vim_strchr(name, AUTOLOAD_CHAR);
+@@ -23698,7 +23921,8 @@
+ 	}
+ 
+ 	/* Try loading the package from $VIMRUNTIME/autoload/<name>.vim */
+-	if (source_runtime(scriptname, FALSE) == OK)
++	if ((scriptpath = autoload_cache_find(scriptname + 9)) != NULL &&
++		do_source(scriptpath, FALSE, DOSO_NONE) == OK)
+ 	    ret = TRUE;
+     }
+ 
+diff -r 2e92269ec226 src/option.c
+--- a/src/option.c	Sat Jul 04 11:24:53 2015 +0900
++++ b/src/option.c	Sat Jul 04 11:25:00 2015 +0900
+@@ -7114,6 +7114,14 @@
+     }
+ #endif
+ 
++#ifdef FEAT_EVAL
++    else if (varp == &p_rtp)
++    {
++	if (STRCMP(p_rtp, oldval) != 0)
++	    autoload_cache_clear();
++    }
++#endif
++
+     /* Options that are a list of flags. */
+     else
+     {
+diff -r 2e92269ec226 src/proto/eval.pro
+--- a/src/proto/eval.pro	Sat Jul 04 11:24:53 2015 +0900
++++ b/src/proto/eval.pro	Sat Jul 04 11:25:00 2015 +0900
+@@ -114,6 +114,7 @@
+ char_u *get_expanded_name __ARGS((char_u *name, int check));
+ void func_dump_profile __ARGS((FILE *fd));
+ char_u *get_user_func_name __ARGS((expand_T *xp, int idx));
++void autoload_cache_clear __ARGS((void));
+ void ex_delfunction __ARGS((exarg_T *eap));
+ void func_unref __ARGS((char_u *name));
+ void func_ref __ARGS((char_u *name));

@@ -1,0 +1,783 @@
+# HG changeset patch
+# Parent a57489c58bfc1321c3f92afaab61a9a69cc5509e
+
+diff -r a57489c58bfc src/edit.c
+--- a/src/edit.c	Tue May 06 20:18:43 2014 +0900
++++ b/src/edit.c	Tue May 06 20:50:14 2014 +0900
+@@ -9330,12 +9330,7 @@
+     tpos = curwin->w_cursor;
+     if (oneleft() == OK)
+     {
+-#if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
+-	/* Only call start_arrow() when not busy with preediting, it will
+-	 * break undo.  K_LEFT is inserted in im_correct_cursor(). */
+-	if (!im_is_preediting())
+-#endif
+-	    start_arrow(&tpos);
++	start_arrow(&tpos);
+ #ifdef FEAT_RIGHTLEFT
+ 	/* If exit reversed string, position is fixed */
+ 	if (revins_scol != -1 && (int)curwin->w_cursor.col >= revins_scol)
+diff -r a57489c58bfc src/ex_getln.c
+--- a/src/ex_getln.c	Tue May 06 20:18:43 2014 +0900
++++ b/src/ex_getln.c	Tue May 06 20:50:14 2014 +0900
+@@ -94,9 +94,6 @@
+ static void	save_cmdline __ARGS((struct cmdline_info *ccp));
+ static void	restore_cmdline __ARGS((struct cmdline_info *ccp));
+ static int	cmdline_paste __ARGS((int regname, int literally, int remcr));
+-#if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
+-static void	redrawcmd_preedit __ARGS((void));
+-#endif
+ #ifdef FEAT_WILDMENU
+ static void	cmdline_del __ARGS((int from));
+ #endif
+@@ -2467,106 +2464,6 @@
+ }
+ #endif
+ 
+-#if (defined(FEAT_XIM) && (defined(FEAT_GUI_GTK))) || defined(PROTO)
+-/*
+- * Return the virtual column number at the current cursor position.
+- * This is used by the IM code to obtain the start of the preedit string.
+- */
+-    colnr_T
+-cmdline_getvcol_cursor()
+-{
+-    if (ccline.cmdbuff == NULL || ccline.cmdpos > ccline.cmdlen)
+-	return MAXCOL;
+-
+-# ifdef FEAT_MBYTE
+-    if (has_mbyte)
+-    {
+-	colnr_T	col;
+-	int	i = 0;
+-
+-	for (col = 0; i < ccline.cmdpos; ++col)
+-	    i += (*mb_ptr2len)(ccline.cmdbuff + i);
+-
+-	return col;
+-    }
+-    else
+-# endif
+-	return ccline.cmdpos;
+-}
+-#endif
+-
+-#if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
+-/*
+- * If part of the command line is an IM preedit string, redraw it with
+- * IM feedback attributes.  The cursor position is restored after drawing.
+- */
+-    static void
+-redrawcmd_preedit()
+-{
+-    if ((State & CMDLINE)
+-	    && xic != NULL
+-	    /* && im_get_status()  doesn't work when using SCIM */
+-	    && !p_imdisable
+-	    && im_is_preediting())
+-    {
+-	int	cmdpos = 0;
+-	int	cmdspos;
+-	int	old_row;
+-	int	old_col;
+-	colnr_T	col;
+-
+-	old_row = msg_row;
+-	old_col = msg_col;
+-	cmdspos = ((ccline.cmdfirstc != NUL) ? 1 : 0) + ccline.cmdindent;
+-
+-# ifdef FEAT_MBYTE
+-	if (has_mbyte)
+-	{
+-	    for (col = 0; col < preedit_start_col
+-			  && cmdpos < ccline.cmdlen; ++col)
+-	    {
+-		cmdspos += (*mb_ptr2cells)(ccline.cmdbuff + cmdpos);
+-		cmdpos  += (*mb_ptr2len)(ccline.cmdbuff + cmdpos);
+-	    }
+-	}
+-	else
+-# endif
+-	{
+-	    cmdspos += preedit_start_col;
+-	    cmdpos  += preedit_start_col;
+-	}
+-
+-	msg_row = cmdline_row + (cmdspos / (int)Columns);
+-	msg_col = cmdspos % (int)Columns;
+-	if (msg_row >= Rows)
+-	    msg_row = Rows - 1;
+-
+-	for (col = 0; cmdpos < ccline.cmdlen; ++col)
+-	{
+-	    int char_len;
+-	    int char_attr;
+-
+-	    char_attr = im_get_feedback_attr(col);
+-	    if (char_attr < 0)
+-		break; /* end of preedit string */
+-
+-# ifdef FEAT_MBYTE
+-	    if (has_mbyte)
+-		char_len = (*mb_ptr2len)(ccline.cmdbuff + cmdpos);
+-	    else
+-# endif
+-		char_len = 1;
+-
+-	    msg_outtrans_len_attr(ccline.cmdbuff + cmdpos, char_len, char_attr);
+-	    cmdpos += char_len;
+-	}
+-
+-	msg_row = old_row;
+-	msg_col = old_col;
+-    }
+-}
+-#endif /* FEAT_XIM && FEAT_GUI_GTK */
+-
+ /*
+  * Allocate a new command line buffer.
+  * Assigns the new buffer to ccline.cmdbuff and ccline.cmdbufflen.
+@@ -3301,9 +3198,6 @@
+     }
+ 
+     windgoto(msg_row, msg_col);
+-#if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
+-    redrawcmd_preedit();
+-#endif
+ #ifdef MCH_CURSOR_SHAPE
+     mch_update_cursor();
+ #endif
+diff -r a57489c58bfc src/globals.h
+--- a/src/globals.h	Tue May 06 20:18:43 2014 +0900
++++ b/src/globals.h	Tue May 06 20:50:14 2014 +0900
+@@ -871,19 +871,6 @@
+ #ifdef FEAT_XIM
+ # ifdef FEAT_GUI_GTK
+ EXTERN GtkIMContext	*xic INIT(= NULL);
+-/*
+- * Start and end column of the preedit area in virtual columns from the start
+- * of the text line.  When there is no preedit area they are set to MAXCOL.
+- * "preedit_end_col" is needed for coloring the preedited string.  Drawing the
+- * color between "preedit_start_col" and curpos did not work, because some XIM
+- * set the cursor position to the first char of the string.
+- */
+-EXTERN colnr_T		preedit_start_col INIT(= MAXCOL);
+-EXTERN colnr_T		preedit_end_col INIT(= MAXCOL);
+-
+-/* "xim_changed_while_preediting" is set when changed() can set the 'modified'
+- * flag even while preediting. */
+-EXTERN int		xim_changed_while_preediting INIT(= FALSE);
+ # else
+ EXTERN XIC		xic INIT(= NULL);
+ # endif
+diff -r a57489c58bfc src/mbyte.c
+--- a/src/mbyte.c	Tue May 06 20:18:43 2014 +0900
++++ b/src/mbyte.c	Tue May 06 20:50:14 2014 +0900
+@@ -4444,29 +4444,18 @@
+ # if defined(FEAT_GUI_GTK) || defined(PROTO)
+ static int xim_has_preediting INIT(= FALSE);  /* IM current status */
+ 
+-/*
+- * Set preedit_start_col to the current cursor position.
+- */
+-    static void
+-init_preedit_start_col(void)
+-{
+-    if (State & CMDLINE)
+-	preedit_start_col = cmdline_getvcol_cursor();
+-    else if (curwin != NULL)
+-	getvcol(curwin, &curwin->w_cursor, &preedit_start_col, NULL, NULL);
+-    /* Prevent that preediting marks the buffer as changed. */
+-    xim_changed_while_preediting = curbuf->b_changed;
+-}
+-
+ static int im_is_active	       = FALSE;	/* IM is enabled for current mode    */
+ static int preedit_is_active   = FALSE;
+-static int im_preedit_cursor   = 0;	/* cursor offset in characters       */
+-static int im_preedit_trailing = 0;	/* number of characters after cursor */
+ 
+ static unsigned long im_commit_handler_id  = 0;
+ static unsigned int  im_activatekey_keyval = GDK_VoidSymbol;
+ static unsigned int  im_activatekey_state  = 0;
+ 
++static GtkWidget *preedit_window = NULL;
++static GtkWidget *preedit_label = NULL;
++
++static void im_preedit_window_set_position(void);
++
+     void
+ im_set_active(int active)
+ {
+@@ -4519,6 +4508,8 @@
+ 	area.height = gui.char_height;
+ 
+ 	gtk_im_context_set_cursor_location(xic, &area);
++
++	im_preedit_window_set_position();
+     }
+ }
+ 
+@@ -4549,42 +4540,95 @@
+ 	gui_mch_mousehide(TRUE);
+ }
+ 
++     static void
++im_preedit_window_set_position(void)
++{
++    int x, y, w, h, sw, sh;
++
++    if (preedit_window == NULL)
++	return;
++
++    sw = gdk_screen_get_width(gtk_widget_get_screen(preedit_window));
++    sh = gdk_screen_get_height(gtk_widget_get_screen(preedit_window));
++    gdk_window_get_origin(gui.drawarea->window, &x, &y);
++    gtk_window_get_size(GTK_WINDOW(preedit_window), &w, &h);
++    x = x + FILL_X(gui.col);
++    y = y + FILL_Y(gui.row);
++    if (x + w > sw)
++	x = sw - w;
++    if (y + h > sh)
++	y = sh - h;
++    gtk_window_move(GTK_WINDOW(preedit_window), x, y);
++}
++
++    static void
++im_preedit_window_open()
++{
++    char *preedit_string;
++    char buf[8];
++    PangoAttrList *attr_list;
++    PangoLayout *layout;
++    GdkColor color;
++    gint w, h;
++
++    if (preedit_window == NULL)
++    {
++	preedit_window = gtk_window_new(GTK_WINDOW_POPUP);
++	preedit_label = gtk_label_new("");
++	gtk_container_add(GTK_CONTAINER(preedit_window), preedit_label);
++    }
++
++    gtk_widget_modify_font(preedit_label, gui.norm_font);
++
++    vim_snprintf(buf, sizeof(buf), "#%06X", gui.norm_pixel);
++    gdk_color_parse(buf, &color);
++    gtk_widget_modify_fg(preedit_label, GTK_STATE_NORMAL, &color);
++
++    vim_snprintf(buf, sizeof(buf), "#%06X", gui.back_pixel);
++    gdk_color_parse(buf, &color);
++    gtk_widget_modify_bg(preedit_window, GTK_STATE_NORMAL, &color);
++
++    gtk_im_context_get_preedit_string(xic, &preedit_string, &attr_list, NULL);
++
++    if (preedit_string[0] != NUL)
++    {
++	gtk_label_set_text(GTK_LABEL(preedit_label), preedit_string);
++	gtk_label_set_attributes(GTK_LABEL(preedit_label), attr_list);
++
++	layout = gtk_label_get_layout(GTK_LABEL(preedit_label));
++	pango_layout_get_pixel_size(layout, &w, &h);
++	h = MAX(h, gui.char_height);
++	gtk_window_resize(GTK_WINDOW(preedit_window), w, h);
++
++	gtk_widget_show_all(preedit_window);
++
++	im_preedit_window_set_position();
++    }
++
++    g_free(preedit_string);
++    pango_attr_list_unref(attr_list);
++}
++
++    static void
++im_preedit_window_close()
++{
++    if (preedit_window != NULL)
++	gtk_widget_hide(preedit_window);
++}
++
++    static void
++im_show_preedit()
++{
++    im_preedit_window_open();
++
++    if (p_mh) /* blank out the pointer if necessary */
++	gui_mch_mousehide(TRUE);
++}
++
+     static void
+ im_delete_preedit(void)
+ {
+-    char_u bskey[]  = {CSI, 'k', 'b'};
+-    char_u delkey[] = {CSI, 'k', 'D'};
+-
+-    if (State & NORMAL)
+-    {
+-	im_preedit_cursor = 0;
+-	return;
+-    }
+-    for (; im_preedit_cursor > 0; --im_preedit_cursor)
+-	add_to_input_buf(bskey, (int)sizeof(bskey));
+-
+-    for (; im_preedit_trailing > 0; --im_preedit_trailing)
+-	add_to_input_buf(delkey, (int)sizeof(delkey));
+-}
+-
+-/*
+- * Move the cursor left by "num_move_back" characters.
+- * Note that ins_left() checks im_is_preediting() to avoid breaking undo for
+- * these K_LEFT keys.
+- */
+-    static void
+-im_correct_cursor(int num_move_back)
+-{
+-    char_u backkey[] = {CSI, 'k', 'l'};
+-
+-    if (State & NORMAL)
+-	return;
+-#  ifdef FEAT_RIGHTLEFT
+-    if ((State & CMDLINE) == 0 && curwin != NULL && curwin->w_p_rl)
+-	backkey[2] = 'r';
+-#  endif
+-    for (; num_move_back > 0; --num_move_back)
+-	add_to_input_buf(backkey, (int)sizeof(backkey));
++    im_preedit_window_close();
+ }
+ 
+ static int xim_expected_char = NUL;
+@@ -4597,6 +4641,8 @@
+ im_show_info(void)
+ {
+     int	    old_vgetc_busy;
++    int	    old_row = gui.row;
++    int	    old_col = gui.col;
+ 
+     old_vgetc_busy = vgetc_busy;
+     vgetc_busy = TRUE;
+@@ -4605,6 +4651,8 @@
+     if ((State & NORMAL) || (State & INSERT))
+ 	setcursor();
+     out_flush();
++    gui.row = old_row;
++    gui.col = old_col;
+ }
+ 
+ /*
+@@ -4618,49 +4666,11 @@
+ {
+     int		slen = (int)STRLEN(str);
+     int		add_to_input = TRUE;
+-    int		clen;
+-    int		len = slen;
+-    int		commit_with_preedit = TRUE;
+-    char_u	*im_str;
+ 
+ #ifdef XIM_DEBUG
+     xim_log("im_commit_cb(): %s\n", str);
+ #endif
+ 
+-    /* The imhangul module doesn't reset the preedit string before
+-     * committing.  Call im_delete_preedit() to work around that. */
+-    im_delete_preedit();
+-
+-    /* Indicate that preediting has finished. */
+-    if (preedit_start_col == MAXCOL)
+-    {
+-	init_preedit_start_col();
+-	commit_with_preedit = FALSE;
+-    }
+-
+-    /* The thing which setting "preedit_start_col" to MAXCOL means that
+-     * "preedit_start_col" will be set forcedly when calling
+-     * preedit_changed_cb() next time.
+-     * "preedit_start_col" should not reset with MAXCOL on this part. Vim
+-     * is simulating the preediting by using add_to_input_str(). when
+-     * preedit begin immediately before committed, the typebuf is not
+-     * flushed to screen, then it can't get correct "preedit_start_col".
+-     * Thus, it should calculate the cells by adding cells of the committed
+-     * string. */
+-    if (input_conv.vc_type != CONV_NONE)
+-    {
+-	im_str = string_convert(&input_conv, (char_u *)str, &len);
+-	g_return_if_fail(im_str != NULL);
+-    }
+-    else
+-	im_str = (char_u *)str;
+-
+-    clen = mb_string2cells(im_str, len);
+-
+-    if (input_conv.vc_type != CONV_NONE)
+-	vim_free(im_str);
+-    preedit_start_col += clen;
+-
+     /* Is this a single character that matches a keypad key that's just
+      * been pressed?  If so, we don't want it to be entered as such - let
+      * us carry on processing the raw keycode so that it may be used in
+@@ -4684,15 +4694,6 @@
+     if (add_to_input)
+ 	im_add_to_input((char_u *)str, slen);
+ 
+-    /* Inserting chars while "im_is_active" is set does not cause a change of
+-     * buffer.  When the chars are committed the buffer must be marked as
+-     * changed. */
+-    if (!commit_with_preedit)
+-	preedit_start_col = MAXCOL;
+-
+-    /* This flag is used in changed() at next call. */
+-    xim_changed_while_preediting = TRUE;
+-
+     if (gtk_main_level() > 0)
+ 	gtk_main_quit();
+ }
+@@ -4725,7 +4726,6 @@
+     im_delete_preedit();
+ 
+     /* Indicate that preediting has finished */
+-    preedit_start_col = MAXCOL;
+     xim_has_preediting = FALSE;
+ 
+ #if 0
+@@ -4780,15 +4780,8 @@
+ im_preedit_changed_cb(GtkIMContext *context, gpointer data UNUSED)
+ {
+     char    *preedit_string = NULL;
+-    int	    cursor_index    = 0;
+-    int	    num_move_back   = 0;
+-    char_u  *str;
+-    char_u  *p;
+-    int	    i;
+-
+-    gtk_im_context_get_preedit_string(context,
+-				      &preedit_string, NULL,
+-				      &cursor_index);
++
++    gtk_im_context_get_preedit_string(context, &preedit_string, NULL, NULL);
+ 
+ #ifdef XIM_DEBUG
+     xim_log("im_preedit_changed_cb(): %s\n", preedit_string);
+@@ -4796,66 +4789,15 @@
+ 
+     g_return_if_fail(preedit_string != NULL); /* just in case */
+ 
+-    /* If preedit_start_col is MAXCOL set it to the current cursor position. */
+-    if (preedit_start_col == MAXCOL && preedit_string[0] != '\0')
++    if (preedit_string[0] == NUL)
++    {
++	xim_has_preediting = FALSE;
++	im_delete_preedit();
++    }
++    else
+     {
+ 	xim_has_preediting = TRUE;
+-
+-	/* Urgh, this breaks if the input buffer isn't empty now */
+-	init_preedit_start_col();
+-    }
+-    else if (cursor_index == 0 && preedit_string[0] == '\0')
+-    {
+-	xim_has_preediting = FALSE;
+-
+-	/* If at the start position (after typing backspace)
+-	 * preedit_start_col must be reset. */
+-	preedit_start_col = MAXCOL;
+-    }
+-
+-    im_delete_preedit();
+-
+-    /*
+-     * Compute the end of the preediting area: "preedit_end_col".
+-     * According to the documentation of gtk_im_context_get_preedit_string(),
+-     * the cursor_pos output argument returns the offset in bytes.  This is
+-     * unfortunately not true -- real life shows the offset is in characters,
+-     * and the GTK+ source code agrees with me.  Will file a bug later.
+-     */
+-    if (preedit_start_col != MAXCOL)
+-	preedit_end_col = preedit_start_col;
+-    str = (char_u *)preedit_string;
+-    for (p = str, i = 0; *p != NUL; p += utf_byte2len(*p), ++i)
+-    {
+-	int is_composing;
+-
+-	is_composing = ((*p & 0x80) != 0 && utf_iscomposing(utf_ptr2char(p)));
+-	/*
+-	 * These offsets are used as counters when generating <BS> and <Del>
+-	 * to delete the preedit string.  So don't count composing characters
+-	 * unless 'delcombine' is enabled.
+-	 */
+-	if (!is_composing || p_deco)
+-	{
+-	    if (i < cursor_index)
+-		++im_preedit_cursor;
+-	    else
+-		++im_preedit_trailing;
+-	}
+-	if (!is_composing && i >= cursor_index)
+-	{
+-	    /* This is essentially the same as im_preedit_trailing, except
+-	     * composing characters are not counted even if p_deco is set. */
+-	    ++num_move_back;
+-	}
+-	if (preedit_start_col != MAXCOL)
+-	    preedit_end_col += utf_ptr2cells(p);
+-    }
+-
+-    if (p > str)
+-    {
+-	im_add_to_input(str, (int)(p - str));
+-	im_correct_cursor(num_move_back);
++	im_show_preedit();
+     }
+ 
+     g_free(preedit_string);
+@@ -4864,98 +4806,6 @@
+ 	gtk_main_quit();
+ }
+ 
+-/*
+- * Translate the Pango attributes at iter to Vim highlighting attributes.
+- * Ignore attributes not supported by Vim highlighting.  This shouldn't have
+- * too much impact -- right now we handle even more attributes than necessary
+- * for the IM modules I tested with.
+- */
+-    static int
+-translate_pango_attributes(PangoAttrIterator *iter)
+-{
+-    PangoAttribute  *attr;
+-    int		    char_attr = HL_NORMAL;
+-
+-    attr = pango_attr_iterator_get(iter, PANGO_ATTR_UNDERLINE);
+-    if (attr != NULL && ((PangoAttrInt *)attr)->value
+-						 != (int)PANGO_UNDERLINE_NONE)
+-	char_attr |= HL_UNDERLINE;
+-
+-    attr = pango_attr_iterator_get(iter, PANGO_ATTR_WEIGHT);
+-    if (attr != NULL && ((PangoAttrInt *)attr)->value >= (int)PANGO_WEIGHT_BOLD)
+-	char_attr |= HL_BOLD;
+-
+-    attr = pango_attr_iterator_get(iter, PANGO_ATTR_STYLE);
+-    if (attr != NULL && ((PangoAttrInt *)attr)->value
+-						   != (int)PANGO_STYLE_NORMAL)
+-	char_attr |= HL_ITALIC;
+-
+-    attr = pango_attr_iterator_get(iter, PANGO_ATTR_BACKGROUND);
+-    if (attr != NULL)
+-    {
+-	const PangoColor *color = &((PangoAttrColor *)attr)->color;
+-
+-	/* Assume inverse if black background is requested */
+-	if ((color->red | color->green | color->blue) == 0)
+-	    char_attr |= HL_INVERSE;
+-    }
+-
+-    return char_attr;
+-}
+-
+-/*
+- * Retrieve the highlighting attributes at column col in the preedit string.
+- * Return -1 if not in preediting mode or if col is out of range.
+- */
+-    int
+-im_get_feedback_attr(int col)
+-{
+-    char	    *preedit_string = NULL;
+-    PangoAttrList   *attr_list	    = NULL;
+-    int		    char_attr	    = -1;
+-
+-    if (xic == NULL)
+-	return char_attr;
+-
+-    gtk_im_context_get_preedit_string(xic, &preedit_string, &attr_list, NULL);
+-
+-    if (preedit_string != NULL && attr_list != NULL)
+-    {
+-	int idx;
+-
+-	/* Get the byte index as used by PangoAttrIterator */
+-	for (idx = 0; col > 0 && preedit_string[idx] != '\0'; --col)
+-	    idx += utfc_ptr2len((char_u *)preedit_string + idx);
+-
+-	if (preedit_string[idx] != '\0')
+-	{
+-	    PangoAttrIterator	*iter;
+-	    int			start, end;
+-
+-	    char_attr = HL_NORMAL;
+-	    iter = pango_attr_list_get_iterator(attr_list);
+-
+-	    /* Extract all relevant attributes from the list. */
+-	    do
+-	    {
+-		pango_attr_iterator_range(iter, &start, &end);
+-
+-		if (idx >= start && idx < end)
+-		    char_attr |= translate_pango_attributes(iter);
+-	    }
+-	    while (pango_attr_iterator_next(iter));
+-
+-	    pango_attr_iterator_destroy(iter);
+-	}
+-    }
+-
+-    if (attr_list != NULL)
+-	pango_attr_list_unref(attr_list);
+-    g_free(preedit_string);
+-
+-    return char_attr;
+-}
+-
+     void
+ xim_init(void)
+ {
+@@ -4996,7 +4846,6 @@
+     }
+     im_is_active = FALSE;
+     im_commit_handler_id = 0;
+-    preedit_start_col = MAXCOL;
+     xim_has_preediting = FALSE;
+ }
+ 
+@@ -5151,7 +5000,6 @@
+ 	}
+     }
+ 
+-    preedit_start_col = MAXCOL;
+     xim_has_preediting = FALSE;
+ }
+ 
+@@ -5256,21 +5104,6 @@
+ 	{
+ 	    int imresult = gtk_im_context_filter_keypress(xic, event);
+ 
+-	    /* Some XIM send following sequence:
+-	     * 1. preedited string.
+-	     * 2. committed string.
+-	     * 3. line changed key.
+-	     * 4. preedited string.
+-	     * 5. remove preedited string.
+-	     * if 3, Vim can't move back the above line for 5.
+-	     * thus, this part should not parse the key. */
+-	    if (!imresult && preedit_start_col != MAXCOL
+-					       && event->keyval == GDK_Return)
+-	    {
+-		im_synthesize_keypress(GDK_Return, 0U);
+-		return FALSE;
+-	    }
+-
+ 	    /* If XIM tried to commit a keypad key as a single char.,
+ 	     * ignore it so we can use the keypad key 'raw', for mappings. */
+ 	    if (xim_expected_char != NUL && xim_ignored_char)
+diff -r a57489c58bfc src/misc1.c
+--- a/src/misc1.c	Tue May 06 20:18:43 2014 +0900
++++ b/src/misc1.c	Tue May 06 20:50:14 2014 +0900
+@@ -2689,15 +2689,6 @@
+     void
+ changed()
+ {
+-#if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
+-    /* The text of the preediting area is inserted, but this doesn't
+-     * mean a change of the buffer yet.  That is delayed until the
+-     * text is committed. (this means preedit becomes empty) */
+-    if (im_is_preediting() && !xim_changed_while_preediting)
+-	return;
+-    xim_changed_while_preediting = FALSE;
+-#endif
+-
+     if (!curbuf->b_changed)
+     {
+ 	int	save_msg_scroll = msg_scroll;
+diff -r a57489c58bfc src/proto/ex_getln.pro
+--- a/src/proto/ex_getln.pro	Tue May 06 20:18:43 2014 +0900
++++ b/src/proto/ex_getln.pro	Tue May 06 20:50:14 2014 +0900
+@@ -9,7 +9,6 @@
+ char_u *getexmodeline __ARGS((int promptc, void *cookie, int indent));
+ int cmdline_overstrike __ARGS((void));
+ int cmdline_at_end __ARGS((void));
+-colnr_T cmdline_getvcol_cursor __ARGS((void));
+ void free_cmdline_buf __ARGS((void));
+ void putcmdline __ARGS((int c, int shift));
+ void unputcmdline __ARGS((void));
+diff -r a57489c58bfc src/proto/mbyte.pro
+--- a/src/proto/mbyte.pro	Tue May 06 20:18:43 2014 +0900
++++ b/src/proto/mbyte.pro	Tue May 06 20:50:14 2014 +0900
+@@ -76,7 +76,6 @@
+ void xim_set_focus __ARGS((int focus));
+ void im_set_position __ARGS((int row, int col));
+ void xim_set_preedit __ARGS((void));
+-int im_get_feedback_attr __ARGS((int col));
+ void xim_init __ARGS((void));
+ void im_shutdown __ARGS((void));
+ int im_xim_isvalid_imactivate __ARGS((void));
+diff -r a57489c58bfc src/screen.c
+--- a/src/screen.c	Tue May 06 20:18:43 2014 +0900
++++ b/src/screen.c	Tue May 06 20:50:14 2014 +0900
+@@ -2966,10 +2966,6 @@
+ #endif
+ #define WL_LINE		WL_SBR + 1	/* text in the line */
+     int		draw_state = WL_START;	/* what to draw next */
+-#if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
+-    int		feedback_col = 0;
+-    int		feedback_old_attr = -1;
+-#endif
+ 
+ #ifdef FEAT_CONCEAL
+     int		syntax_flags	= 0;
+@@ -4701,43 +4697,6 @@
+ 		&& !attr_pri)
+ 	    char_attr = extra_attr;
+ 
+-#if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
+-	/* XIM don't send preedit_start and preedit_end, but they send
+-	 * preedit_changed and commit.  Thus Vim can't set "im_is_active", use
+-	 * im_is_preediting() here. */
+-	if (xic != NULL
+-		&& lnum == wp->w_cursor.lnum
+-		&& (State & INSERT)
+-		&& !p_imdisable
+-		&& im_is_preediting()
+-		&& draw_state == WL_LINE)
+-	{
+-	    colnr_T tcol;
+-
+-	    if (preedit_end_col == MAXCOL)
+-		getvcol(curwin, &(wp->w_cursor), &tcol, NULL, NULL);
+-	    else
+-		tcol = preedit_end_col;
+-	    if ((long)preedit_start_col <= vcol && vcol < (long)tcol)
+-	    {
+-		if (feedback_old_attr < 0)
+-		{
+-		    feedback_col = 0;
+-		    feedback_old_attr = char_attr;
+-		}
+-		char_attr = im_get_feedback_attr(feedback_col);
+-		if (char_attr < 0)
+-		    char_attr = feedback_old_attr;
+-		feedback_col++;
+-	    }
+-	    else if (feedback_old_attr >= 0)
+-	    {
+-		char_attr = feedback_old_attr;
+-		feedback_old_attr = -1;
+-		feedback_col = 0;
+-	    }
+-	}
+-#endif
+ 	/*
+ 	 * Handle the case where we are in column 0 but not on the first
+ 	 * character of the line and the user wants us to show us a
+diff -r a57489c58bfc src/undo.c
+--- a/src/undo.c	Tue May 06 20:18:43 2014 +0900
++++ b/src/undo.c	Tue May 06 20:50:14 2014 +0900
+@@ -2747,10 +2747,6 @@
+     /* Skip it when already synced or syncing is disabled. */
+     if (curbuf->b_u_synced || (!force && no_u_sync > 0))
+ 	return;
+-#if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
+-    if (im_is_preediting())
+-	return;		    /* XIM is busy, don't break an undo sequence */
+-#endif
+     if (get_undolevel() < 0)
+ 	curbuf->b_u_synced = TRUE;  /* no entries, nothing to do */
+     else

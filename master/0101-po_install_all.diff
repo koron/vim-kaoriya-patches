@@ -1,0 +1,18 @@
+# HG changeset patch
+# Parent 6b852cad5b57780df191cd28566d14e66cb2729d
+Add 'install-all' target  (used by kaoriya package build system)
+
+diff -r 6b852cad5b57 -r 709c8f6212bf src/po/Make_mvc.mak
+--- a/src/po/Make_mvc.mak	Sat Apr 13 21:40:17 2013 +0900
++++ b/src/po/Make_mvc.mak	Sat Apr 13 22:51:00 2013 +0900
+@@ -105,6 +105,10 @@
+ 	if not exist $(INSTALLDIR) $(MKD) $(INSTALLDIR)
+ 	$(CP) $(LANGUAGE).mo $(INSTALLDIR)\$(PACKAGE).mo
+ 
++install-all: all
++	FOR %%l IN ($(LANGUAGES)) DO @IF NOT EXIST $(VIMRUNTIME)\lang\%%l\LC_MESSAGES $(MKD) $(VIMRUNTIME)\lang\%%l\LC_MESSAGES
++	FOR %%l IN ($(LANGUAGES)) DO @$(CP) %%l.mo $(VIMRUNTIME)\lang\%%l\LC_MESSAGES\$(PACKAGE).mo
++
+ clean:
+ 	$(RM) *.mo
+ 	$(RM) *.pot

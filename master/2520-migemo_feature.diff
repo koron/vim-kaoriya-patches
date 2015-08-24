@@ -1,0 +1,763 @@
+# HG changeset patch
+# Parent 3e9f602e3362e01b850845651357f0a6886d7875
+# Parent  ce73d82e98a71a688494690978f4e8fe3cc010f6
+Add C/Migemo feature
+
+diff -r ce73d82e98a7 src/Make_mvc.mak
+--- a/src/Make_mvc.mak	Sun Mar 01 11:07:30 2015 +0900
++++ b/src/Make_mvc.mak	Sun Mar 01 11:09:29 2015 +0900
+@@ -686,6 +686,14 @@
+ CFLAGS = $(CFLAGS) -DDYNAMIC_GETTEXT
+ !endif
+ 
++#
++# Support Migemo
++#
++!ifdef MIGEMO
++!message Migemo supported - will be dynamic linked.
++CFLAGS = $(CFLAGS) -DDYNAMIC_MIGEMO
++!endif
++
+ # TCL interface
+ !ifdef TCL
+ !ifndef TCL_VER
+diff -r ce73d82e98a7 src/config.h.in
+--- a/src/config.h.in	Sun Mar 01 11:07:30 2015 +0900
++++ b/src/config.h.in	Sun Mar 01 11:09:29 2015 +0900
+@@ -172,6 +172,7 @@
+ #undef HAVE_LSTAT
+ #undef HAVE_MEMCMP
+ #undef HAVE_MEMSET
++#undef HAVE_MIGEMO
+ #undef HAVE_MKDTEMP
+ #undef HAVE_NANOSLEEP
+ #undef HAVE_OPENDIR
+@@ -233,6 +234,7 @@
+ #undef HAVE_LIBGEN_H
+ #undef HAVE_LIBINTL_H
+ #undef HAVE_LOCALE_H
++#undef HAVE_MIGEMO_H
+ #undef HAVE_MATH_H
+ #undef HAVE_NDIR_H
+ #undef HAVE_POLL_H
+diff -r ce73d82e98a7 src/configure.in
+--- a/src/configure.in	Sun Mar 01 11:07:30 2015 +0900
++++ b/src/configure.in	Sun Mar 01 11:09:29 2015 +0900
+@@ -2852,7 +2852,7 @@
+ AC_CHECK_HEADERS(stdarg.h stdint.h stdlib.h string.h \
+ 	sys/select.h sys/utsname.h termcap.h fcntl.h \
+ 	sgtty.h sys/ioctl.h sys/time.h sys/types.h \
+-	termio.h iconv.h inttypes.h langinfo.h math.h \
++	termio.h iconv.h inttypes.h langinfo.h math.h migemo.h \
+ 	unistd.h stropts.h errno.h sys/resource.h \
+ 	sys/systeminfo.h locale.h sys/stream.h termios.h \
+ 	libc.h sys/statfs.h poll.h sys/poll.h pwd.h \
+@@ -3863,6 +3863,19 @@
+   AC_MSG_RESULT(yes)
+ fi
+ 
++dnl Check for C/Migemo (regexp pattern expansion).
++AC_MSG_CHECKING(--disable-migemo argument)
++AC_ARG_ENABLE(migemo,
++	[  --disable-migemo        Don't support C/Migemo.], ,
++	[enable_migemo="yes"])
++if test "$enable_migemo" = "yes"; then
++  AC_MSG_RESULT(no)
++  AC_CHECK_LIB(migemo, migemo_open,
++	[LIBS="$LIBS -lmigemo" AC_DEFINE(HAVE_MIGEMO)],,)
++else
++  AC_MSG_RESULT(yes)
++fi
++
+ dnl Check for dynamic linking loader
+ AC_CHECK_HEADER(dlfcn.h, DLL=dlfcn.h, [AC_CHECK_HEADER(dl.h, DLL=dl.h)])
+ if test x${DLL} = xdlfcn.h; then
+diff -r ce73d82e98a7 src/eval.c
+--- a/src/eval.c	Sun Mar 01 11:07:30 2015 +0900
++++ b/src/eval.c	Sun Mar 01 11:09:29 2015 +0900
+@@ -629,6 +629,7 @@
+ static void f_matchlist __ARGS((typval_T *argvars, typval_T *rettv));
+ static void f_matchstr __ARGS((typval_T *argvars, typval_T *rettv));
+ static void f_max __ARGS((typval_T *argvars, typval_T *rettv));
++static void f_migemo __ARGS((typval_T *argvars, typval_T *rettv));
+ static void f_min __ARGS((typval_T *argvars, typval_T *rettv));
+ #ifdef vim_mkdir
+ static void f_mkdir __ARGS((typval_T *argvars, typval_T *rettv));
+@@ -8199,6 +8200,7 @@
+     {"matchlist",	2, 4, f_matchlist},
+     {"matchstr",	2, 4, f_matchstr},
+     {"max",		1, 1, f_max},
++    {"migemo",		1, 1, f_migemo},
+     {"min",		1, 1, f_min},
+ #ifdef vim_mkdir
+     {"mkdir",		1, 3, f_mkdir},
+@@ -12747,6 +12749,11 @@
+ #ifdef FEAT_MENU
+ 	"menu",
+ #endif
++#ifdef USE_MIGEMO
++# ifndef DYNAMIC_MIGEMO
++	"migemo",
++# endif
++#endif
+ #ifdef FEAT_SESSION
+ 	"mksession",
+ #endif
+@@ -13083,6 +13090,10 @@
+ 	else if (STRICMP(name, "win95") == 0)
+ 	    n = mch_windows95();
+ #endif
++#if defined(USE_MIGEMO)
++	else if (STRICMP(name, "migemo") == 0)
++	    n = migemo_enabled() ? TRUE : FALSE;
++#endif
+ #ifdef FEAT_NETBEANS_INTG
+ 	else if (STRICMP(name, "netbeans_enabled") == 0)
+ 	    n = netbeans_active();
+@@ -14751,6 +14762,24 @@
+ }
+ 
+ /*
++ * "migemo()" function
++ */
++    static void
++f_migemo(argvars, rettv)
++    typval_T	*argvars;
++    typval_T	*rettv;
++{
++    char_u* arg = get_tv_string(&argvars[0]);
++
++    rettv->v_type = VAR_STRING;
++#ifdef USE_MIGEMO
++    rettv->vval.v_string = query_migemo(arg);
++#else
++    rettv->vval.v_string = vim_strsave(arg);
++#endif
++}
++
++/*
+  * "min()" function
+  */
+     static void
+diff -r ce73d82e98a7 src/ex_getln.c
+--- a/src/ex_getln.c	Sun Mar 01 11:07:30 2015 +0900
++++ b/src/ex_getln.c	Sun Mar 01 11:09:29 2015 +0900
+@@ -205,7 +205,17 @@
+      * custom status line may invoke ":normal". */
+     struct cmdline_info save_ccline;
+ #endif
+-
++#ifdef USE_MIGEMO
++    int		migemo_enabled = 0;
++#endif
++
++#ifdef USE_MIGEMO
++    if (count < 0)
++    {
++	migemo_enabled = 1;
++	count = -count;
++    }
++#endif
+ #ifdef FEAT_SNIFF
+     want_sniff_request = 0;
+ #endif
+@@ -1782,15 +1792,22 @@
+ 		i = 0;
+ 	    else
+ 	    {
++		int search_options = (SEARCH_KEEP + SEARCH_OPT
++			+ SEARCH_NOOF + SEARCH_PEEK);
++
+ 		cursor_off();		/* so the user knows we're busy */
+ 		out_flush();
+ 		++emsg_off;    /* So it doesn't beep if bad expr */
++#ifdef USE_MIGEMO
++		if (migemo_enabled)
++		    search_options |= SEARCH_MIGEMO;
++#endif
+ #ifdef FEAT_RELTIME
+ 		/* Set the time limit to half a second. */
+ 		profile_setlimit(500L, &tm);
+ #endif
+ 		i = do_search(NULL, firstc, ccline.cmdbuff, count,
+-			SEARCH_KEEP + SEARCH_OPT + SEARCH_NOOF + SEARCH_PEEK,
++			search_options,
+ #ifdef FEAT_RELTIME
+ 			&tm
+ #else
+diff -r ce73d82e98a7 src/feature.h
+--- a/src/feature.h	Sun Mar 01 11:07:30 2015 +0900
++++ b/src/feature.h	Sun Mar 01 11:09:29 2015 +0900
+@@ -1349,3 +1349,13 @@
+ 	    || (defined(WIN3264) && defined(FEAT_GUI_W32))
+ # define FEAT_FILTERPIPE
+ #endif
++
++/*
++ * +migemo		Regexp pattern expansion.  See:
++ * 				http://migemo.namazu.org/
++ * 				http://www.kaoriya.net/
++ */
++/* Use migemo_open() when it's available */
++#if (defined(HAVE_MIGEMO_H) && defined(HAVE_MIGEMO)) || defined(DYNAMIC_MIGEMO)
++# define USE_MIGEMO
++#endif
+diff -r ce73d82e98a7 src/main.c
+--- a/src/main.c	Sun Mar 01 11:07:30 2015 +0900
++++ b/src/main.c	Sun Mar 01 11:09:29 2015 +0900
+@@ -1492,6 +1492,9 @@
+ #ifdef FEAT_PERL
+     perl_end();
+ #endif
++#ifdef USE_MIGEMO
++    reset_migemo(TRUE);
++#endif
+ #if defined(USE_ICONV) && defined(DYNAMIC_ICONV)
+     iconv_end();
+ #endif
+diff -r ce73d82e98a7 src/normal.c
+--- a/src/normal.c	Sun Mar 01 11:07:30 2015 +0900
++++ b/src/normal.c	Sun Mar 01 11:09:29 2015 +0900
+@@ -6303,7 +6303,12 @@
+ 	return;
+     }
+ 
++#ifdef USE_MIGEMO
++    cap->searchbuf = getcmdline(cap->cmdchar,
++	    (cap->nchar == 'g' ? -cap->count1 : cap->count1), 0);
++#else
+     cap->searchbuf = getcmdline(cap->cmdchar, cap->count1, 0);
++#endif
+ 
+     if (cap->searchbuf == NULL)
+     {
+@@ -6312,6 +6317,9 @@
+     }
+ 
+     (void)normal_search(cap, cap->cmdchar, cap->searchbuf,
++#ifdef USE_MIGEMO
++	    (cap->nchar == 'g' ? SEARCH_MIGEMO : 0) |
++#endif
+ 						(cap->arg ? 0 : SEARCH_MARK));
+ }
+ 
+@@ -8337,7 +8345,9 @@
+     case '~':
+     case 'u':
+     case 'U':
++#ifndef USE_MIGEMO
+     case '?':
++#endif
+     case '@':
+ 	nv_operator(cap);
+ 	break;
+@@ -8436,6 +8446,25 @@
+ 							 FALSE, FALSE, FALSE);
+ 	break;
+ 
++#ifdef USE_MIGEMO
++    case '/':
++	cap->cmdchar = '/';
++	cap->nchar = 'g';
++	nv_search(cap);
++	break;
++
++    case '?':
++	if (curbuf->b_p_migemo)
++	{
++	    cap->cmdchar = '?';
++	    cap->nchar = 'g';
++	    nv_search(cap);
++	}
++	else
++	    nv_operator(cap);
++	break;
++#endif
++
+     default:
+ 	clearopbeep(oap);
+ 	break;
+diff -r ce73d82e98a7 src/option.c
+--- a/src/option.c	Sun Mar 01 11:07:30 2015 +0900
++++ b/src/option.c	Sun Mar 01 11:09:29 2015 +0900
+@@ -138,6 +138,9 @@
+ # define PV_LW		OPT_BOTH(OPT_BUF(BV_LW))
+ #endif
+ #define PV_MA		OPT_BUF(BV_MA)
++#ifdef USE_MIGEMO
++# define PV_MIG		OPT_BUF(BV_MIG)
++#endif
+ #define PV_ML		OPT_BUF(BV_ML)
+ #define PV_MOD		OPT_BUF(BV_MOD)
+ #define PV_MPS		OPT_BUF(BV_MPS)
+@@ -1844,6 +1847,14 @@
+     {"mesg",	    NULL,   P_BOOL|P_VI_DEF,
+ 			    (char_u *)NULL, PV_NONE,
+ 			    {(char_u *)FALSE, (char_u *)0L} SCRIPTID_INIT},
++#ifdef USE_MIGEMO
++    {"migemo",	    "mgm",  P_BOOL|P_VI_DEF|P_VIM,
++			    (char_u *)&p_migemo, PV_MIG,
++			    {(char_u *)FALSE, (char_u *)0L} SCRIPTID_INIT},
++    {"migemodict",  "mgd",  P_STRING|P_EXPAND|P_VI_DEF|P_VIM,
++			    (char_u *)&p_migdict, PV_NONE,
++			    {(char_u *)"", (char_u *)0L} SCRIPTID_INIT},
++#endif /* USE_MIGEMO */
+     {"mkspellmem",  "msm",  P_STRING|P_VI_DEF|P_EXPAND|P_SECURE,
+ #ifdef FEAT_SPELL
+ 			    (char_u *)&p_msm, PV_NONE,
+@@ -5643,6 +5654,11 @@
+ 	free_string_option(*p);
+ 	*p = s;
+     }
++
++#ifdef USE_MIGEMO
++    if (varp == &p_migdict)
++	reset_migemo(FALSE);
++#endif
+ }
+ 
+ /*
+@@ -10216,6 +10232,9 @@
+ 	case PV_ML:	return (char_u *)&(curbuf->b_p_ml);
+ 	case PV_MPS:	return (char_u *)&(curbuf->b_p_mps);
+ 	case PV_MA:	return (char_u *)&(curbuf->b_p_ma);
++#ifdef USE_MIGEMO
++	case PV_MIG:	return (char_u *)&(curbuf->b_p_migemo);
++#endif
+ 	case PV_MOD:	return (char_u *)&(curbuf->b_changed);
+ 	case PV_NF:	return (char_u *)&(curbuf->b_p_nf);
+ 	case PV_PI:	return (char_u *)&(curbuf->b_p_pi);
+@@ -10632,6 +10651,11 @@
+ 	    buf->b_p_iminsert = p_iminsert;
+ 	    buf->b_p_imsearch = p_imsearch;
+ 
++#ifdef USE_MIGEMO
++	    /* This is migemo extension */
++	    buf->b_p_migemo = p_migemo;
++#endif
++
+ 	    /* options that are normally global but also have a local value
+ 	     * are not copied, start using the global value */
+ 	    buf->b_p_ar = -1;
+diff -r ce73d82e98a7 src/option.h
+--- a/src/option.h	Sun Mar 01 11:07:30 2015 +0900
++++ b/src/option.h	Sun Mar 01 11:09:29 2015 +0900
+@@ -625,6 +625,10 @@
+ #ifdef FEAT_MENU
+ EXTERN long	p_mis;		/* 'menuitems' */
+ #endif
++#ifdef USE_MIGEMO
++EXTERN int	p_migemo;	/* 'migemo' */
++EXTERN char_u	*p_migdict;	/* 'migemodict' */
++#endif
+ #ifdef FEAT_SPELL
+ EXTERN char_u	*p_msm;		/* 'mkspellmem' */
+ #endif
+@@ -1004,6 +1008,9 @@
+     , BV_LW
+ #endif
+     , BV_MA
++#ifdef USE_MIGEMO
++    , BV_MIG
++#endif
+     , BV_ML
+     , BV_MOD
+     , BV_MPS
+diff -r ce73d82e98a7 src/proto/search.pro
+--- a/src/proto/search.pro	Sun Mar 01 11:07:30 2015 +0900
++++ b/src/proto/search.pro	Sun Mar 01 11:09:29 2015 +0900
+@@ -14,6 +14,9 @@
+ void last_pat_prog __ARGS((regmmatch_T *regmatch));
+ int searchit __ARGS((win_T *win, buf_T *buf, pos_T *pos, int dir, char_u *pat, long count, int options, int pat_use, linenr_T stop_lnum, proftime_T *tm));
+ void set_search_direction __ARGS((int cdir));
++int migemo_enabled __ARGS((void));
++void reset_migemo __ARGS((int lastcall));
++char_u* query_migemo __ARGS((char_u* str));
+ int do_search __ARGS((oparg_T *oap, int dirc, char_u *pat, long count, int options, proftime_T *tm));
+ int search_for_exact_line __ARGS((buf_T *buf, pos_T *pos, int dir, char_u *pat));
+ int searchc __ARGS((cmdarg_T *cap, int t_cmd));
+diff -r ce73d82e98a7 src/search.c
+--- a/src/search.c	Sun Mar 01 11:07:30 2015 +0900
++++ b/src/search.c	Sun Mar 01 11:09:29 2015 +0900
+@@ -1044,6 +1044,305 @@
+ }
+ #endif
+ 
++#ifdef USE_MIGEMO
++# define MIGEMO_QUERY_MAXSIZE 40960
++/* Load migemo header */
++# ifndef DYNAMIC_MIGEMO
++#  include <migemo.h>
++# else /* DYNAMIC_MIGEMO */
++
++# define MIGEMO_PROC FARPROC
++# ifndef DYNAMIC_MIGEMO_DLL
++#  define DYNAMIC_MIGEMO_DLL "migemo.dll"
++# endif
++
++#  define MIGEMO_OPINDEX_OR 0
++#  define MIGEMO_OPINDEX_NEST_IN 1
++#  define MIGEMO_OPINDEX_NEST_OUT 2
++#  define MIGEMO_OPINDEX_SELECT_IN 3
++#  define MIGEMO_OPINDEX_SELECT_OUT 4
++#  define MIGEMO_OPINDEX_NEWLINE 5
++
++typedef struct _migemo migemo;
++typedef int (*MIGEMO_PROC_CHAR2INT)(unsigned char*, unsigned int*);
++typedef int (*MIGEMO_PROC_INT2CHAR)(unsigned int, unsigned char*);
++static HANDLE hDllMigemo = NULL;
++migemo* (__stdcall *dll_migemo_open)(char*);
++void (__stdcall *dll_migemo_close)(migemo*);
++unsigned char* (__stdcall *dll_migemo_query)(migemo*, unsigned char*);
++void (__stdcall *dll_migemo_release)(migemo*, unsigned char*);
++int (__stdcall *dll_migemo_set_operator)(migemo*, int index, unsigned char* op);
++const unsigned char* (__stdcall *dll_migemo_get_operator)(migemo*, int index);
++void (__stdcall *dll_migemo_setproc_char2int)(migemo*, MIGEMO_PROC_CHAR2INT);
++void (__stdcall *dll_migemo_setproc_int2char)(migemo*, MIGEMO_PROC_INT2CHAR);
++
++#  define migemo_open dll_migemo_open
++#  define migemo_close dll_migemo_close
++#  define migemo_query dll_migemo_query
++#  define migemo_release dll_migemo_release
++#  define migemo_set_operator dll_migemo_set_operator
++#  define migemo_get_operator dll_migemo_get_operator
++#  define migemo_setproc_char2int dll_migemo_setproc_char2int
++#  define migemo_setproc_int2char dll_migemo_setproc_int2char
++
++    static void
++dyn_migemo_end()
++{
++    if (hDllMigemo)
++    {
++	FreeLibrary(hDllMigemo);
++	hDllMigemo = NULL;
++    }
++}
++
++    static int
++dyn_migemo_init()
++{
++    static struct { char* name; MIGEMO_PROC* ptr; } migemo_func_table[] = {
++	{"migemo_open", (MIGEMO_PROC*)&dll_migemo_open},
++	{"migemo_close", (MIGEMO_PROC*)&dll_migemo_close},
++	{"migemo_query", (MIGEMO_PROC*)&dll_migemo_query},
++	{"migemo_release", (MIGEMO_PROC*)&dll_migemo_release},
++	{"migemo_set_operator", (MIGEMO_PROC*)&dll_migemo_set_operator},
++	{"migemo_get_operator", (MIGEMO_PROC*)&dll_migemo_get_operator},
++	{"migemo_setproc_char2int", (MIGEMO_PROC*)&dll_migemo_setproc_char2int},
++	{"migemo_setproc_int2char", (MIGEMO_PROC*)&dll_migemo_setproc_int2char},
++	{NULL, NULL},
++    };
++    int i;
++
++    if (hDllMigemo)
++	return 1;
++    if (!(hDllMigemo = LoadLibraryEx(DYNAMIC_MIGEMO_DLL, NULL, 0)))
++	return 0;
++    for (i = 0; migemo_func_table[i].ptr; ++i)
++    {
++	if (!(*migemo_func_table[i].ptr = GetProcAddress(hDllMigemo,
++			migemo_func_table[i].name)))
++	{
++	    dyn_migemo_end();
++	    return 0;
++	}
++    }
++    return 1;
++}
++# endif /* DYNAMIC_MIGEMO */
++
++    static int 
++vimigemo_char2int(unsigned char* p, unsigned int* code)
++{
++    unsigned int ch = *p;
++    int len = 1;
++
++#ifdef FEAT_MBYTE
++    if (has_mbyte)
++    {
++	ch = (*mb_ptr2char)(p);
++	len = (*mb_ptr2len)(p);
++    }
++#endif
++    if (code)
++	*code = ch;
++    return len;
++}
++
++    static int
++vimigemo_int2char(unsigned int code, unsigned char* buf)
++{
++    int len;
++
++#ifdef FEAT_MBYTE
++    if (has_mbyte && (len = (*mb_char2len)(code)) != 1)
++    {
++	if (buf)
++	    (*mb_char2bytes)(code, buf);
++    }
++    else
++#endif
++    {
++	len = 0;
++	switch (code)
++	{
++	    case '\\':
++	    case '.': case '*': case '^': case '$': case '/':
++	    case '[': case ']': case '~':
++		if (buf)
++		    buf[len] = '\\';
++		++len;
++	    default:
++		if (buf)
++		    buf[len] = (unsigned char)(code & 0xFF);
++		++len;
++		break;
++	}
++    }
++
++    return len;
++}
++
++    int
++migemo_enabled()
++{
++    return
++#ifdef DYNAMIC_MIGEMO
++	dyn_migemo_init()
++#else
++	1
++#endif
++	;
++}
++
++static migemo* migemo_object = NULL;
++static int migemo_tryload = 0;
++
++    static void
++init_migemo()
++{
++# ifdef DYNAMIC_MIGEMO
++    if (!dyn_migemo_init())
++	return;
++# endif
++    if (migemo_tryload || migemo_object)
++	return;
++
++    migemo_tryload = 1;
++    migemo_object = migemo_open(p_migdict);
++
++    if (!migemo_object)
++	return;
++
++    migemo_set_operator(migemo_object, MIGEMO_OPINDEX_OR, "\\|");
++    migemo_set_operator(migemo_object, MIGEMO_OPINDEX_NEST_IN, "\\%(");
++    migemo_set_operator(migemo_object, MIGEMO_OPINDEX_NEST_OUT, "\\)");
++    migemo_set_operator(migemo_object, MIGEMO_OPINDEX_NEST_OUT, "\\)");
++    migemo_set_operator(migemo_object, MIGEMO_OPINDEX_NEWLINE, "\\_s*");
++    migemo_setproc_int2char(migemo_object, vimigemo_int2char);
++    migemo_setproc_char2int(migemo_object, vimigemo_char2int);
++}
++
++    void
++reset_migemo(int lastcall)
++{
++    if (migemo_object)
++	migemo_close(migemo_object);
++    migemo_object = NULL;
++    migemo_tryload = 0;
++# ifdef DYNAMIC_MIGEMO
++    if (lastcall)
++	dyn_migemo_end();
++# endif
++}
++
++    char_u*
++query_migemo(char_u* str)
++{
++    char_u *retval = NULL;
++
++    if (str)
++    {
++	init_migemo();
++	if (migemo_object)
++	{
++	    char *query = migemo_query(migemo_object, str);
++
++	    if (query != NULL)
++	    {
++		retval = vim_strsave(query);
++		migemo_release(migemo_object, query);
++	    }
++	}
++    }
++    return retval ? retval : str;
++}
++
++    int
++check_migemo_able_string(char_u* str)
++{
++    size_t len;
++
++    len = STRLEN(str);
++    /* Disabled because of adding query size limitation. */
++#if 0
++    if (len == 1 && vim_strchr("kstnKSTN", str[0]))
++	return 0;
++#endif
++    /* TODO: Incomplete method.  To be improved. */
++    if (len >= 1 && (vim_strchr(str, '^')))
++	return 0;
++    if (len >= 2 && !STRNCMP(str, "\\<", 2))
++	return 0;
++    /* Search for multibyte char */
++#ifdef FEAT_MBYTE
++    if (has_mbyte)
++	while (*str)
++	{
++	    if ((*mb_ptr2len)(str) > 1)
++		return 0;
++	    ++str;
++	}
++#endif
++    return 1;
++}
++
++    static int
++searchit_migemo(win, buf, pos, dir, str, count, options, pat_use, stop_lnum,
++	tm, did)
++    win_T	*win;
++    buf_T	*buf;
++    pos_T	*pos;
++    int		dir;
++    char_u	*str;
++    long	count;
++    int		options;
++    int		pat_use;
++    linenr_T	stop_lnum;	/* stop after this line number when != 0 */
++    proftime_T*	tm;
++    int		*did;
++{
++    int retval = 0;
++    int didval = 0;
++
++    if (str && buf && STRLEN(p_migdict) > 0 && check_migemo_able_string(str))
++    {
++	init_migemo();
++	if (migemo_object)
++	{
++	    char	*query;
++	    char_u	*newstr = NULL;
++	    
++	    /* Remove backslash in str */
++	    if (vim_strchr(str, '\\') && (newstr = vim_strsave(str)))
++	    {
++		char_u *p, *end = newstr + STRLEN(newstr);
++
++		for (p = newstr; p[0] != NUL; ++p)
++		{
++		    if ((p = vim_strchr(p, '\\')) == NULL)
++			break;
++		    mch_memmove(p, p + 1, end - p);
++		}
++		str = newstr;
++	    }
++	    query = migemo_query(migemo_object, str);
++	    if (query && STRLEN(query) < MIGEMO_QUERY_MAXSIZE)
++	    {
++		retval = searchit(win, buf, pos, dir, query, count, options,
++			pat_use, stop_lnum, tm);
++		didval = 1;
++	    }
++	    if (query)
++		migemo_release(migemo_object, query);
++	    if (newstr)
++		vim_free(newstr);
++	}
++    }
++
++    if (did)
++	*did = didval;
++    return retval;
++}
++#endif /* USE_MIGEMO */
++
+ /*
+  * Highest level string search function.
+  * Search for the 'count'th occurrence of pattern 'pat' in direction 'dirc'
+@@ -1354,12 +1653,30 @@
+ 	     lrFswap(searchstr,0);
+ #endif
+ 
++#ifdef USE_MIGEMO
++	{
++	    int did_migemo = 0;
++	    if (options & SEARCH_MIGEMO)
++		c = searchit_migemo(
++			curwin, curbuf, &pos,
++			dirc == '/' ? FORWARD : BACKWARD,
++			searchstr, count, spats[0].off.end + (options &
++			    (SEARCH_KEEP + SEARCH_PEEK + SEARCH_HIS
++			     + SEARCH_MSG + SEARCH_START
++			     + ((pat != NULL && *pat == ';') ?
++				 0 : SEARCH_NOOF))),
++			RE_LAST, (linenr_T)0, tm, &did_migemo);
++	    if (!did_migemo)
++#endif /* USE_MIGEMO */
+ 	c = searchit(curwin, curbuf, &pos, dirc == '/' ? FORWARD : BACKWARD,
+ 		searchstr, count, spats[0].off.end + (options &
+ 		       (SEARCH_KEEP + SEARCH_PEEK + SEARCH_HIS
+ 			+ SEARCH_MSG + SEARCH_START
+ 			+ ((pat != NULL && *pat == ';') ? 0 : SEARCH_NOOF))),
+ 		RE_LAST, (linenr_T)0, tm);
++#ifdef USE_MIGEMO
++	}
++#endif /* USE_MIGEMO */
+ 
+ 	if (dircp != NULL)
+ 	    *dircp = dirc;	/* restore second '/' or '?' for normal_cmd() */
+diff -r ce73d82e98a7 src/structs.h
+--- a/src/structs.h	Sun Mar 01 11:07:30 2015 +0900
++++ b/src/structs.h	Sun Mar 01 11:09:29 2015 +0900
+@@ -1623,6 +1623,9 @@
+     int		b_p_lisp;	/* 'lisp' */
+ #endif
+     char_u	*b_p_mps;	/* 'matchpairs' */
++#ifdef USE_MIGEMO
++    int		b_p_migemo;	/* 'migemo' */
++#endif
+     int		b_p_ml;		/* 'modeline' */
+     int		b_p_ml_nobin;	/* b_p_ml saved for binary mode */
+     int		b_p_ma;		/* 'modifiable' */
+diff -r ce73d82e98a7 src/version.c
+--- a/src/version.c	Sun Mar 01 11:07:30 2015 +0900
++++ b/src/version.c	Sun Mar 01 11:09:29 2015 +0900
+@@ -342,6 +342,15 @@
+ #else
+ 	"-menu",
+ #endif
++#ifdef USE_MIGEMO
++# ifdef DYNAMIC_MIGEMO
++	"+migemo/dyn",
++# else
++	"+migemo",
++# endif
++#else
++	"-migemo",
++#endif
+ #ifdef FEAT_SESSION
+ 	"+mksession",
+ #else
+diff -r ce73d82e98a7 src/vim.h
+--- a/src/vim.h	Sun Mar 01 11:07:30 2015 +0900
++++ b/src/vim.h	Sun Mar 01 11:09:29 2015 +0900
+@@ -934,6 +934,9 @@
+ #define SEARCH_MARK  0x200  /* set previous context mark */
+ #define SEARCH_KEEP  0x400  /* keep previous search pattern */
+ #define SEARCH_PEEK  0x800  /* peek for typed char, cancel search */
++#ifdef USE_MIGEMO
++# define SEARCH_MIGEMO	0x1000	/* use migemo for search */
++#endif
+ 
+ /* Values for find_ident_under_cursor() */
+ #define FIND_IDENT	1	/* find identifier (word) */

@@ -1,0 +1,65 @@
+# HG changeset patch
+# Parent 075eea398ffffd51e0611c419defa9561f00f709
+diff -r 075eea398fff -r 7a655516cab5 src/po/ja.euc-jp.po
+--- a/src/po/ja.euc-jp.po	Fri May 02 15:46:14 2014 +0200
++++ b/src/po/ja.euc-jp.po	Sun May 04 20:55:50 2014 +0900
+@@ -15,7 +15,7 @@
+ "Project-Id-Version: Vim 7.4\n"
+ "Report-Msgid-Bugs-To: \n"
+ "POT-Creation-Date: 2013-07-06 13:50+0900\n"
+-"PO-Revision-Date: 2013-07-06 15:00+0900\n"
++"PO-Revision-Date: 2014-05-04 20:55+0900\n"
+ "Last-Translator: MURAOKA Taro <koron.kaoriya@gmail.com>\n"
+ "Language-Team: MURAOKA Taro <koron.kaoriya@gmail.com>\n"
+ "Language: Japanese\n"
+@@ -5541,7 +5541,7 @@
+ 
+ #, c-format
+ msgid "E416: missing equal sign: %s"
+-msgstr "E416: ≈˘πÊ§¨§¨§¢§Í§ﬁ§ª§Û: %s"
++msgstr "E416: ≈˘πÊ§¨§¢§Í§ﬁ§ª§Û: %s"
+ 
+ #, c-format
+ msgid "E417: missing argument: %s"
+diff -r 075eea398fff -r 7a655516cab5 src/po/ja.po
+--- a/src/po/ja.po	Fri May 02 15:46:14 2014 +0200
++++ b/src/po/ja.po	Sun May 04 20:55:50 2014 +0900
+@@ -15,7 +15,7 @@
+ "Project-Id-Version: Vim 7.4\n"
+ "Report-Msgid-Bugs-To: \n"
+ "POT-Creation-Date: 2013-07-06 13:50+0900\n"
+-"PO-Revision-Date: 2013-07-06 15:00+0900\n"
++"PO-Revision-Date: 2014-05-04 20:55+0900\n"
+ "Last-Translator: MURAOKA Taro <koron.kaoriya@gmail.com>\n"
+ "Language-Team: MURAOKA Taro <koron.kaoriya@gmail.com>\n"
+ "Language: Japanese\n"
+@@ -5541,7 +5541,7 @@
+ 
+ #, c-format
+ msgid "E416: missing equal sign: %s"
+-msgstr "E416: Á≠âÂè∑„Åå„Åå„ÅÇ„Çä„Åæ„Åõ„Çì: %s"
++msgstr "E416: Á≠âÂè∑„Åå„ÅÇ„Çä„Åæ„Åõ„Çì: %s"
+ 
+ #, c-format
+ msgid "E417: missing argument: %s"
+diff -r 075eea398fff -r 7a655516cab5 src/po/ja.sjis.po
+--- a/src/po/ja.sjis.po	Fri May 02 15:46:14 2014 +0200
++++ b/src/po/ja.sjis.po	Sun May 04 20:55:50 2014 +0900
+@@ -15,7 +15,7 @@
+ "Project-Id-Version: Vim 7.4\n"
+ "Report-Msgid-Bugs-To: \n"
+ "POT-Creation-Date: 2013-07-06 13:50+0900\n"
+-"PO-Revision-Date: 2013-07-06 15:00+0900\n"
++"PO-Revision-Date: 2014-05-04 20:55+0900\n"
+ "Last-Translator: MURAOKA Taro <koron.kaoriya@gmail.com>\n"
+ "Language-Team: MURAOKA Taro <koron.kaoriya@gmail.com>\n"
+ "Language: Japanese\n"
+@@ -5541,7 +5541,7 @@
+ 
+ #, c-format
+ msgid "E416: missing equal sign: %s"
+-msgstr "E416: ìôçÜÇ™Ç™Ç†ÇËÇ‹ÇπÇÒ: %s"
++msgstr "E416: ìôçÜÇ™Ç†ÇËÇ‹ÇπÇÒ: %s"
+ 
+ #, c-format
+ msgid "E417: missing argument: %s"

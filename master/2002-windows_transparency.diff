@@ -1,0 +1,149 @@
+# HG changeset patch
+# Parent fde93adeda8d91c54211d002010c4476c27e8dcc
+implement 'transparency' for Windows GUI
+
+diff -r fde93adeda8d src/gui_w32.c
+--- a/src/gui_w32.c	Sat Apr 13 21:44:19 2013 +0900
++++ b/src/gui_w32.c	Sat Apr 13 21:57:35 2013 +0900
+@@ -417,6 +417,19 @@
+ #ifdef FEAT_NETBEANS_INTG
+ int WSInitialized = FALSE; /* WinSock is initialized */
+ #endif
++
++/*
++ * For Transparent Window (for only Windows 2000)
++ */
++#define USE_LAYERED_WINDOW 1
++#if USE_LAYERED_WINDOW
++# define WS_EX_LAYERED 0x80000
++# define LWA_ALPHA 2
++typedef DWORD (WINAPI *FWINLAYER)(HWND hwnd, DWORD crKey, BYTE bAlpha,
++	DWORD dwFlags);
++static void w32_set_transparency(HWND hwnd, BYTE bAlpha);
++#endif /* USE_LAYERED_WINDOW */
++
+ /*
+  * Return TRUE when running under Windows NT 3.x or Win32s, both of which have
+  * less fancy GUI APIs.
+@@ -1467,6 +1480,8 @@
+     if (s_hwnd == NULL)
+ 	return FAIL;
+ 
++    w32_set_transparency(s_hwnd, 255);
++
+ #ifdef GLOBAL_IME
+     global_ime_init(atom, s_hwnd);
+ #endif
+@@ -1810,6 +1825,46 @@
+     gui.currSpColor = color;
+ }
+ 
++#if USE_LAYERED_WINDOW
++    void
++w32_set_transparency(HWND hwnd, BYTE bAlpha)
++{
++    FWINLAYER pfLayer;
++    HANDLE hDll;
++
++    if (!hwnd)
++	hwnd = s_hwnd;
++
++    /* Turn off transpareny */
++    if (bAlpha == 255)
++    {
++	SetWindowLong(hwnd, GWL_EXSTYLE, ~WS_EX_LAYERED &
++		GetWindowLong(hwnd, GWL_EXSTYLE));
++	return;
++    }
++
++    /* Obtain pointer to function set transparecy rate */
++    if (!(hDll = LoadLibrary("user32.dll")))
++	return;
++    pfLayer = (FWINLAYER)GetProcAddress(hDll, "SetLayeredWindowAttributes");
++
++    if (pfLayer)
++    {
++	SetWindowLong(hwnd, GWL_EXSTYLE, WS_EX_LAYERED |
++		GetWindowLong(hwnd, GWL_EXSTYLE));
++	pfLayer(hwnd, 0, bAlpha, LWA_ALPHA);
++    }
++
++    FreeLibrary(hDll);
++}
++
++    void
++gui_mch_set_transparency(int alpha)
++{
++    w32_set_transparency(NULL, (BYTE)alpha);
++}
++#endif /* USE_LAYERED_WINDOW */
++
+ #if defined(FEAT_MBYTE) && defined(FEAT_MBYTE_IME)
+ /*
+  * Multi-byte handling, originally by Sung-Hoon Baek.
+diff -r fde93adeda8d src/option.c
+--- a/src/option.c	Sat Apr 13 21:44:19 2013 +0900
++++ b/src/option.c	Sat Apr 13 21:57:35 2013 +0900
+@@ -2620,6 +2620,11 @@
+ 			    (char_u *)&p_tbis, PV_NONE,
+ 			    {(char_u *)"small", (char_u *)0L} SCRIPTID_INIT},
+ #endif
++#ifdef USE_TRANSPARENCY
++    {"transparency", "tra", P_NUM|P_VI_DEF,
++			    (char_u *)&p_transparency, PV_NONE,
++			    {(char_u *)255L, (char_u *)0L}},
++#endif
+     {"ttimeout",    NULL,   P_BOOL|P_VI_DEF|P_VIM,
+ 			    (char_u *)&p_ttimeout, PV_NONE,
+ 			    {(char_u *)FALSE, (char_u *)0L} SCRIPTID_INIT},
+@@ -8360,6 +8365,15 @@
+     }
+ #endif
+ 
++#ifdef USE_TRANSPARENCY
++    else if ((long *)varp == &p_transparency)
++    {
++	if (p_transparency < 1 || p_transparency > 255)
++	    p_transparency = 255;
++	gui_mch_set_transparency(p_transparency);
++    }
++#endif
++
+     else if (pp == &curbuf->b_p_iminsert)
+     {
+ 	if (curbuf->b_p_iminsert < 0 || curbuf->b_p_iminsert > B_IMODE_LAST)
+diff -r fde93adeda8d src/option.h
+--- a/src/option.h	Sat Apr 13 21:44:19 2013 +0900
++++ b/src/option.h	Sat Apr 13 21:57:35 2013 +0900
+@@ -792,6 +792,9 @@
+ #ifdef FEAT_INS_EXPAND
+ EXTERN char_u	*p_tsr;		/* 'thesaurus' */
+ #endif
++#ifdef USE_TRANSPARENCY
++EXTERN long	p_transparency;	/* 'transparency'*/
++#endif
+ EXTERN int	p_ttimeout;	/* 'ttimeout' */
+ EXTERN long	p_ttm;		/* 'ttimeoutlen' */
+ EXTERN int	p_tbi;		/* 'ttybuiltin' */
+diff -r fde93adeda8d src/os_win32.h
+--- a/src/os_win32.h	Sat Apr 13 21:44:19 2013 +0900
++++ b/src/os_win32.h	Sat Apr 13 21:57:35 2013 +0900
+@@ -86,6 +86,7 @@
+ 
+ #ifdef FEAT_GUI_W32
+ # define NO_CONSOLE		/* don't included console-only code */
++# define USE_TRANSPARENCY
+ #endif
+ 
+ /* toupper() is not really broken, but it's very slow.	Probably because of
+diff -r fde93adeda8d src/proto/gui_w32.pro
+--- a/src/proto/gui_w32.pro	Sat Apr 13 21:44:19 2013 +0900
++++ b/src/proto/gui_w32.pro	Sat Apr 13 21:57:35 2013 +0900
+@@ -68,6 +68,7 @@
+ void gui_mch_set_fg_color __ARGS((guicolor_T color));
+ void gui_mch_set_bg_color __ARGS((guicolor_T color));
+ void gui_mch_set_sp_color __ARGS((guicolor_T color));
++void gui_mch_set_transparency __ARGS((int alpha));
+ void im_set_font __ARGS((LOGFONT *lf));
+ void im_set_position __ARGS((int row, int col));
+ void im_set_active __ARGS((int active));

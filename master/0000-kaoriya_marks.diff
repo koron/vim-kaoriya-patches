@@ -1,0 +1,26 @@
+# HG changeset patch
+# Parent a079ef0ce00173db42e2f60beee84b5cec71a505
+add +kaoriya marks
+
+diff -r a079ef0ce001 src/eval.c
+--- a/src/eval.c	Sat Apr 06 17:26:26 2013 +0200
++++ b/src/eval.c	Fri Apr 12 01:58:23 2013 +0900
+@@ -12248,6 +12248,7 @@
+ #ifdef FEAT_JUMPLIST
+ 	"jumplist",
+ #endif
++	"kaoriya",
+ #ifdef FEAT_KEYMAP
+ 	"keymap",
+ #endif
+diff -r a079ef0ce001 src/version.c
+--- a/src/version.c	Sat Apr 06 17:26:26 2013 +0200
++++ b/src/version.c	Fri Apr 12 01:58:23 2013 +0900
+@@ -287,6 +287,7 @@
+ #else
+ 	"-keymap",
+ #endif
++	"+kaoriya",
+ #ifdef FEAT_LANGMAP
+ 	"+langmap",
+ #else

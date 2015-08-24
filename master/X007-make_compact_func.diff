@@ -1,0 +1,201 @@
+# HG changeset patch
+# Parent 3e84e9c2c249355bdf1e51643255eda5a9e519b0
+Make compact stored functions (skeleton)
+
+diff -r 3e84e9c2c249 src/eval.c
+--- a/src/eval.c	Wed Apr 17 22:42:59 2013 +0900
++++ b/src/eval.c	Wed Apr 17 22:44:42 2013 +0900
+@@ -495,6 +495,8 @@
+ static void f_cindent __ARGS((typval_T *argvars, typval_T *rettv));
+ static void f_clearmatches __ARGS((typval_T *argvars, typval_T *rettv));
+ static void f_col __ARGS((typval_T *argvars, typval_T *rettv));
++static void f_compactinfo __ARGS((typval_T *argvars, typval_T *rettv));
++static void f_compactreset __ARGS((typval_T *argvars, typval_T *rettv));
+ #if defined(FEAT_INS_EXPAND)
+ static void f_complete __ARGS((typval_T *argvars, typval_T *rettv));
+ static void f_complete_add __ARGS((typval_T *argvars, typval_T *rettv));
+@@ -7882,6 +7884,8 @@
+     {"cindent",		1, 1, f_cindent},
+     {"clearmatches",	0, 0, f_clearmatches},
+     {"col",		1, 1, f_col},
++    {"compactinfo",	0, 0, f_compactinfo},
++    {"compactreset",	0, 0, f_compactreset},
+ #if defined(FEAT_INS_EXPAND)
+     {"complete",	2, 2, f_complete},
+     {"complete_add",	1, 1, f_complete_add},
+@@ -9445,6 +9449,40 @@
+     rettv->vval.v_number = col;
+ }
+ 
++/*
++ * "compactinfo()" function
++ */
++    static void
++f_compactinfo(argvars, rettv)
++    typval_T	*argvars;
++    typval_T	*rettv;
++{
++    list_T	*l;
++
++    if (rettv_list_alloc(rettv) == OK)
++    {
++	l = rettv->vval.v_list;
++	list_append_number(l, devel_compact_presize);
++	list_append_number(l, devel_compact_postsize);
++	list_append_number(l, devel_compact_funcnum);
++    }
++    else
++	rettv->vval.v_number = FALSE;
++}
++
++/*
++ * "compactreset()" function
++ */
++    static void
++f_compactreset(argvars, rettv)
++    typval_T	*argvars;
++    typval_T	*rettv UNUSED;
++{
++    devel_compact_presize = 0;
++    devel_compact_postsize = 0;
++    devel_compact_funcnum = 0;
++}
++
+ #if defined(FEAT_INS_EXPAND)
+ /*
+  * "complete()" function
+@@ -21174,6 +21212,26 @@
+     return p;
+ }
+ 
++    static char_u *
++make_line_compact(line, prevline, lines, alloced)
++    char_u	*line;
++    char_u	**prevline;
++    garray_T	*lines;
++    int		*alloced;
++{
++    char_u	*p = skipwhite(line);
++
++    /* Substitute an empty line for a comment line. */
++    if (*p == '"')
++	return line + (int)STRLEN(line);
++    /* Remove leading whites. */
++    if (p != line)
++	return p;
++
++    /* Use original line. */
++    return NULL;
++}
++
+ /*
+  * ":function"
+  */
+@@ -21207,6 +21265,8 @@
+     int		todo;
+     hashitem_T	*hi;
+     int		sourcing_lnum_off;
++    int		compacted_size = 0;
++    char_u	*compacted_prevline = NULL;
+ 
+     /*
+      * ":function" without argument: list functions.
+@@ -21637,6 +21697,37 @@
+ 	    }
+ 	}
+ 
++	/* make theline compact. */
++	{
++	    char_u* compacted = NULL;
++	    int alloced = 0;
++
++	    if (p_cfs)
++	    {
++		compacted = make_line_compact(theline,
++		    &compacted_prevline, &newlines, &alloced);
++	    }
++
++	    if (compacted && compacted != theline)
++	    {
++		int sz1 = (int)STRLEN(theline);
++		int sz2 = (int)STRLEN(compacted);
++		assert(sz2 < sz1);
++		devel_compact_presize += sz1;
++		devel_compact_postsize += sz2;
++		mch_memmove(theline, compacted, sz2 + 1);
++	    }
++	    else
++	    {
++		int sz = (int)STRLEN(theline);
++		devel_compact_presize += sz;
++		devel_compact_postsize += sz;
++	    }
++
++	    if (compacted && alloced)
++		vim_free(compacted);
++	}
++
+ 	/* Add the line to the function. */
+ 	if (ga_grow(&newlines, 1 + sourcing_lnum_off) == FAIL)
+ 	{
+@@ -21657,6 +21748,7 @@
+ 	}
+ 
+ 	((char_u **)(newlines.ga_data))[newlines.ga_len++] = theline;
++	compacted_prevline = theline;
+ 
+ 	/* Add NULL lines for continuation lines, so that the line count is
+ 	 * equal to the index in the growarray.   */
+@@ -21804,6 +21896,7 @@
+ 	STRCPY(fp->uf_name, name);
+ 	hash_add(&func_hashtab, UF2HIKEY(fp));
+     }
++    devel_compact_funcnum += 1;
+     fp->uf_args = newargs;
+     fp->uf_lines = newlines;
+ #ifdef FEAT_PROFILE
+diff -r 3e84e9c2c249 src/globals.h
+--- a/src/globals.h	Wed Apr 17 22:42:59 2013 +0900
++++ b/src/globals.h	Wed Apr 17 22:44:42 2013 +0900
+@@ -233,6 +233,9 @@
+ EXTERN int	debug_break_level INIT(= -1);	/* break below this level */
+ EXTERN int	debug_did_msg INIT(= FALSE);	/* did "debug mode" message */
+ EXTERN int	debug_tick INIT(= 0);		/* breakpoint change count */
++EXTERN int	devel_compact_presize INIT(= 0);
++EXTERN int	devel_compact_postsize INIT(= 0);
++EXTERN int	devel_compact_funcnum INIT(= 0);
+ # ifdef FEAT_PROFILE
+ EXTERN int	do_profiling INIT(= PROF_NONE);	/* PROF_ values */
+ # endif
+diff -r 3e84e9c2c249 src/option.c
+--- a/src/option.c	Wed Apr 17 22:42:59 2013 +0900
++++ b/src/option.c	Wed Apr 17 22:44:42 2013 +0900
+@@ -812,6 +812,15 @@
+ 			    SCRIPTID_INIT},
+ 			    /* P_PRI_MKRC isn't needed here, optval_default()
+ 			     * always returns TRUE for 'compatible' */
++    {"compact",  "cfs",	    P_BOOL|P_VIM,
++#ifdef FEAT_EVAL
++			    (char_u *)&p_cfs, PV_NONE,
++			    {(char_u *)TRUE, (char_u *)FALSE}
++#else
++			    (char_u *)&NULL, PV_NONE,
++			    {(char_u *)0L, (char_u *)0L}
++#endif
++			    SCRIPTID_INIT},
+     {"compatible",  "cp",   P_BOOL|P_RALL,
+ 			    (char_u *)&p_cp, PV_NONE,
+ 			    {(char_u *)TRUE, (char_u *)FALSE} SCRIPTID_INIT},
+diff -r 3e84e9c2c249 src/option.h
+--- a/src/option.h	Wed Apr 17 22:42:59 2013 +0900
++++ b/src/option.h	Wed Apr 17 22:44:42 2013 +0900
+@@ -391,6 +391,9 @@
+ #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
+ EXTERN int	p_confirm;	/* 'confirm' */
+ #endif
++#ifdef FEAT_EVAL
++EXTERN int	p_cfs;		/* 'compactfunc' */
++#endif
+ EXTERN int	p_cp;		/* 'compatible' */
+ #ifdef FEAT_INS_EXPAND
+ EXTERN char_u	*p_cot;		/* 'completeopt' */

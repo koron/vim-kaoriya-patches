@@ -1,0 +1,34 @@
+# HG changeset patch
+# Parent 5a2d7f302b1d42b1ed917be4a2c09966f36cc99b
+Some embeded languages require init WinSock by hosting application
+
+diff -r 5a2d7f302b1d -r 17043ccfead3 src/gui_w32.c
+--- a/src/gui_w32.c	Sat Apr 13 22:11:26 2013 +0900
++++ b/src/gui_w32.c	Sat Apr 13 22:19:45 2013 +0900
+@@ -1315,9 +1315,26 @@
+ 		argv[*argc] = NULL;
+ 		break;	/* enough? */
+ 	    }
++
+     }
+ #endif
+ 
++    /*
++     * Some embeded languages (if_*) require to initialize WinSock2 by hosting
++     * application.
++     */
++    {
++	WSADATA wsaData;
++	int wsaerr;
++
++	/* Init WinSock */
++	wsaerr = WSAStartup(MAKEWORD(2, 2), &wsaData);
++#ifdef FEAT_NETBEANS_INTG
++	if (wsaerr == 0)
++	    WSInitialized = TRUE;
++#endif
++    }
++
+     /* get the OS version info */
+     os_version.dwOSVersionInfoSize = sizeof(os_version);
+     GetVersionEx(&os_version); /* this call works on Win32s, Win95 and WinNT */

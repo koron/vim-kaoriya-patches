@@ -1,0 +1,432 @@
+# HG changeset patch
+# Parent b6260ab35c5c3d8a73ddbcb15cba08ef0d886396
+# Parent  6a1eeb657a5562fb6745da88c13a335d9fcb19ea
+
+diff -r 6a1eeb657a55 runtime/doc/eval.txt
+--- a/runtime/doc/eval.txt	Sat Jul 04 11:24:29 2015 +0900
++++ b/runtime/doc/eval.txt	Sat Jul 04 11:24:41 2015 +0900
+@@ -1885,6 +1885,10 @@
+ 					rhs of mapping {name} in mode {mode}
+ mapcheck( {name}[, {mode} [, {abbr}]])
+ 				String	check for mappings matching {name}
++markadd( {pos})			Number	create a new mark
++markdelete( {id})		none	delete mark identified by {id}
++markget( {id})			List	get mark identified by {id}
++markupdate( {id}, {pos})	none	update mark identified by {id}
+ match( {expr}, {pat}[, {start}[, {count}]])
+ 				Number	position where {pat} matches in {expr}
+ matchadd( {group}, {pattern}[, {priority}[, {id}]])
+diff -r 6a1eeb657a55 src/buffer.c
+--- a/src/buffer.c	Sat Jul 04 11:24:29 2015 +0900
++++ b/src/buffer.c	Sat Jul 04 11:24:41 2015 +0900
+@@ -734,6 +734,9 @@
+ #endif
+     }
+ #ifdef FEAT_EVAL
++    emarklist_cleanup(&buf->b_emarklist);
++#endif
++#ifdef FEAT_EVAL
+     vars_clear(&buf->b_vars->dv_hashtab); /* free all internal variables */
+     hash_init(&buf->b_vars->dv_hashtab);
+ #endif
+@@ -2736,6 +2739,9 @@
+     if (p_fdls >= 0)
+ 	curwin->w_p_fdl = p_fdls;
+ #endif
++#ifdef FEAT_EVAL
++    emarklist_init(&buf->b_emarklist);
++#endif
+ #ifdef FEAT_SYN_HL
+     check_colorcolumn(curwin);
+ #endif
+diff -r 6a1eeb657a55 src/eval.c
+--- a/src/eval.c	Sat Jul 04 11:24:29 2015 +0900
++++ b/src/eval.c	Sat Jul 04 11:24:41 2015 +0900
+@@ -621,6 +621,10 @@
+ static void f_map __ARGS((typval_T *argvars, typval_T *rettv));
+ static void f_maparg __ARGS((typval_T *argvars, typval_T *rettv));
+ static void f_mapcheck __ARGS((typval_T *argvars, typval_T *rettv));
++static void f_markadd __ARGS((typval_T *argvars, typval_T *rettv));
++static void f_markdelete __ARGS((typval_T *argvars, typval_T *rettv));
++static void f_markget __ARGS((typval_T *argvars, typval_T *rettv));
++static void f_markupdate __ARGS((typval_T *argvars, typval_T *rettv));
+ static void f_match __ARGS((typval_T *argvars, typval_T *rettv));
+ static void f_matchadd __ARGS((typval_T *argvars, typval_T *rettv));
+ static void f_matchaddpos __ARGS((typval_T *argvars, typval_T *rettv));
+@@ -8219,6 +8223,10 @@
+     {"map",		2, 2, f_map},
+     {"maparg",		1, 4, f_maparg},
+     {"mapcheck",	1, 3, f_mapcheck},
++    {"markadd",		1, 1, f_markadd},
++    {"markdelete",	1, 1, f_markdelete},
++    {"markget",		1, 1, f_markget},
++    {"markupdate",	2, 2, f_markupdate},
+     {"match",		2, 4, f_match},
+     {"matchadd",	2, 4, f_matchadd},
+     {"matchaddpos",	2, 4, f_matchaddpos},
+@@ -14373,6 +14381,95 @@
+     get_maparg(argvars, rettv, FALSE);
+ }
+ 
++/*
++ * "markadd()" function
++ */
++    static void
++f_markadd(argvars, rettv)
++    typval_T	*argvars;
++    typval_T	*rettv;
++{
++    pos_T	*fp;
++    int		fnum = curbuf->b_fnum;
++    emark_T	*markp = NULL;
++
++    fp = var2fpos(&argvars[0], FALSE, &fnum);
++    if (fp != NULL && fnum == curbuf->b_fnum)
++	markp = emarklist_add(&curbuf->b_emarklist, fp);
++
++    rettv->vval.v_number = markp != NULL ? markp->em_id : -1;
++}
++
++/*
++ * "markdelete()" function
++ */
++    static void
++f_markdelete(argvars, rettv)
++    typval_T	*argvars;
++    typval_T	*rettv UNUSED;
++{
++    long	id;
++
++    id = get_tv_number_chk(&argvars[0], NULL);
++    if (id >= 0)
++	emarklist_remove(&curbuf->b_emarklist, (int_u)id);
++}
++
++/*
++ * "markget()" function
++ */
++    static void
++f_markget(argvars, rettv)
++    typval_T	*argvars;
++    typval_T	*rettv;
++{
++    long	id;
++    emark_T	**markpp = NULL;
++    list_T	*l;
++
++    id = get_tv_number_chk(&argvars[0], NULL);
++    if (id >= 0)
++	markpp = emarklist_find(&curbuf->b_emarklist, (int_u)id);
++
++    if (rettv_list_alloc(rettv) == OK)
++    {
++	l = rettv->vval.v_list;
++	if (markpp != NULL && *markpp != NULL)
++	{
++	    pos_T	*fp = &(*markpp)->em_pos;
++	    list_append_number(l, (varnumber_T)fp->lnum);
++	    list_append_number(l, (varnumber_T)fp->col == MAXCOL ?  MAXCOL
++		    : fp->col + 1);
++	}
++    }
++    else
++	rettv->vval.v_number = FALSE;
++}
++
++/*
++ * "markupdate()" function
++ */
++    static void
++f_markupdate(argvars, rettv)
++    typval_T	*argvars;
++    typval_T	*rettv UNUSED;
++{
++    long	id;
++    emark_T	**markpp = NULL;
++    pos_T	*fp;
++    int		fnum = curbuf->b_fnum;
++
++    id = get_tv_number_chk(&argvars[0], NULL);
++    fp = var2fpos(&argvars[1], FALSE, &fnum);
++
++    if (id >= 0 && fp != NULL && fnum == curbuf->b_fnum)
++    {
++	markpp = emarklist_find(&curbuf->b_emarklist, (int_u)id);
++	if (markpp != NULL && *markpp != NULL)
++	    (*markpp)->em_pos = *fp;
++    }
++}
++
+ static void find_some_match __ARGS((typval_T *argvars, typval_T *rettv, int start));
+ 
+     static void
+diff -r 6a1eeb657a55 src/mark.c
+--- a/src/mark.c	Sat Jul 04 11:24:29 2015 +0900
++++ b/src/mark.c	Sat Jul 04 11:24:41 2015 +0900
+@@ -37,6 +37,12 @@
+ #ifdef FEAT_VIMINFO
+ static void write_one_filemark __ARGS((FILE *fp, xfmark_T *fm, int c1, int c2));
+ #endif
++#ifdef FEAT_EVAL
++static emark_T ** emark_find __ARGS((emark_T **first, int_u (*find)(emark_T *, void *), void *data));
++static int_u emark_find_equals_id __ARGS((emark_T *p, void *data));
++static int_u emark_find_over_pos __ARGS((emark_T *p, void *data));
++static void emarklist_adjust __ARGS((emarklist_T *list, linenr_T line1, linenr_T, long amount, long amount_after));
++#endif
+ 
+ /*
+  * Set named mark "c" at current cursor position.
+@@ -1185,6 +1191,11 @@
+     /* adjust diffs */
+     diff_mark_adjust(line1, line2, amount, amount_after);
+ #endif
++
++#ifdef FEAT_EVAL
++    /* Adjust eval marks */
++    emarklist_adjust(&curbuf->b_emarklist, line1, line2, amount, amount_after);
++#endif
+ }
+ 
+ /* This code is used often, needs to be fast. */
+@@ -1217,6 +1228,7 @@
+     int		fnum = curbuf->b_fnum;
+     win_T	*win;
+     pos_T	*posp;
++    emark_T	*emarkp;
+ 
+     if ((col_amount == 0L && lnum_amount == 0L) || cmdmod.lockmarks)
+ 	return; /* nothing to do */
+@@ -1283,6 +1295,15 @@
+ 		col_adjust(&win->w_cursor);
+ 	}
+     }
++
++#ifdef FEAT_EVAL
++    /*
++     * Adjust eval marks of current buffer.
++     */
++    for (emarkp = curbuf->b_emarklist.eml_first; emarkp;
++	    emarkp = emarkp->em_next)
++	col_adjust(&emarkp->em_pos);
++#endif
+ }
+ 
+ #ifdef FEAT_JUMPLIST
+@@ -1814,3 +1835,163 @@
+     vim_free(name_buf);
+ }
+ #endif /* FEAT_VIMINFO */
++
++#ifdef FEAT_EVAL
++    void
++emarklist_init(list)
++    emarklist_T *list;
++{
++    list->eml_first = NULL;
++    list->eml_count = 0;
++    list->eml_next_id = 0;
++}
++
++    void
++emarklist_cleanup(list)
++    emarklist_T *list;
++{
++    emark_T     *m;
++    emark_T     *next;
++
++    for (m = list->eml_first; m; m = next)
++    {
++	next = m->em_next;
++	vim_free(m);
++    }
++    list->eml_count = 0;
++    list->eml_next_id = 0;
++}
++
++    static emark_T **
++emark_find(first, find, data)
++    emark_T **first;
++    int_u (*find)(emark_T *, void *);
++    void *data;
++{
++    emark_T	**pp;
++
++    for (pp = first; *pp; pp = &(*pp)->em_next)
++    {
++	switch ((*find)(*pp, data))
++	{
++	    case 1:
++		return pp;
++	    case 2:
++		return &(*pp)->em_next;
++	}
++    }
++    /* not found, until end. */
++    return NULL;
++}
++
++    static int_u
++emark_find_equals_id(p, data)
++    emark_T *p;
++    void *data;
++{
++    return (p->em_id == *((int_u*)data)) ? 1 : 0;
++}
++
++    static int_u
++emark_find_over_pos(p, data)
++    emark_T *p;
++    void *data;
++{
++    pos_T	*pos;
++
++    /* find an emark_T which have larger pos_T than data */
++    pos = (pos_T *)data;
++    if ((pos->lnum < p->em_pos.lnum) ||
++	    (pos->lnum == p->em_pos.lnum && pos->col <= p->em_pos.col))
++	return 1;
++
++    return (p->em_next == NULL) ? 2 : 0;
++}
++
++    emark_T*
++emarklist_add(list, pos)
++    emarklist_T *list;
++    pos_T *pos;
++{
++    emark_T	**pp;
++    emark_T	*p;
++
++    pp = emark_find(&list->eml_first, emark_find_over_pos, pos);
++    if (pp == NULL)
++	pp = &list->eml_first;
++
++    p = (emark_T*)alloc(sizeof(*p));
++    if (p)
++    {
++	++list->eml_count;
++	p->em_id = list->eml_next_id++;
++	p->em_pos = *pos;
++	p->em_next = *pp;
++	*pp = p;
++    }
++
++    return p;
++}
++
++    emark_T**
++emarklist_find(list, id)
++    emarklist_T *list;
++    int_u id;
++{
++    return emark_find(&list->eml_first, emark_find_equals_id, &id);
++}
++
++    void
++emarklist_remove(list, id)
++    emarklist_T *list;
++    int_u id;
++{
++    emark_T	**pp;
++    emark_T	*p;
++
++    pp = emarklist_find(list, id);
++    if (pp && *pp)
++    {
++	p = *pp;
++	*pp = p->em_next;
++	vim_free(p);
++	--list->eml_count;
++    }
++}
++
++    static void
++emarklist_adjust(list, line1, line2, amount, amount_after)
++    emarklist_T *list;
++    linenr_T	line1;
++    linenr_T	line2;
++    long	amount;
++    long	amount_after;
++{
++    emark_T	**pp;
++    emark_T	**ppnext;
++    linenr_T	*lp;
++
++    /* Adjust all eval marks. */
++    for (pp = &curbuf->b_emarklist.eml_first; *pp; pp = &(*pp)->em_next)
++	one_adjust_nodel(&(*pp)->em_pos.lnum);
++
++    /* Remove invalid marks, which lnum is 0. */
++    for (pp = &curbuf->b_emarklist.eml_first; *pp; pp = ppnext)
++    {
++	if ((*pp)->em_pos.lnum != 0)
++	{
++	    /* Keep current mark. */
++	    ppnext = &(*pp)->em_next;
++	}
++	else
++	{
++	    /* Remove current mark. */
++	    emark_T	*p = (*pp);
++
++	    *pp = p->em_next;
++	    vim_free(p);
++	    --list->eml_count;
++	}
++    }
++}
++#endif /* FEAT_EVAL */
+diff -r 6a1eeb657a55 src/proto/mark.pro
+--- a/src/proto/mark.pro	Sat Jul 04 11:24:29 2015 +0900
++++ b/src/proto/mark.pro	Sat Jul 04 11:24:41 2015 +0900
+@@ -28,4 +28,9 @@
+ int removable __ARGS((char_u *name));
+ int write_viminfo_marks __ARGS((FILE *fp_out));
+ void copy_viminfo_marks __ARGS((vir_T *virp, FILE *fp_out, int count, int eof, int flags));
++void emarklist_init __ARGS((emarklist_T *list));
++void emarklist_cleanup __ARGS((emarklist_T *list));
++emark_T* emarklist_add __ARGS((emarklist_T *list, pos_T *pos));
++emark_T** emarklist_find __ARGS((emarklist_T *list, int_u id));
++void emarklist_remove __ARGS((emarklist_T *list, int_u id));
+ /* vim: set ft=c : */
+diff -r 6a1eeb657a55 src/structs.h
+--- a/src/structs.h	Sat Jul 04 11:24:29 2015 +0900
++++ b/src/structs.h	Sat Jul 04 11:24:41 2015 +0900
+@@ -112,6 +112,26 @@
+     char_u	*fname;		/* file name, used when fnum == 0 */
+ } xfmark_T;
+ 
++#ifdef FEAT_EVAL
++
++typedef struct evalmark_S emark_T;
++
++struct evalmark_S
++{
++    int		em_id;
++    pos_T	em_pos;
++    emark_T	*em_next;
++};
++
++typedef struct evalmarklist_S
++{
++    emark_T	*eml_first;
++    int_u	eml_count;
++    int_u	eml_next_id;
++} emarklist_T;
++
++#endif /* FEAT_EVAL */
++
+ /*
+  * The taggy struct is used to store the information about a :tag command.
+  */
+@@ -1744,6 +1764,10 @@
+     dict_T	*b_vars;	/* internal variables, local to buffer */
+ #endif
+ 
++#ifdef FEAT_EVAL
++    emarklist_T	b_emarklist;
++#endif
++
+ #if defined(FEAT_BEVAL) && defined(FEAT_EVAL)
+     char_u	*b_p_bexpr;	/* 'balloonexpr' local value */
+     long_u	b_p_bexpr_flags;/* flags for 'balloonexpr' */

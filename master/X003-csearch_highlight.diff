@@ -1,0 +1,141 @@
+# HG changeset patch
+# Parent 49cde2c6f62831f450a4b2a948e767b5cfc73e46
+# Parent  cb0284e6cd2022d20aca36cd21363052523df15c
+
+diff -r cb0284e6cd20 src/normal.c
+--- a/src/normal.c	Sat Jul 04 12:11:03 2015 +0900
++++ b/src/normal.c	Sat Jul 04 14:33:29 2015 +0900
+@@ -541,6 +541,112 @@
+     return idx;
+ }
+ 
++#ifdef FEAT_SYN_HL
++
++typedef struct citer_s
++{
++    char_u	*top;
++    colnr_T	col;
++    colnr_T	col_end;
++    int		dir;
++} citer_t;
++
++typedef struct cseach_match_s
++{
++    int		count;
++    colnr_T	col;
++} cseach_match_t;
++
++#define CSEARCH_MATCH_COUNT	256
++
++static cseach_match_t csearch_matches[CSEARCH_MATCH_COUNT];
++
++    void
++csearch_citer_init(citer, top, col, dir)
++    citer_t	*citer;
++    char_u	*top;
++    colnr_T	col;
++    int		dir;
++{
++    citer->top = top;
++    citer->col = col;
++    citer->col_end = (colnr_T)STRLEN(top);
++    citer->dir = dir;
++}
++
++    int
++csearch_citer_get(citer)
++    citer_t	*citer;
++{
++    if (citer->col >= 0 && citer->col < citer->col_end)
++	return (*mb_ptr2char)(citer->top + citer->col);
++    else
++	return 0;
++}
++
++    void
++csearch_citer_forward(citer)
++    citer_t	*citer;
++{
++    if (citer->col >= 0 && citer->col < citer->col_end)
++    {
++	if (citer->dir > 0)
++	    citer->col += (*mb_ptr2len)(citer->top + citer->col);
++	else
++	    citer->col -= (*mb_head_off)(citer->top,
++		    citer->top + citer->col - 1) + 1;
++    }
++}
++
++    static void
++csearch_highlight_enable(dir, count)
++    int dir;
++    int count;
++{
++    citer_t	citer;
++    int		ch;
++    cseach_match_t *m;
++
++    count = (count <= 0) ? 1 : count;
++    dir = (dir == 0) ? 1 : dir;
++
++    vim_memset(&csearch_matches, 0, sizeof(csearch_matches));
++    csearch_citer_init(&citer, ml_get_curline(), curwin->w_cursor.col, dir);
++
++    /* find csearch targets. */
++    csearch_citer_forward(&citer);
++    while ((ch = csearch_citer_get(&citer)) != 0)
++    {
++	if (ch >= 0 && ch < CSEARCH_MATCH_COUNT)
++	{
++	    m = &csearch_matches[ch];
++	    if (m->count < count && ++m->count == count)
++		m->col = citer.col;
++	}
++	csearch_citer_forward(&citer);
++    }
++
++    /* TODO: highlight csearch targets */
++
++    /* for debug */
++    _RPT2(_CRT_WARN, "csearch: dir=%d count=%d\n", dir, count);
++    for (ch = 0; ch < CSEARCH_MATCH_COUNT; ++ch)
++    {
++	m = &csearch_matches[ch];
++	if (m->count == count)
++	    _RPT2(_CRT_WARN, "  '%c' at %d\n", ch, m->col);
++    }
++}
++
++    static void
++csearch_highlight_disable()
++{
++    vim_memset(&csearch_matches, 0, sizeof(csearch_matches));
++
++    /* TODO: de-highlight csearch targets me. */
++}
++#endif
++
+ /*
+  * Execute a command in Normal mode.
+  */
+@@ -974,8 +1080,20 @@
+ 		im_set_active(TRUE);
+ #endif
+ 
++#ifdef FEAT_SYN_HL
++	    /* apply csearch highlight if need. */
++	    if (nv_cmds[idx].cmd_func == nv_csearch)
++		csearch_highlight_enable(nv_cmds[idx].cmd_arg, ca.opcount);
++#endif
++
+ 	    *cp = plain_vgetc();
+ 
++#ifdef FEAT_SYN_HL
++	    /* revert csearch highlight if need. */
++	    if (nv_cmds[idx].cmd_func == nv_csearch)
++		csearch_highlight_disable();
++#endif
++
+ 	    if (langmap_active)
+ 	    {
+ 		/* Undo the decrement done above */

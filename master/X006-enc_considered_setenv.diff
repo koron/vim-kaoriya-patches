@@ -1,0 +1,65 @@
+# HG changeset patch
+# Parent dbec1f3575481201fc095ad088135b3dcf62c839
+convert encoding of environment value when mismatch between Vim and OS
+
+diff -r dbec1f357548 src/os_win32.c
+--- a/src/os_win32.c	Wed Apr 17 22:40:22 2013 +0900
++++ b/src/os_win32.c	Wed Apr 17 22:42:59 2013 +0900
+@@ -5987,3 +5987,34 @@
+     set_alist_count();
+ }
+ #endif
++
++    int
++mch_setenv(var, value, x)
++    char *var;
++    char *value;
++    int	 x;
++{
++    char_u	*envbuf;
++
++    envbuf = alloc((unsigned)(STRLEN(var) + STRLEN(value) + 2));
++    if (envbuf == NULL)
++	return -1;
++
++    sprintf((char *)envbuf, "%s=%s", var, value);
++
++#ifdef FEAT_MBYTE
++    if (enc_codepage >= 0 && (int)GetACP() != enc_codepage)
++    {
++	WCHAR	    *p = enc_to_utf16(envbuf, NULL);
++
++	vim_free(envbuf);
++	if (p == NULL)
++	    return -1;
++	_wputenv(p);
++    }
++    else
++#endif
++	_putenv((char *)envbuf);
++
++    return 0;
++}
+diff -r dbec1f357548 src/os_win32.h
+--- a/src/os_win32.h	Wed Apr 17 22:40:22 2013 +0900
++++ b/src/os_win32.h	Wed Apr 17 22:42:59 2013 +0900
+@@ -192,7 +192,9 @@
+ #define ASSERT_NULL_OR_POINTER(p, type) \
+     ASSERT(((p) == NULL)  ||  IsValidAddress((p), sizeof(type), FALSE))
+ 
+-#define mch_setenv(name, val, x) setenv(name, val, x)
++#ifndef HAVE_SETENV
++# define HAVE_SETENV
++#endif
+ #define mch_getenv(x) (char_u *)getenv((char *)(x))
+ #ifdef __BORLANDC__
+ # define vim_mkdir(x, y) mkdir(x)
+diff -r dbec1f357548 src/proto/os_win32.pro
+--- a/src/proto/os_win32.pro	Wed Apr 17 22:40:22 2013 +0900
++++ b/src/proto/os_win32.pro	Wed Apr 17 22:42:59 2013 +0900
+@@ -55,4 +55,5 @@
+ void used_file_arg __ARGS((char *name, int literal, int full_path, int diff_mode));
+ void set_alist_count __ARGS((void));
+ void fix_arg_enc __ARGS((void));
++int mch_setenv __ARGS((char *var, char *value, int x));
+ /* vim: set ft=c : */

@@ -1,0 +1,54 @@
+# HG changeset patch
+# Parent ffd09d2fd0438d47f843962485ab6fe53212bed3
+
+diff -r ffd09d2fd043 src/gui_w32.c
+--- a/src/gui_w32.c	Sun Aug 03 04:07:53 2014 +0900
++++ b/src/gui_w32.c	Sun Aug 03 04:09:03 2014 +0900
+@@ -485,6 +485,27 @@
+     }
+ }
+ 
++/*
++ * Return TRUE when Visual Style is enabled.
++ */
++    static int
++is_visual_style_enabled(void)
++{
++    HANDLE hUxtheme;
++    static BOOL (WINAPI *pIsThemeActive)(void) = NULL;
++    static BOOL loaded = FALSE;
++
++    if (!loaded) {
++	hUxtheme = GetModuleHandle("uxtheme.dll");
++	if (hUxtheme != NULL)
++	    pIsThemeActive = (void*)GetProcAddress(hUxtheme, "IsThemeActive");
++	loaded = TRUE;
++    }
++    if (pIsThemeActive)
++	return pIsThemeActive();
++    return FALSE;
++}
++
+ #ifdef FEAT_MENU
+ /*
+  * Figure out how high the menu bar is at the moment.
+@@ -1580,7 +1601,7 @@
+ 	    return FAIL;
+     }
+     s_textArea = CreateWindowEx(
+-	WS_EX_CLIENTEDGE,
++	is_visual_style_enabled() ? 0 : WS_EX_CLIENTEDGE,
+ 	szTextAreaClass, "Vim text area",
+ 	WS_CHILD | WS_VISIBLE, 0, 0,
+ 	100,				/* Any value will do for now */
+@@ -1629,7 +1650,9 @@
+     /*
+      * Start out by adding the configured border width into the border offset
+      */
+-    gui.border_offset = gui.border_width + 2;	/*CLIENT EDGE*/
++    gui.border_offset = gui.border_width;
++    if (!is_visual_style_enabled())
++	gui.border_offset += 2;	    /*CLIENT EDGE*/
+ 
+     /*
+      * Set up for Intellimouse processing

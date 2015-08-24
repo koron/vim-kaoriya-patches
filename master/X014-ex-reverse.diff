@@ -1,0 +1,84 @@
+# HG changeset patch
+# Parent 93a59527ca9919cd9c847588c074836ddeebd98e
+
+diff -r 93a59527ca99 src/ex_cmds.c
+--- a/src/ex_cmds.c	Mon Dec 01 23:41:25 2014 +0900
++++ b/src/ex_cmds.c	Tue Dec 02 01:36:42 2014 +0900
+@@ -578,6 +578,53 @@
+ }
+ 
+ /*
++ * ":reverse".
++ */
++    void
++ex_reverse(eap)
++    exarg_T	*eap;
++{
++    size_t	count = (size_t)(eap->line2 - eap->line1 + 1);
++    size_t	i;
++    linenr_T	lnum;
++    char_u	*s;
++    long	deleted;
++
++    if (count <= 1)
++	return;
++
++    if (u_save((linenr_T)(eap->line1 - 1), (linenr_T)(eap->line2 + 1)) == FAIL)
++	return;
++
++    lnum = eap->line2;
++    for (i = 0; i < count; ++i)
++    {
++	s = ml_get((linenr_T)(eap->line2 - i));
++	if (ml_append(lnum++, s, (colnr_T)0, FALSE) == FAIL)
++	    break;
++	fast_breakcheck();
++	if (got_int)
++	    goto reverse_end;
++    }
++
++    if (i == count)
++	for (i = 0; i < count; ++i)
++	    ml_delete(eap->line1, FAIL);
++    else
++	count = 0;
++
++    deleted = (long)(count - (lnum - eap->line2));
++    changed_lines(eap->line1, 0, eap->line2 + 1, -deleted);
++
++    curwin->w_cursor.lnum = eap->line1;
++    beginline(BL_WHITE | BL_FIX);
++
++reverse_end:
++    if (got_int)
++	EMSG(_(e_interr));
++}
++
++/*
+  * ":retab".
+  */
+     void
+diff -r 93a59527ca99 src/ex_cmds.h
+--- a/src/ex_cmds.h	Mon Dec 01 23:41:25 2014 +0900
++++ b/src/ex_cmds.h	Tue Dec 02 01:36:42 2014 +0900
+@@ -1137,6 +1137,9 @@
+ EX(CMD_return,		"return",	ex_return,
+ 			EXTRA|NOTRLCOM|SBOXOK|CMDWIN,
+ 			ADDR_LINES),
++EX(CMD_reverse,		"reverse",	ex_reverse,
++			RANGE|DFLALL|WHOLEFOLD|MODIFY,
++			ADDR_LINES),
+ EX(CMD_rewind,		"rewind",	ex_rewind,
+ 			EXTRA|BANG|EDITCMD|ARGOPT|TRLBAR,
+ 			ADDR_LINES),
+diff -r 93a59527ca99 src/proto/ex_cmds.pro
+--- a/src/proto/ex_cmds.pro	Mon Dec 01 23:41:25 2014 +0900
++++ b/src/proto/ex_cmds.pro	Tue Dec 02 01:36:42 2014 +0900
+@@ -2,6 +2,7 @@
+ void do_ascii __ARGS((exarg_T *eap));
+ void ex_align __ARGS((exarg_T *eap));
+ void ex_sort __ARGS((exarg_T *eap));
++void ex_reverse __ARGS((exarg_T *eap));
+ void ex_retab __ARGS((exarg_T *eap));
+ int do_move __ARGS((linenr_T line1, linenr_T line2, linenr_T dest));
+ void ex_copy __ARGS((linenr_T line1, linenr_T line2, linenr_T n));

@@ -1,0 +1,182 @@
+# HG changeset patch
+# Parent 411154c3f7dd2450736ded250ab0fb306b560fd6
+# Parent  54ebe5bb45e252c7a59ea0e9e78cd77610d8af69
+
+diff -r 54ebe5bb45e2 src/os_unix.c
+--- a/src/os_unix.c	Sat Jul 04 11:18:13 2015 +0900
++++ b/src/os_unix.c	Sat Jul 04 11:24:21 2015 +0900
+@@ -3067,6 +3067,28 @@
+ #endif
+ }
+ 
++/*
++ * return TRUE if "name" is a symbolic link
++ * return FALSE if "name" is not a symbolic link
++ * return FALSE for error
++ */
++    int
++mch_is_symbolic_link(name)
++    char_u *name;
++{
++    struct stat statb;
++
++    if (*name == NUL)	    /* Some lstat()s don't flag "" as an error. */
++	return FALSE;
++    if (lstat((char *)name, &statb))
++	return FALSE;
++#ifdef _POSIX_SOURCE
++    return (S_ISLNK(statb.st_mode) ? TRUE : FALSE);
++#else
++    return ((statb.st_mode & S_IFMT) == S_IFLNK ? TRUE : FALSE);
++#endif
++}
++
+ static int executable_file __ARGS((char_u *name));
+ 
+ /*
+diff -r 54ebe5bb45e2 src/os_unix.h
+--- a/src/os_unix.h	Sat Jul 04 11:18:13 2015 +0900
++++ b/src/os_unix.h	Sat Jul 04 11:24:21 2015 +0900
+@@ -565,3 +565,5 @@
+ 
+ /* We have three kinds of ACL support. */
+ #define HAVE_ACL (HAVE_POSIX_ACL || HAVE_SOLARIS_ACL || HAVE_AIX_ACL)
++
++#define FEAT_SYMBOLIC_LINKS
+diff -r 54ebe5bb45e2 src/os_win32.c
+--- a/src/os_win32.c	Sat Jul 04 11:18:13 2015 +0900
++++ b/src/os_win32.c	Sat Jul 04 11:24:21 2015 +0900
+@@ -78,6 +78,16 @@
+ # endif
+ #endif
+ 
++/*
++ * Reparse Point
++ */
++#ifndef FILE_ATTRIBUTE_REPARSE_POINT
++# define FILE_ATTRIBUTE_REPARSE_POINT	0x00000400
++#endif
++#ifndef IO_REPARSE_TAG_SYMLINK
++# define IO_REPARSE_TAG_SYMLINK		0xA000000C
++#endif
++
+ /* Record all output and all keyboard & mouse input */
+ /* #define MCH_WRITE_DUMP */
+ 
+@@ -3145,10 +3155,10 @@
+ }
+ 
+ /*
+- * Return TRUE if file "fname" is a symbolic link.
++ * Return TRUE if "name" is a symbolic link (or a junction).
+  */
+     int
+-mch_is_symbolic_link(char_u *fname)
++mch_is_symbolic_link(char_u *name)
+ {
+     HANDLE		hFind;
+     int			res = FALSE;
+@@ -3159,7 +3169,7 @@
+     WIN32_FIND_DATAW	findDataW;
+ 
+     if (enc_codepage >= 0 && (int)GetACP() != enc_codepage)
+-	wn = enc_to_utf16(fname, NULL);
++	wn = enc_to_utf16(name, NULL);
+     if (wn != NULL)
+     {
+ 	hFind = FindFirstFileW(wn, &findDataW);
+@@ -3168,7 +3178,7 @@
+ 		&& GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+ 	{
+ 	    /* Retry with non-wide function (for Windows 98). */
+-	    hFind = FindFirstFile(fname, &findDataA);
++	    hFind = FindFirstFile(name, &findDataA);
+ 	    if (hFind != INVALID_HANDLE_VALUE)
+ 	    {
+ 		fileFlags = findDataA.dwFileAttributes;
+@@ -3184,7 +3194,7 @@
+     else
+ #endif
+     {
+-	hFind = FindFirstFile(fname, &findDataA);
++	hFind = FindFirstFile(name, &findDataA);
+ 	if (hFind != INVALID_HANDLE_VALUE)
+ 	{
+ 	    fileFlags = findDataA.dwFileAttributes;
+@@ -3196,7 +3206,8 @@
+ 	FindClose(hFind);
+ 
+     if ((fileFlags & FILE_ATTRIBUTE_REPARSE_POINT)
+-	    && reparseTag == IO_REPARSE_TAG_SYMLINK)
++	    && (reparseTag == IO_REPARSE_TAG_SYMLINK
++		|| reparseTag == IO_REPARSE_TAG_MOUNT_POINT))
+ 	res = TRUE;
+ 
+     return res;
+@@ -5747,7 +5758,8 @@
+ 
+ 
+ /*
+- * this version of remove is not scared by a readonly (backup) file
++ * This version of remove is not scared by a readonly (backup) file.
++ * This can also remove a symbolic link like Unix.
+  * Return 0 for success, -1 for failure.
+  */
+     int
+@@ -5758,6 +5770,13 @@
+     int		n;
+ #endif
+ 
++    /*
++     * On Windows, deleting a directory's symbolic link is done by
++     * RemoveDirectory(): mch_rmdir.  It seems unnatural, but it is fact.
++     */
++    if (mch_isdir(name) && mch_is_symbolic_link(name))
++	return mch_rmdir(name);
++
+     win32_setattrs(name, FILE_ATTRIBUTE_NORMAL);
+ 
+ #ifdef FEAT_MBYTE
+diff -r 54ebe5bb45e2 src/os_win32.h
+--- a/src/os_win32.h	Sat Jul 04 11:18:13 2015 +0900
++++ b/src/os_win32.h	Sat Jul 04 11:24:21 2015 +0900
+@@ -57,6 +57,8 @@
+ 
+ #define FEAT_SHORTCUT		/* resolve shortcuts */
+ 
++#define FEAT_SYMBOLIC_LINKS
++
+ #if (!defined(__BORLANDC__) || __BORLANDC__ >= 0x550) \
+ 	&& (!defined(_MSC_VER) || _MSC_VER > 1020)
+ /*
+@@ -144,6 +146,19 @@
+ # define IO_REPARSE_TAG_SYMLINK		0xA000000C
+ #endif
+ 
++/*
++ * Reparse Point
++ */
++#ifndef FILE_ATTRIBUTE_REPARSE_POINT
++# define FILE_ATTRIBUTE_REPARSE_POINT	0x00000400
++#endif
++#ifndef IO_REPARSE_TAG_MOUNT_POINT
++# define IO_REPARSE_TAG_MOUNT_POINT	0xA0000003
++#endif
++#ifndef IO_REPARSE_TAG_SYMLINK
++# define IO_REPARSE_TAG_SYMLINK		0xA000000C
++#endif
++
+ #if defined(_MSC_VER) || defined(__BORLANDC__)
+     /* Support for __try / __except.  All versions of MSVC and Borland C are
+      * expected to have this.  Any other compilers that support it? */
+diff -r 54ebe5bb45e2 src/proto/os_unix.pro
+--- a/src/proto/os_unix.pro	Sat Jul 04 11:18:13 2015 +0900
++++ b/src/proto/os_unix.pro	Sat Jul 04 11:24:21 2015 +0900
+@@ -42,6 +42,7 @@
+ void mch_free_acl __ARGS((vim_acl_T aclent));
+ void mch_hide __ARGS((char_u *name));
+ int mch_isdir __ARGS((char_u *name));
++int mch_is_symbolic_link __ARGS((char_u *name));
+ int mch_can_exe __ARGS((char_u *name, char_u **path, int use_path));
+ int mch_nodetype __ARGS((char_u *name));
+ void mch_early_init __ARGS((void));

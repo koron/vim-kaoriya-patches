@@ -1,10 +1,11 @@
 # HG changeset patch
 # Parent a57489c58bfc1321c3f92afaab61a9a69cc5509e
 
-diff -r a57489c58bfc src/edit.c
---- a/src/edit.c	Tue May 06 20:18:43 2014 +0900
-+++ b/src/edit.c	Tue May 06 20:50:14 2014 +0900
-@@ -9330,12 +9330,7 @@
+diff --git a/src/edit.c b/src/edit.c
+index db4a079..bbcf7e9 100644
+--- a/src/edit.c
++++ b/src/edit.c
+@@ -9495,16 +9495,9 @@ ins_left(end_change)
      tpos = curwin->w_cursor;
      if (oneleft() == OK)
      {
@@ -13,15 +14,22 @@ diff -r a57489c58bfc src/edit.c
 -	 * break undo.  K_LEFT is inserted in im_correct_cursor(). */
 -	if (!im_is_preediting())
 -#endif
--	    start_arrow(&tpos);
-+	start_arrow(&tpos);
+-	{
+-	    start_arrow_with_change(&tpos, end_change);
+-	    if (!end_change)
+-		AppendCharToRedobuff(K_LEFT);
+-	}
++	start_arrow_with_change(&tpos, end_change);
++	if (!end_change)
++	    AppendCharToRedobuff(K_LEFT);
  #ifdef FEAT_RIGHTLEFT
  	/* If exit reversed string, position is fixed */
  	if (revins_scol != -1 && (int)curwin->w_cursor.col >= revins_scol)
-diff -r a57489c58bfc src/ex_getln.c
---- a/src/ex_getln.c	Tue May 06 20:18:43 2014 +0900
-+++ b/src/ex_getln.c	Tue May 06 20:50:14 2014 +0900
-@@ -94,9 +94,6 @@
+diff --git a/src/ex_getln.c b/src/ex_getln.c
+index 8879a82..2c2c3d1 100644
+--- a/src/ex_getln.c
++++ b/src/ex_getln.c
+@@ -94,9 +94,6 @@ static void	draw_cmdline __ARGS((int start, int len));
  static void	save_cmdline __ARGS((struct cmdline_info *ccp));
  static void	restore_cmdline __ARGS((struct cmdline_info *ccp));
  static int	cmdline_paste __ARGS((int regname, int literally, int remcr));
@@ -31,7 +39,7 @@ diff -r a57489c58bfc src/ex_getln.c
  #ifdef FEAT_WILDMENU
  static void	cmdline_del __ARGS((int from));
  #endif
-@@ -2467,106 +2464,6 @@
+@@ -2505,106 +2502,6 @@ cmdline_at_end()
  }
  #endif
  
@@ -138,7 +146,7 @@ diff -r a57489c58bfc src/ex_getln.c
  /*
   * Allocate a new command line buffer.
   * Assigns the new buffer to ccline.cmdbuff and ccline.cmdbufflen.
-@@ -3301,9 +3198,6 @@
+@@ -3339,9 +3236,6 @@ cursorcmd()
      }
  
      windgoto(msg_row, msg_col);
@@ -148,10 +156,11 @@ diff -r a57489c58bfc src/ex_getln.c
  #ifdef MCH_CURSOR_SHAPE
      mch_update_cursor();
  #endif
-diff -r a57489c58bfc src/globals.h
---- a/src/globals.h	Tue May 06 20:18:43 2014 +0900
-+++ b/src/globals.h	Tue May 06 20:50:14 2014 +0900
-@@ -871,19 +871,6 @@
+diff --git a/src/globals.h b/src/globals.h
+index f0879dc..8962bfd 100644
+--- a/src/globals.h
++++ b/src/globals.h
+@@ -872,19 +872,6 @@ EXTERN int* (*iconv_errno) (void);
  #ifdef FEAT_XIM
  # ifdef FEAT_GUI_GTK
  EXTERN GtkIMContext	*xic INIT(= NULL);
@@ -171,10 +180,11 @@ diff -r a57489c58bfc src/globals.h
  # else
  EXTERN XIC		xic INIT(= NULL);
  # endif
-diff -r a57489c58bfc src/mbyte.c
---- a/src/mbyte.c	Tue May 06 20:18:43 2014 +0900
-+++ b/src/mbyte.c	Tue May 06 20:50:14 2014 +0900
-@@ -4444,29 +4444,18 @@
+diff --git a/src/mbyte.c b/src/mbyte.c
+index c23022f..a137b19 100644
+--- a/src/mbyte.c
++++ b/src/mbyte.c
+@@ -4537,29 +4537,18 @@ iconv_end()
  # if defined(FEAT_GUI_GTK) || defined(PROTO)
  static int xim_has_preediting INIT(= FALSE);  /* IM current status */
  
@@ -209,7 +219,7 @@ diff -r a57489c58bfc src/mbyte.c
      void
  im_set_active(int active)
  {
-@@ -4519,6 +4508,8 @@
+@@ -4612,6 +4601,8 @@ im_set_position(int row, int col)
  	area.height = gui.char_height;
  
  	gtk_im_context_set_cursor_location(xic, &area);
@@ -218,7 +228,7 @@ diff -r a57489c58bfc src/mbyte.c
      }
  }
  
-@@ -4549,42 +4540,95 @@
+@@ -4642,42 +4633,95 @@ im_add_to_input(char_u *str, int len)
  	gui_mch_mousehide(TRUE);
  }
  
@@ -243,18 +253,24 @@ diff -r a57489c58bfc src/mbyte.c
 +    gtk_window_move(GTK_WINDOW(preedit_window), x, y);
 +}
 +
-+    static void
+     static void
+-im_delete_preedit(void)
 +im_preedit_window_open()
-+{
+ {
+-    char_u bskey[]  = {CSI, 'k', 'b'};
+-    char_u delkey[] = {CSI, 'k', 'D'};
 +    char *preedit_string;
 +    char buf[8];
 +    PangoAttrList *attr_list;
 +    PangoLayout *layout;
 +    GdkColor color;
 +    gint w, h;
-+
+ 
+-    if (State & NORMAL)
 +    if (preedit_window == NULL)
-+    {
+     {
+-	im_preedit_cursor = 0;
+-	return;
 +	preedit_window = gtk_window_new(GTK_WINDOW_POPUP);
 +	preedit_label = gtk_label_new("");
 +	gtk_container_add(GTK_CONTAINER(preedit_window), preedit_label);
@@ -285,8 +301,12 @@ diff -r a57489c58bfc src/mbyte.c
 +	gtk_widget_show_all(preedit_window);
 +
 +	im_preedit_window_set_position();
-+    }
-+
+     }
+-    for (; im_preedit_cursor > 0; --im_preedit_cursor)
+-	add_to_input_buf(bskey, (int)sizeof(bskey));
+ 
+-    for (; im_preedit_trailing > 0; --im_preedit_trailing)
+-	add_to_input_buf(delkey, (int)sizeof(delkey));
 +    g_free(preedit_string);
 +    pango_attr_list_unref(attr_list);
 +}
@@ -296,45 +316,20 @@ diff -r a57489c58bfc src/mbyte.c
 +{
 +    if (preedit_window != NULL)
 +	gtk_widget_hide(preedit_window);
-+}
-+
-+    static void
-+im_show_preedit()
-+{
-+    im_preedit_window_open();
-+
-+    if (p_mh) /* blank out the pointer if necessary */
-+	gui_mch_mousehide(TRUE);
-+}
-+
-     static void
- im_delete_preedit(void)
- {
--    char_u bskey[]  = {CSI, 'k', 'b'};
--    char_u delkey[] = {CSI, 'k', 'D'};
--
--    if (State & NORMAL)
--    {
--	im_preedit_cursor = 0;
--	return;
--    }
--    for (; im_preedit_cursor > 0; --im_preedit_cursor)
--	add_to_input_buf(bskey, (int)sizeof(bskey));
--
--    for (; im_preedit_trailing > 0; --im_preedit_trailing)
--	add_to_input_buf(delkey, (int)sizeof(delkey));
--}
--
+ }
+ 
 -/*
 - * Move the cursor left by "num_move_back" characters.
 - * Note that ins_left() checks im_is_preediting() to avoid breaking undo for
 - * these K_LEFT keys.
 - */
--    static void
+     static void
 -im_correct_cursor(int num_move_back)
--{
++im_show_preedit()
+ {
 -    char_u backkey[] = {CSI, 'k', 'l'};
--
++    im_preedit_window_open();
+ 
 -    if (State & NORMAL)
 -	return;
 -#  ifdef FEAT_RIGHTLEFT
@@ -343,11 +338,18 @@ diff -r a57489c58bfc src/mbyte.c
 -#  endif
 -    for (; num_move_back > 0; --num_move_back)
 -	add_to_input_buf(backkey, (int)sizeof(backkey));
++    if (p_mh) /* blank out the pointer if necessary */
++	gui_mch_mousehide(TRUE);
++}
++
++    static void
++im_delete_preedit(void)
++{
 +    im_preedit_window_close();
  }
  
  static int xim_expected_char = NUL;
-@@ -4597,6 +4641,8 @@
+@@ -4690,6 +4734,8 @@ static int xim_ignored_char = FALSE;
  im_show_info(void)
  {
      int	    old_vgetc_busy;
@@ -356,7 +358,7 @@ diff -r a57489c58bfc src/mbyte.c
  
      old_vgetc_busy = vgetc_busy;
      vgetc_busy = TRUE;
-@@ -4605,6 +4651,8 @@
+@@ -4698,6 +4744,8 @@ im_show_info(void)
      if ((State & NORMAL) || (State & INSERT))
  	setcursor();
      out_flush();
@@ -365,7 +367,7 @@ diff -r a57489c58bfc src/mbyte.c
  }
  
  /*
-@@ -4618,49 +4666,11 @@
+@@ -4711,49 +4759,11 @@ im_commit_cb(GtkIMContext *context UNUSED,
  {
      int		slen = (int)STRLEN(str);
      int		add_to_input = TRUE;
@@ -415,7 +417,7 @@ diff -r a57489c58bfc src/mbyte.c
      /* Is this a single character that matches a keypad key that's just
       * been pressed?  If so, we don't want it to be entered as such - let
       * us carry on processing the raw keycode so that it may be used in
-@@ -4684,15 +4694,6 @@
+@@ -4777,15 +4787,6 @@ im_commit_cb(GtkIMContext *context UNUSED,
      if (add_to_input)
  	im_add_to_input((char_u *)str, slen);
  
@@ -431,7 +433,7 @@ diff -r a57489c58bfc src/mbyte.c
      if (gtk_main_level() > 0)
  	gtk_main_quit();
  }
-@@ -4725,7 +4726,6 @@
+@@ -4818,7 +4819,6 @@ im_preedit_end_cb(GtkIMContext *context UNUSED, gpointer data UNUSED)
      im_delete_preedit();
  
      /* Indicate that preediting has finished */
@@ -439,7 +441,7 @@ diff -r a57489c58bfc src/mbyte.c
      xim_has_preediting = FALSE;
  
  #if 0
-@@ -4780,15 +4780,8 @@
+@@ -4873,15 +4873,8 @@ im_preedit_end_cb(GtkIMContext *context UNUSED, gpointer data UNUSED)
  im_preedit_changed_cb(GtkIMContext *context, gpointer data UNUSED)
  {
      char    *preedit_string = NULL;
@@ -448,36 +450,30 @@ diff -r a57489c58bfc src/mbyte.c
 -    char_u  *str;
 -    char_u  *p;
 -    int	    i;
--
+ 
 -    gtk_im_context_get_preedit_string(context,
 -				      &preedit_string, NULL,
 -				      &cursor_index);
-+
 +    gtk_im_context_get_preedit_string(context, &preedit_string, NULL, NULL);
  
  #ifdef XIM_DEBUG
      xim_log("im_preedit_changed_cb(): %s\n", preedit_string);
-@@ -4796,66 +4789,15 @@
+@@ -4889,66 +4882,15 @@ im_preedit_changed_cb(GtkIMContext *context, gpointer data UNUSED)
  
      g_return_if_fail(preedit_string != NULL); /* just in case */
  
 -    /* If preedit_start_col is MAXCOL set it to the current cursor position. */
 -    if (preedit_start_col == MAXCOL && preedit_string[0] != '\0')
-+    if (preedit_string[0] == NUL)
-+    {
-+	xim_has_preediting = FALSE;
-+	im_delete_preedit();
-+    }
-+    else
-     {
- 	xim_has_preediting = TRUE;
+-    {
+-	xim_has_preediting = TRUE;
 -
 -	/* Urgh, this breaks if the input buffer isn't empty now */
 -	init_preedit_start_col();
 -    }
 -    else if (cursor_index == 0 && preedit_string[0] == '\0')
--    {
--	xim_has_preediting = FALSE;
++    if (preedit_string[0] == NUL)
+     {
+ 	xim_has_preediting = FALSE;
 -
 -	/* If at the start position (after typing backspace)
 -	 * preedit_start_col must be reset. */
@@ -521,17 +517,20 @@ diff -r a57489c58bfc src/mbyte.c
 -	}
 -	if (preedit_start_col != MAXCOL)
 -	    preedit_end_col += utf_ptr2cells(p);
--    }
++	im_delete_preedit();
+     }
 -
 -    if (p > str)
--    {
++    else
+     {
 -	im_add_to_input(str, (int)(p - str));
 -	im_correct_cursor(num_move_back);
++	xim_has_preediting = TRUE;
 +	im_show_preedit();
      }
  
      g_free(preedit_string);
-@@ -4864,98 +4806,6 @@
+@@ -4957,98 +4899,6 @@ im_preedit_changed_cb(GtkIMContext *context, gpointer data UNUSED)
  	gtk_main_quit();
  }
  
@@ -630,7 +629,7 @@ diff -r a57489c58bfc src/mbyte.c
      void
  xim_init(void)
  {
-@@ -4996,7 +4846,6 @@
+@@ -5089,7 +4939,6 @@ im_shutdown(void)
      }
      im_is_active = FALSE;
      im_commit_handler_id = 0;
@@ -638,7 +637,7 @@ diff -r a57489c58bfc src/mbyte.c
      xim_has_preediting = FALSE;
  }
  
-@@ -5151,7 +5000,6 @@
+@@ -5244,7 +5093,6 @@ xim_reset(void)
  	}
      }
  
@@ -646,7 +645,7 @@ diff -r a57489c58bfc src/mbyte.c
      xim_has_preediting = FALSE;
  }
  
-@@ -5256,21 +5104,6 @@
+@@ -5349,21 +5197,6 @@ xim_queue_key_press_event(GdkEventKey *event, int down)
  	{
  	    int imresult = gtk_im_context_filter_keypress(xic, event);
  
@@ -668,10 +667,11 @@ diff -r a57489c58bfc src/mbyte.c
  	    /* If XIM tried to commit a keypad key as a single char.,
  	     * ignore it so we can use the keypad key 'raw', for mappings. */
  	    if (xim_expected_char != NUL && xim_ignored_char)
-diff -r a57489c58bfc src/misc1.c
---- a/src/misc1.c	Tue May 06 20:18:43 2014 +0900
-+++ b/src/misc1.c	Tue May 06 20:50:14 2014 +0900
-@@ -2689,15 +2689,6 @@
+diff --git a/src/misc1.c b/src/misc1.c
+index 8b5ea64..6a787c5 100644
+--- a/src/misc1.c
++++ b/src/misc1.c
+@@ -2753,15 +2753,6 @@ skip_to_option_part(p)
      void
  changed()
  {
@@ -687,10 +687,11 @@ diff -r a57489c58bfc src/misc1.c
      if (!curbuf->b_changed)
      {
  	int	save_msg_scroll = msg_scroll;
-diff -r a57489c58bfc src/proto/ex_getln.pro
---- a/src/proto/ex_getln.pro	Tue May 06 20:18:43 2014 +0900
-+++ b/src/proto/ex_getln.pro	Tue May 06 20:50:14 2014 +0900
-@@ -9,7 +9,6 @@
+diff --git a/src/proto/ex_getln.pro b/src/proto/ex_getln.pro
+index 86e01b5..e6e8a00 100644
+--- a/src/proto/ex_getln.pro
++++ b/src/proto/ex_getln.pro
+@@ -9,7 +9,6 @@ char_u *getexline __ARGS((int c, void *cookie, int indent));
  char_u *getexmodeline __ARGS((int promptc, void *cookie, int indent));
  int cmdline_overstrike __ARGS((void));
  int cmdline_at_end __ARGS((void));
@@ -698,10 +699,11 @@ diff -r a57489c58bfc src/proto/ex_getln.pro
  void free_cmdline_buf __ARGS((void));
  void putcmdline __ARGS((int c, int shift));
  void unputcmdline __ARGS((void));
-diff -r a57489c58bfc src/proto/mbyte.pro
---- a/src/proto/mbyte.pro	Tue May 06 20:18:43 2014 +0900
-+++ b/src/proto/mbyte.pro	Tue May 06 20:50:14 2014 +0900
-@@ -76,7 +76,6 @@
+diff --git a/src/proto/mbyte.pro b/src/proto/mbyte.pro
+index c599dac..b7e1386 100644
+--- a/src/proto/mbyte.pro
++++ b/src/proto/mbyte.pro
+@@ -76,7 +76,6 @@ void im_set_active __ARGS((int active));
  void xim_set_focus __ARGS((int focus));
  void im_set_position __ARGS((int row, int col));
  void xim_set_preedit __ARGS((void));
@@ -709,10 +711,11 @@ diff -r a57489c58bfc src/proto/mbyte.pro
  void xim_init __ARGS((void));
  void im_shutdown __ARGS((void));
  int im_xim_isvalid_imactivate __ARGS((void));
-diff -r a57489c58bfc src/screen.c
---- a/src/screen.c	Tue May 06 20:18:43 2014 +0900
-+++ b/src/screen.c	Tue May 06 20:50:14 2014 +0900
-@@ -2966,10 +2966,6 @@
+diff --git a/src/screen.c b/src/screen.c
+index b1af862..d055c30 100644
+--- a/src/screen.c
++++ b/src/screen.c
+@@ -3033,10 +3033,6 @@ win_line(wp, lnum, startrow, endrow, nochange)
  #endif
  #define WL_LINE		WL_SBR + 1	/* text in the line */
      int		draw_state = WL_START;	/* what to draw next */
@@ -723,7 +726,7 @@ diff -r a57489c58bfc src/screen.c
  
  #ifdef FEAT_CONCEAL
      int		syntax_flags	= 0;
-@@ -4701,43 +4697,6 @@
+@@ -4982,43 +4978,6 @@ win_line(wp, lnum, startrow, endrow, nochange)
  		&& !attr_pri)
  	    char_attr = extra_attr;
  
@@ -767,10 +770,11 @@ diff -r a57489c58bfc src/screen.c
  	/*
  	 * Handle the case where we are in column 0 but not on the first
  	 * character of the line and the user wants us to show us a
-diff -r a57489c58bfc src/undo.c
---- a/src/undo.c	Tue May 06 20:18:43 2014 +0900
-+++ b/src/undo.c	Tue May 06 20:50:14 2014 +0900
-@@ -2747,10 +2747,6 @@
+diff --git a/src/undo.c b/src/undo.c
+index c29832b..7cfd1e8 100644
+--- a/src/undo.c
++++ b/src/undo.c
+@@ -3022,10 +3022,6 @@ u_sync(force)
      /* Skip it when already synced or syncing is disabled. */
      if (curbuf->b_u_synced || (!force && no_u_sync > 0))
  	return;

@@ -2,10 +2,11 @@
 # Parent 620d826bce9527620cfa726d5df0e4d9af5ddf3b
 add 'C' flag to 'guioptions' which control to show the caption of window
 
-diff -r 620d826bce95 runtime/doc/options.txt
---- a/runtime/doc/options.txt	Sun Aug 31 14:19:06 2014 +0900
-+++ b/runtime/doc/options.txt	Sun Aug 31 14:27:34 2014 +0900
-@@ -3751,6 +3751,9 @@
+diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
+index 48793a9..4107d8e 100644
+--- a/runtime/doc/options.txt
++++ b/runtime/doc/options.txt
+@@ -3823,6 +3823,9 @@ A jump table for the options with a short description can be found at |Q_op|.
  	  'F'	Add a footer.  Only for Motif.  See |gui-footer|.
  
  
@@ -15,10 +16,11 @@ diff -r 620d826bce95 runtime/doc/options.txt
  						*'guipty'* *'noguipty'*
  'guipty'		boolean	(default on)
  			global
-diff -r 620d826bce95 src/gui.c
---- a/src/gui.c	Sun Aug 31 14:19:06 2014 +0900
-+++ b/src/gui.c	Sun Aug 31 14:27:34 2014 +0900
-@@ -3346,6 +3346,8 @@
+diff --git a/src/gui.c b/src/gui.c
+index fc2981c..282e5be 100644
+--- a/src/gui.c
++++ b/src/gui.c
+@@ -3346,6 +3346,8 @@ gui_init_which_components(oldval)
      static int	prev_tearoff = -1;
      int		using_tearoff = FALSE;
  #endif
@@ -27,7 +29,7 @@ diff -r 620d826bce95 src/gui.c
  
      char_u	*p;
      int		i;
-@@ -3423,6 +3425,9 @@
+@@ -3423,6 +3425,9 @@ gui_init_which_components(oldval)
  		using_tearoff = TRUE;
  #endif
  		break;
@@ -37,7 +39,7 @@ diff -r 620d826bce95 src/gui.c
  	    default:
  		/* Ignore options that are not supported */
  		break;
-@@ -3533,6 +3538,14 @@
+@@ -3533,6 +3538,14 @@ gui_init_which_components(oldval)
  	    prev_tearoff = using_tearoff;
  	}
  #endif
@@ -52,10 +54,11 @@ diff -r 620d826bce95 src/gui.c
  	if (need_set_size != 0)
  	{
  #ifdef FEAT_GUI_GTK
-diff -r 620d826bce95 src/gui_w32.c
---- a/src/gui_w32.c	Sun Aug 31 14:19:06 2014 +0900
-+++ b/src/gui_w32.c	Sun Aug 31 14:27:34 2014 +0900
-@@ -592,6 +592,49 @@
+diff --git a/src/gui_w32.c b/src/gui_w32.c
+index 64bb627..028dba5 100644
+--- a/src/gui_w32.c
++++ b/src/gui_w32.c
+@@ -590,6 +590,49 @@ gui_is_win32s(void)
      return (os_version.dwPlatformId == VER_PLATFORM_WIN32s);
  }
  
@@ -105,16 +108,16 @@ diff -r 620d826bce95 src/gui_w32.c
  #ifdef FEAT_MENU
  /*
   * Figure out how high the menu bar is at the moment.
-@@ -623,7 +666,7 @@
+@@ -629,7 +672,7 @@ gui_mswin_get_menu_height(
  	    {
  		RECT r1, r2;
  		int frameht = GetSystemMetrics(SM_CYFRAME);
 -		int capht = GetSystemMetrics(SM_CYCAPTION);
-+ 		int capht = get_caption_height();
++		int capht = get_caption_height();
  
  		/* get window rect of s_hwnd
  		 * get client rect of s_hwnd
-@@ -1854,10 +1897,11 @@
+@@ -1868,10 +1911,11 @@ gui_mch_set_shellsize(int width, int height,
  
      /* compute the size of the outside of the window */
      win_width = width + (GetSystemMetrics(SM_CXFRAME) +
@@ -128,7 +131,7 @@ diff -r 620d826bce95 src/gui_w32.c
  #ifdef FEAT_MENU
  			+ gui_mswin_get_menu_height(FALSE)
  #endif
-@@ -2783,7 +2827,8 @@
+@@ -2790,7 +2834,8 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
  
      *screen_w = workarea_rect.right - workarea_rect.left
  		- (GetSystemMetrics(SM_CXFRAME) +
@@ -138,7 +141,7 @@ diff -r 620d826bce95 src/gui_w32.c
  
      /* FIXME: dirty trick: Because the gui_get_base_height() doesn't include
       * the menubar for MSwin, we subtract it from the screen height, so that
-@@ -2791,7 +2836,7 @@
+@@ -2798,7 +2843,7 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
      *screen_h = workarea_rect.bottom - workarea_rect.top
  		- (GetSystemMetrics(SM_CYFRAME) +
  		   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
@@ -147,10 +150,11 @@ diff -r 620d826bce95 src/gui_w32.c
  #ifdef FEAT_MENU
  		- gui_mswin_get_menu_height(FALSE)
  #endif
-diff -r 620d826bce95 src/gui_w48.c
---- a/src/gui_w48.c	Sun Aug 31 14:19:06 2014 +0900
-+++ b/src/gui_w48.c	Sun Aug 31 14:27:34 2014 +0900
-@@ -139,6 +139,8 @@
+diff --git a/src/gui_w48.c b/src/gui_w48.c
+index 9035578..3c61004 100644
+--- a/src/gui_w48.c
++++ b/src/gui_w48.c
+@@ -139,6 +139,8 @@ typedef int WNDPROC;
  static void _OnPaint( HWND hwnd);
  static void clear_rect(RECT *rcp);
  static int gui_mswin_get_menu_height(int fix_window);
@@ -159,39 +163,40 @@ diff -r 620d826bce95 src/gui_w48.c
  
  static WORD		s_dlgfntheight;		/* height of the dialog font */
  static WORD		s_dlgfntwidth;		/* width of the dialog font */
-@@ -2930,11 +2932,12 @@
+@@ -2931,11 +2933,12 @@ gui_mswin_get_valid_dimensions(
  
      base_width = gui_get_base_width()
  	+ (GetSystemMetrics(SM_CXFRAME) +
--           GetSystemMetrics(SM_CXPADDEDBORDER)) * 2;
-+           GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
+-	   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2;
++	   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
 +	+ get_caption_width_adjustment();
      base_height = gui_get_base_height()
  	+ (GetSystemMetrics(SM_CYFRAME) +
-            GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
+ 	   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
 -	+ GetSystemMetrics(SM_CYCAPTION)
 +	+ get_caption_height()
  #ifdef FEAT_MENU
  	+ gui_mswin_get_menu_height(FALSE)
  #endif
-@@ -3318,11 +3321,12 @@
+@@ -3337,11 +3340,13 @@ gui_mch_newfont()
      GetWindowRect(s_hwnd, &rect);
      gui_resize_shell(rect.right - rect.left
  			- (GetSystemMetrics(SM_CXFRAME) +
--                           GetSystemMetrics(SM_CXPADDEDBORDER)) * 2,
-+                           GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
+-			   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2,
++			   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
 +			- get_caption_width_adjustment(),
  		     rect.bottom - rect.top
  			- (GetSystemMetrics(SM_CYFRAME) +
-                            GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
--			- GetSystemMetrics(SM_CYCAPTION)
+ 			   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
+ 			- GetSystemMetrics(SM_CYCAPTION)
 +			- get_caption_height()
  #ifdef FEAT_MENU
  			- gui_mswin_get_menu_height(FALSE)
  #endif
-diff -r 620d826bce95 src/option.h
---- a/src/option.h	Sun Aug 31 14:19:06 2014 +0900
-+++ b/src/option.h	Sun Aug 31 14:27:34 2014 +0900
+diff --git a/src/option.h b/src/option.h
+index 824550e..3088244 100644
+--- a/src/option.h
++++ b/src/option.h
 @@ -237,7 +237,8 @@
  #define GO_TOOLBAR	'T'		/* add toolbar */
  #define GO_FOOTER	'F'		/* add footer */
@@ -202,10 +207,11 @@ diff -r 620d826bce95 src/option.h
  
  /* flags for 'comments' option */
  #define COM_NEST	'n'		/* comments strings nest */
-diff -r 620d826bce95 src/proto/gui_w32.pro
---- a/src/proto/gui_w32.pro	Sun Aug 31 14:19:06 2014 +0900
-+++ b/src/proto/gui_w32.pro	Sun Aug 31 14:27:34 2014 +0900
-@@ -61,6 +61,7 @@
+diff --git a/src/proto/gui_w32.pro b/src/proto/gui_w32.pro
+index 5504218..d1fac73 100644
+--- a/src/proto/gui_w32.pro
++++ b/src/proto/gui_w32.pro
+@@ -61,6 +61,7 @@ char_u *gui_mch_browsedir __ARGS((char_u *title, char_u *initdir));
  char_u *gui_mch_browse __ARGS((int saving, char_u *title, char_u *dflt, char_u *ext, char_u *initdir, char_u *filter));
  int get_cmd_args __ARGS((char *prog, char *cmdline, char ***argvp, char **tofree));
  int gui_is_win32s __ARGS((void));

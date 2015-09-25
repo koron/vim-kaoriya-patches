@@ -1,5 +1,4 @@
 disable_regexp_logs.diff #-no_kaoriya
-GH764-restore-screenbuffer-win7-r3.diff #-no_kaoriya
 GH632-lambda-r23.diff #+lambda
 lambda-r23-p1.diff #+lambda
 lambda-r23-ex1.diff #+lambda

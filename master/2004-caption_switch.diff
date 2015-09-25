@@ -151,7 +151,7 @@ index 64bb627..028dba5 100644
  		- gui_mswin_get_menu_height(FALSE)
  #endif
 diff --git a/src/gui_w48.c b/src/gui_w48.c
-index 9035578..3c61004 100644
+index dd2aeca..210579a 100644
 --- a/src/gui_w48.c
 +++ b/src/gui_w48.c
 @@ -139,6 +139,8 @@ typedef int WNDPROC;
@@ -178,21 +178,19 @@ index 9035578..3c61004 100644
  #ifdef FEAT_MENU
  	+ gui_mswin_get_menu_height(FALSE)
  #endif
-@@ -3337,11 +3340,13 @@ gui_mch_newfont()
-     GetWindowRect(s_hwnd, &rect);
-     gui_resize_shell(rect.right - rect.left
- 			- (GetSystemMetrics(SM_CXFRAME) +
--			   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2,
-+			   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
-+			- get_caption_width_adjustment(),
- 		     rect.bottom - rect.top
- 			- (GetSystemMetrics(SM_CYFRAME) +
- 			   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
- 			- GetSystemMetrics(SM_CYCAPTION)
-+			- get_caption_height()
- #ifdef FEAT_MENU
- 			- gui_mswin_get_menu_height(FALSE)
- #endif
+@@ -3338,9 +3341,11 @@ gui_mch_newfont()
+     if (win_socket_id == 0)
+     {
+ 	gui_resize_shell(rect.right - rect.left
++	    - get_caption_width_adjustment()
+ 	    - (GetSystemMetrics(SM_CXFRAME) +
+-	       GetSystemMetrics(SM_CXPADDEDBORDER)) * 2,
++	       GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
+ 	    rect.bottom - rect.top
++	    - get_caption_height()
+ 	    - (GetSystemMetrics(SM_CYFRAME) +
+ 	       GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
+ 	    - GetSystemMetrics(SM_CYCAPTION)
 diff --git a/src/option.h b/src/option.h
 index 824550e..3088244 100644
 --- a/src/option.h

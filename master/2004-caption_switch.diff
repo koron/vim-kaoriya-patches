@@ -3,10 +3,10 @@
 add 'C' flag to 'guioptions' which control to show the caption of window
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index 48793a9..4107d8e 100644
+index c813bc7..f1df590 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
-@@ -3823,6 +3823,9 @@ A jump table for the options with a short description can be found at |Q_op|.
+@@ -3826,6 +3826,9 @@ A jump table for the options with a short description can be found at |Q_op|.
  	  'F'	Add a footer.  Only for Motif.  See |gui-footer|.
  
  
@@ -17,10 +17,10 @@ index 48793a9..4107d8e 100644
  'guipty'		boolean	(default on)
  			global
 diff --git a/src/gui.c b/src/gui.c
-index fc2981c..282e5be 100644
+index 0736522..cb837e5 100644
 --- a/src/gui.c
 +++ b/src/gui.c
-@@ -3346,6 +3346,8 @@ gui_init_which_components(oldval)
+@@ -3367,6 +3367,8 @@ gui_init_which_components(oldval)
      static int	prev_tearoff = -1;
      int		using_tearoff = FALSE;
  #endif
@@ -29,7 +29,7 @@ index fc2981c..282e5be 100644
  
      char_u	*p;
      int		i;
-@@ -3423,6 +3425,9 @@ gui_init_which_components(oldval)
+@@ -3444,6 +3446,9 @@ gui_init_which_components(oldval)
  		using_tearoff = TRUE;
  #endif
  		break;
@@ -39,7 +39,7 @@ index fc2981c..282e5be 100644
  	    default:
  		/* Ignore options that are not supported */
  		break;
-@@ -3533,6 +3538,14 @@ gui_init_which_components(oldval)
+@@ -3554,6 +3559,14 @@ gui_init_which_components(oldval)
  	    prev_tearoff = using_tearoff;
  	}
  #endif
@@ -55,10 +55,10 @@ index fc2981c..282e5be 100644
  	{
  #ifdef FEAT_GUI_GTK
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index 64bb627..028dba5 100644
+index dbed639..71723bd 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
-@@ -590,6 +590,49 @@ gui_is_win32s(void)
+@@ -590,6 +590,57 @@ gui_is_win32s(void)
      return (os_version.dwPlatformId == VER_PLATFORM_WIN32s);
  }
  
@@ -88,14 +88,22 @@ index 64bb627..028dba5 100644
 +    void
 +gui_mch_show_caption(int show)
 +{
++    const static LONG flags_on = WS_CAPTION;
++    const static LONG flags_off = 0;
 +    LONG style, newstyle;
 +
 +    /* Remove caption when title is null. */
 +    style = newstyle = GetWindowLong(s_hwnd, GWL_STYLE);
-+    if (show && !(style & WS_CAPTION))
-+	newstyle = style | WS_CAPTION;
-+    else if (!show && (style & WS_CAPTION))
-+	newstyle = style & ~WS_CAPTION;
++    if (show)
++    {
++	newstyle &= ~flags_off;
++	newstyle |= flags_on;
++    }
++    else
++    {
++	newstyle &= ~flags_on;
++	newstyle |= flags_off;
++    }
 +    if (newstyle != style)
 +    {
 +	SetWindowLong(s_hwnd, GWL_STYLE, newstyle);
@@ -108,7 +116,7 @@ index 64bb627..028dba5 100644
  #ifdef FEAT_MENU
  /*
   * Figure out how high the menu bar is at the moment.
-@@ -629,7 +672,7 @@ gui_mswin_get_menu_height(
+@@ -629,7 +680,7 @@ gui_mswin_get_menu_height(
  	    {
  		RECT r1, r2;
  		int frameht = GetSystemMetrics(SM_CYFRAME);
@@ -117,7 +125,7 @@ index 64bb627..028dba5 100644
  
  		/* get window rect of s_hwnd
  		 * get client rect of s_hwnd
-@@ -1868,10 +1911,11 @@ gui_mch_set_shellsize(int width, int height,
+@@ -1868,10 +1919,11 @@ gui_mch_set_shellsize(int width, int height,
  
      /* compute the size of the outside of the window */
      win_width = width + (GetSystemMetrics(SM_CXFRAME) +
@@ -131,7 +139,7 @@ index 64bb627..028dba5 100644
  #ifdef FEAT_MENU
  			+ gui_mswin_get_menu_height(FALSE)
  #endif
-@@ -2790,7 +2834,8 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
+@@ -2790,7 +2842,8 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
  
      *screen_w = workarea_rect.right - workarea_rect.left
  		- (GetSystemMetrics(SM_CXFRAME) +
@@ -141,7 +149,7 @@ index 64bb627..028dba5 100644
  
      /* FIXME: dirty trick: Because the gui_get_base_height() doesn't include
       * the menubar for MSwin, we subtract it from the screen height, so that
-@@ -2798,7 +2843,7 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
+@@ -2798,7 +2851,7 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
      *screen_h = workarea_rect.bottom - workarea_rect.top
  		- (GetSystemMetrics(SM_CYFRAME) +
  		   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
@@ -191,10 +199,10 @@ index dd2aeca..a8dcd83 100644
  	       GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
  	    - GetSystemMetrics(SM_CYCAPTION)
 diff --git a/src/option.h b/src/option.h
-index 824550e..3088244 100644
+index ba1523b..323163b 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -237,7 +237,8 @@
+@@ -238,7 +238,8 @@
  #define GO_TOOLBAR	'T'		/* add toolbar */
  #define GO_FOOTER	'F'		/* add footer */
  #define GO_VERTICAL	'v'		/* arrange dialog buttons vertically */

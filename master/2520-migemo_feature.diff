@@ -3,10 +3,11 @@
 # Parent  ce73d82e98a71a688494690978f4e8fe3cc010f6
 Add C/Migemo feature
 
-diff -r ce73d82e98a7 src/Make_mvc.mak
---- a/src/Make_mvc.mak	Sun Mar 01 11:07:30 2015 +0900
-+++ b/src/Make_mvc.mak	Sun Mar 01 11:09:29 2015 +0900
-@@ -686,6 +686,14 @@
+diff --git a/src/Make_mvc.mak b/src/Make_mvc.mak
+index fde3b0f..34bcf04 100644
+--- a/src/Make_mvc.mak
++++ b/src/Make_mvc.mak
+@@ -637,6 +637,14 @@ GETTEXT = yes
  CFLAGS = $(CFLAGS) -DDYNAMIC_GETTEXT
  !endif
  
@@ -21,9 +22,10 @@ diff -r ce73d82e98a7 src/Make_mvc.mak
  # TCL interface
  !ifdef TCL
  !ifndef TCL_VER
-diff -r ce73d82e98a7 src/config.h.in
---- a/src/config.h.in	Sun Mar 01 11:07:30 2015 +0900
-+++ b/src/config.h.in	Sun Mar 01 11:09:29 2015 +0900
+diff --git a/src/config.h.in b/src/config.h.in
+index e92cc5e..e9d0d27 100644
+--- a/src/config.h.in
++++ b/src/config.h.in
 @@ -172,6 +172,7 @@
  #undef HAVE_LSTAT
  #undef HAVE_MEMCMP
@@ -40,10 +42,11 @@ diff -r ce73d82e98a7 src/config.h.in
  #undef HAVE_MATH_H
  #undef HAVE_NDIR_H
  #undef HAVE_POLL_H
-diff -r ce73d82e98a7 src/configure.in
---- a/src/configure.in	Sun Mar 01 11:07:30 2015 +0900
-+++ b/src/configure.in	Sun Mar 01 11:09:29 2015 +0900
-@@ -2852,7 +2852,7 @@
+diff --git a/src/configure.in b/src/configure.in
+index 91c0555..de7affc 100644
+--- a/src/configure.in
++++ b/src/configure.in
+@@ -2913,7 +2913,7 @@ fi
  AC_CHECK_HEADERS(stdarg.h stdint.h stdlib.h string.h \
  	sys/select.h sys/utsname.h termcap.h fcntl.h \
  	sgtty.h sys/ioctl.h sys/time.h sys/types.h \
@@ -52,7 +55,7 @@ diff -r ce73d82e98a7 src/configure.in
  	unistd.h stropts.h errno.h sys/resource.h \
  	sys/systeminfo.h locale.h sys/stream.h termios.h \
  	libc.h sys/statfs.h poll.h sys/poll.h pwd.h \
-@@ -3863,6 +3863,19 @@
+@@ -3940,6 +3940,19 @@ else
    AC_MSG_RESULT(yes)
  fi
  
@@ -72,10 +75,11 @@ diff -r ce73d82e98a7 src/configure.in
  dnl Check for dynamic linking loader
  AC_CHECK_HEADER(dlfcn.h, DLL=dlfcn.h, [AC_CHECK_HEADER(dl.h, DLL=dl.h)])
  if test x${DLL} = xdlfcn.h; then
-diff -r ce73d82e98a7 src/eval.c
---- a/src/eval.c	Sun Mar 01 11:07:30 2015 +0900
-+++ b/src/eval.c	Sun Mar 01 11:09:29 2015 +0900
-@@ -629,6 +629,7 @@
+diff --git a/src/eval.c b/src/eval.c
+index 1abb620..5d1e5e6 100644
+--- a/src/eval.c
++++ b/src/eval.c
+@@ -640,6 +640,7 @@ static void f_matchend __ARGS((typval_T *argvars, typval_T *rettv));
  static void f_matchlist __ARGS((typval_T *argvars, typval_T *rettv));
  static void f_matchstr __ARGS((typval_T *argvars, typval_T *rettv));
  static void f_max __ARGS((typval_T *argvars, typval_T *rettv));
@@ -83,7 +87,7 @@ diff -r ce73d82e98a7 src/eval.c
  static void f_min __ARGS((typval_T *argvars, typval_T *rettv));
  #ifdef vim_mkdir
  static void f_mkdir __ARGS((typval_T *argvars, typval_T *rettv));
-@@ -8199,6 +8200,7 @@
+@@ -8248,6 +8249,7 @@ static struct fst
      {"matchlist",	2, 4, f_matchlist},
      {"matchstr",	2, 4, f_matchstr},
      {"max",		1, 1, f_max},
@@ -91,7 +95,7 @@ diff -r ce73d82e98a7 src/eval.c
      {"min",		1, 1, f_min},
  #ifdef vim_mkdir
      {"mkdir",		1, 3, f_mkdir},
-@@ -12747,6 +12749,11 @@
+@@ -13015,6 +13017,11 @@ f_has(argvars, rettv)
  #ifdef FEAT_MENU
  	"menu",
  #endif
@@ -103,7 +107,7 @@ diff -r ce73d82e98a7 src/eval.c
  #ifdef FEAT_SESSION
  	"mksession",
  #endif
-@@ -13083,6 +13090,10 @@
+@@ -13351,6 +13358,10 @@ f_has(argvars, rettv)
  	else if (STRICMP(name, "win95") == 0)
  	    n = mch_windows95();
  #endif
@@ -114,7 +118,7 @@ diff -r ce73d82e98a7 src/eval.c
  #ifdef FEAT_NETBEANS_INTG
  	else if (STRICMP(name, "netbeans_enabled") == 0)
  	    n = netbeans_active();
-@@ -14751,6 +14762,24 @@
+@@ -15051,6 +15062,24 @@ f_max(argvars, rettv)
  }
  
  /*
@@ -139,18 +143,18 @@ diff -r ce73d82e98a7 src/eval.c
   * "min()" function
   */
      static void
-diff -r ce73d82e98a7 src/ex_getln.c
---- a/src/ex_getln.c	Sun Mar 01 11:07:30 2015 +0900
-+++ b/src/ex_getln.c	Sun Mar 01 11:09:29 2015 +0900
-@@ -205,7 +205,17 @@
+diff --git a/src/ex_getln.c b/src/ex_getln.c
+index 3919466..6d76654 100644
+--- a/src/ex_getln.c
++++ b/src/ex_getln.c
+@@ -205,7 +205,17 @@ getcmdline(firstc, count, indent)
       * custom status line may invoke ":normal". */
      struct cmdline_info save_ccline;
  #endif
--
 +#ifdef USE_MIGEMO
 +    int		migemo_enabled = 0;
 +#endif
-+
+ 
 +#ifdef USE_MIGEMO
 +    if (count < 0)
 +    {
@@ -161,7 +165,7 @@ diff -r ce73d82e98a7 src/ex_getln.c
  #ifdef FEAT_SNIFF
      want_sniff_request = 0;
  #endif
-@@ -1782,15 +1792,22 @@
+@@ -1782,15 +1792,22 @@ cmdline_changed:
  		i = 0;
  	    else
  	    {
@@ -185,10 +189,11 @@ diff -r ce73d82e98a7 src/ex_getln.c
  #ifdef FEAT_RELTIME
  			&tm
  #else
-diff -r ce73d82e98a7 src/feature.h
---- a/src/feature.h	Sun Mar 01 11:07:30 2015 +0900
-+++ b/src/feature.h	Sun Mar 01 11:09:29 2015 +0900
-@@ -1349,3 +1349,13 @@
+diff --git a/src/feature.h b/src/feature.h
+index c2bf260..0eacd46 100644
+--- a/src/feature.h
++++ b/src/feature.h
+@@ -1345,3 +1345,13 @@
  	    || (defined(WIN3264) && defined(FEAT_GUI_W32))
  # define FEAT_FILTERPIPE
  #endif
@@ -202,10 +207,11 @@ diff -r ce73d82e98a7 src/feature.h
 +#if (defined(HAVE_MIGEMO_H) && defined(HAVE_MIGEMO)) || defined(DYNAMIC_MIGEMO)
 +# define USE_MIGEMO
 +#endif
-diff -r ce73d82e98a7 src/main.c
---- a/src/main.c	Sun Mar 01 11:07:30 2015 +0900
-+++ b/src/main.c	Sun Mar 01 11:09:29 2015 +0900
-@@ -1492,6 +1492,9 @@
+diff --git a/src/main.c b/src/main.c
+index 584687e..a5ee630 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -1511,6 +1511,9 @@ getout(exitval)
  #ifdef FEAT_PERL
      perl_end();
  #endif
@@ -215,10 +221,11 @@ diff -r ce73d82e98a7 src/main.c
  #if defined(USE_ICONV) && defined(DYNAMIC_ICONV)
      iconv_end();
  #endif
-diff -r ce73d82e98a7 src/normal.c
---- a/src/normal.c	Sun Mar 01 11:07:30 2015 +0900
-+++ b/src/normal.c	Sun Mar 01 11:09:29 2015 +0900
-@@ -6303,7 +6303,12 @@
+diff --git a/src/normal.c b/src/normal.c
+index 89c67d9..d194b33 100644
+--- a/src/normal.c
++++ b/src/normal.c
+@@ -6334,7 +6334,12 @@ nv_search(cap)
  	return;
      }
  
@@ -231,7 +238,7 @@ diff -r ce73d82e98a7 src/normal.c
  
      if (cap->searchbuf == NULL)
      {
-@@ -6312,6 +6317,9 @@
+@@ -6343,6 +6348,9 @@ nv_search(cap)
      }
  
      (void)normal_search(cap, cap->cmdchar, cap->searchbuf,
@@ -241,7 +248,7 @@ diff -r ce73d82e98a7 src/normal.c
  						(cap->arg ? 0 : SEARCH_MARK));
  }
  
-@@ -8337,7 +8345,9 @@
+@@ -8382,7 +8390,9 @@ nv_g_cmd(cap)
      case '~':
      case 'u':
      case 'U':
@@ -251,7 +258,7 @@ diff -r ce73d82e98a7 src/normal.c
      case '@':
  	nv_operator(cap);
  	break;
-@@ -8436,6 +8446,25 @@
+@@ -8481,6 +8491,25 @@ nv_g_cmd(cap)
  							 FALSE, FALSE, FALSE);
  	break;
  
@@ -277,10 +284,11 @@ diff -r ce73d82e98a7 src/normal.c
      default:
  	clearopbeep(oap);
  	break;
-diff -r ce73d82e98a7 src/option.c
---- a/src/option.c	Sun Mar 01 11:07:30 2015 +0900
-+++ b/src/option.c	Sun Mar 01 11:09:29 2015 +0900
-@@ -138,6 +138,9 @@
+diff --git a/src/option.c b/src/option.c
+index 83ce0ef..045f721 100644
+--- a/src/option.c
++++ b/src/option.c
+@@ -139,6 +139,9 @@
  # define PV_LW		OPT_BOTH(OPT_BUF(BV_LW))
  #endif
  #define PV_MA		OPT_BUF(BV_MA)
@@ -290,7 +298,7 @@ diff -r ce73d82e98a7 src/option.c
  #define PV_ML		OPT_BUF(BV_ML)
  #define PV_MOD		OPT_BUF(BV_MOD)
  #define PV_MPS		OPT_BUF(BV_MPS)
-@@ -1844,6 +1847,14 @@
+@@ -1864,6 +1867,14 @@ static struct vimoption
      {"mesg",	    NULL,   P_BOOL|P_VI_DEF,
  			    (char_u *)NULL, PV_NONE,
  			    {(char_u *)FALSE, (char_u *)0L} SCRIPTID_INIT},
@@ -305,7 +313,7 @@ diff -r ce73d82e98a7 src/option.c
      {"mkspellmem",  "msm",  P_STRING|P_VI_DEF|P_EXPAND|P_SECURE,
  #ifdef FEAT_SPELL
  			    (char_u *)&p_msm, PV_NONE,
-@@ -5643,6 +5654,11 @@
+@@ -5754,6 +5765,11 @@ set_string_option_global(opt_idx, varp)
  	free_string_option(*p);
  	*p = s;
      }
@@ -317,7 +325,7 @@ diff -r ce73d82e98a7 src/option.c
  }
  
  /*
-@@ -10216,6 +10232,9 @@
+@@ -10440,6 +10456,9 @@ get_varp(p)
  	case PV_ML:	return (char_u *)&(curbuf->b_p_ml);
  	case PV_MPS:	return (char_u *)&(curbuf->b_p_mps);
  	case PV_MA:	return (char_u *)&(curbuf->b_p_ma);
@@ -327,7 +335,7 @@ diff -r ce73d82e98a7 src/option.c
  	case PV_MOD:	return (char_u *)&(curbuf->b_changed);
  	case PV_NF:	return (char_u *)&(curbuf->b_p_nf);
  	case PV_PI:	return (char_u *)&(curbuf->b_p_pi);
-@@ -10632,6 +10651,11 @@
+@@ -10858,6 +10877,11 @@ buf_copy_options(buf, flags)
  	    buf->b_p_iminsert = p_iminsert;
  	    buf->b_p_imsearch = p_imsearch;
  
@@ -339,10 +347,11 @@ diff -r ce73d82e98a7 src/option.c
  	    /* options that are normally global but also have a local value
  	     * are not copied, start using the global value */
  	    buf->b_p_ar = -1;
-diff -r ce73d82e98a7 src/option.h
---- a/src/option.h	Sun Mar 01 11:07:30 2015 +0900
-+++ b/src/option.h	Sun Mar 01 11:09:29 2015 +0900
-@@ -625,6 +625,10 @@
+diff --git a/src/option.h b/src/option.h
+index 323163b..a486236 100644
+--- a/src/option.h
++++ b/src/option.h
+@@ -660,6 +660,10 @@ EXTERN long	p_mmt;		/* 'maxmemtot' */
  #ifdef FEAT_MENU
  EXTERN long	p_mis;		/* 'menuitems' */
  #endif
@@ -353,7 +362,7 @@ diff -r ce73d82e98a7 src/option.h
  #ifdef FEAT_SPELL
  EXTERN char_u	*p_msm;		/* 'mkspellmem' */
  #endif
-@@ -1004,6 +1008,9 @@
+@@ -1061,6 +1065,9 @@ enum
      , BV_LW
  #endif
      , BV_MA
@@ -363,10 +372,11 @@ diff -r ce73d82e98a7 src/option.h
      , BV_ML
      , BV_MOD
      , BV_MPS
-diff -r ce73d82e98a7 src/proto/search.pro
---- a/src/proto/search.pro	Sun Mar 01 11:07:30 2015 +0900
-+++ b/src/proto/search.pro	Sun Mar 01 11:09:29 2015 +0900
-@@ -14,6 +14,9 @@
+diff --git a/src/proto/search.pro b/src/proto/search.pro
+index 27d2016..8a81e17 100644
+--- a/src/proto/search.pro
++++ b/src/proto/search.pro
+@@ -20,6 +20,9 @@ void set_last_search_pat __ARGS((char_u *s, int idx, int magic, int setlast));
  void last_pat_prog __ARGS((regmmatch_T *regmatch));
  int searchit __ARGS((win_T *win, buf_T *buf, pos_T *pos, int dir, char_u *pat, long count, int options, int pat_use, linenr_T stop_lnum, proftime_T *tm));
  void set_search_direction __ARGS((int cdir));
@@ -376,10 +386,11 @@ diff -r ce73d82e98a7 src/proto/search.pro
  int do_search __ARGS((oparg_T *oap, int dirc, char_u *pat, long count, int options, proftime_T *tm));
  int search_for_exact_line __ARGS((buf_T *buf, pos_T *pos, int dir, char_u *pat));
  int searchc __ARGS((cmdarg_T *cap, int t_cmd));
-diff -r ce73d82e98a7 src/search.c
---- a/src/search.c	Sun Mar 01 11:07:30 2015 +0900
-+++ b/src/search.c	Sun Mar 01 11:09:29 2015 +0900
-@@ -1044,6 +1044,305 @@
+diff --git a/src/search.c b/src/search.c
+index df28388..011c6e0 100644
+--- a/src/search.c
++++ b/src/search.c
+@@ -1124,6 +1124,305 @@ first_submatch(rp)
  }
  #endif
  
@@ -685,7 +696,7 @@ diff -r ce73d82e98a7 src/search.c
  /*
   * Highest level string search function.
   * Search for the 'count'th occurrence of pattern 'pat' in direction 'dirc'
-@@ -1354,12 +1653,30 @@
+@@ -1434,12 +1733,30 @@ do_search(oap, dirc, pat, count, options, tm)
  	     lrFswap(searchstr,0);
  #endif
  
@@ -716,10 +727,11 @@ diff -r ce73d82e98a7 src/search.c
  
  	if (dircp != NULL)
  	    *dircp = dirc;	/* restore second '/' or '?' for normal_cmd() */
-diff -r ce73d82e98a7 src/structs.h
---- a/src/structs.h	Sun Mar 01 11:07:30 2015 +0900
-+++ b/src/structs.h	Sun Mar 01 11:09:29 2015 +0900
-@@ -1623,6 +1623,9 @@
+diff --git a/src/structs.h b/src/structs.h
+index 0c06401..d9095af 100644
+--- a/src/structs.h
++++ b/src/structs.h
+@@ -1626,6 +1626,9 @@ struct file_buffer
      int		b_p_lisp;	/* 'lisp' */
  #endif
      char_u	*b_p_mps;	/* 'matchpairs' */
@@ -729,10 +741,11 @@ diff -r ce73d82e98a7 src/structs.h
      int		b_p_ml;		/* 'modeline' */
      int		b_p_ml_nobin;	/* b_p_ml saved for binary mode */
      int		b_p_ma;		/* 'modifiable' */
-diff -r ce73d82e98a7 src/version.c
---- a/src/version.c	Sun Mar 01 11:07:30 2015 +0900
-+++ b/src/version.c	Sun Mar 01 11:09:29 2015 +0900
-@@ -342,6 +342,15 @@
+diff --git a/src/version.c b/src/version.c
+index b491c48..6a944b4 100644
+--- a/src/version.c
++++ b/src/version.c
+@@ -342,6 +342,15 @@ static char *(features[]) =
  #else
  	"-menu",
  #endif
@@ -748,15 +761,16 @@ diff -r ce73d82e98a7 src/version.c
  #ifdef FEAT_SESSION
  	"+mksession",
  #else
-diff -r ce73d82e98a7 src/vim.h
---- a/src/vim.h	Sun Mar 01 11:07:30 2015 +0900
-+++ b/src/vim.h	Sun Mar 01 11:09:29 2015 +0900
-@@ -934,6 +934,9 @@
- #define SEARCH_MARK  0x200  /* set previous context mark */
+diff --git a/src/vim.h b/src/vim.h
+index f8f0c74..79522f6 100644
+--- a/src/vim.h
++++ b/src/vim.h
+@@ -939,6 +939,9 @@ extern char *(*dyn_libintl_textdomain)(const char *domainname);
  #define SEARCH_KEEP  0x400  /* keep previous search pattern */
  #define SEARCH_PEEK  0x800  /* peek for typed char, cancel search */
+ #define SEARCH_COL  0x1000  /* start at specified column instead of zero */
 +#ifdef USE_MIGEMO
-+# define SEARCH_MIGEMO	0x1000	/* use migemo for search */
++# define SEARCH_MIGEMO	0x2000	/* use migemo for search */
 +#endif
  
  /* Values for find_ident_under_cursor() */

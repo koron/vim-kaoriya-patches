@@ -4,7 +4,6 @@ lambda-r23-p1.diff #+lambda
 lambda-r23-ex1.diff #+lambda
 0001-rich_icon.diff #-no_kaoriya
 0100-embed_manifest.diff #-no_kaoriya
-0101-po_install_all.diff #-no_kaoriya
 2001-improve_modelines.diff #-no_kaoriya
 2002-windows_transparency.diff #-no_kaoriya
 2003-charspace.diff #-no_kaoriya
@@ -13,7 +12,6 @@ lambda-r23-ex1.diff #+lambda
 2006-init_winsock.diff #-no_kaoriya
 2008-sentence_until_punctuation.diff #-no_kaoriya
 2010-imaf_imsf_on_cui.diff #-no_kaoriya
-2011-remove-client-edge.diff #-no_kaoriya #-no_ktakata
 2520-migemo_feature.diff #-no_kaoriya
 2530-guess_encode_feature.diff #-no_kaoriya
 4001-ftp_autolink_2html.diff #-no_kaoriya

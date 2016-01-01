@@ -2,10 +2,10 @@
 # Parent a57489c58bfc1321c3f92afaab61a9a69cc5509e
 
 diff --git a/src/edit.c b/src/edit.c
-index db4a079..bbcf7e9 100644
+index bd5c57e..42dc912 100644
 --- a/src/edit.c
 +++ b/src/edit.c
-@@ -9495,16 +9495,9 @@ ins_left(end_change)
+@@ -9501,16 +9501,9 @@ ins_left(end_change)
      tpos = curwin->w_cursor;
      if (oneleft() == OK)
      {
@@ -26,7 +26,7 @@ index db4a079..bbcf7e9 100644
  	/* If exit reversed string, position is fixed */
  	if (revins_scol != -1 && (int)curwin->w_cursor.col >= revins_scol)
 diff --git a/src/ex_getln.c b/src/ex_getln.c
-index 8879a82..2c2c3d1 100644
+index 6d76654..ce7db79 100644
 --- a/src/ex_getln.c
 +++ b/src/ex_getln.c
 @@ -94,9 +94,6 @@ static void	draw_cmdline __ARGS((int start, int len));
@@ -157,7 +157,7 @@ index 8879a82..2c2c3d1 100644
      mch_update_cursor();
  #endif
 diff --git a/src/globals.h b/src/globals.h
-index f0879dc..8962bfd 100644
+index d921a4e..a31db1d 100644
 --- a/src/globals.h
 +++ b/src/globals.h
 @@ -872,19 +872,6 @@ EXTERN int* (*iconv_errno) (void);
@@ -181,10 +181,10 @@ index f0879dc..8962bfd 100644
  EXTERN XIC		xic INIT(= NULL);
  # endif
 diff --git a/src/mbyte.c b/src/mbyte.c
-index c23022f..a137b19 100644
+index 8121cf5..65f62b6 100644
 --- a/src/mbyte.c
 +++ b/src/mbyte.c
-@@ -4537,29 +4537,18 @@ iconv_end()
+@@ -4546,29 +4546,18 @@ iconv_end()
  # if defined(FEAT_GUI_GTK) || defined(PROTO)
  static int xim_has_preediting INIT(= FALSE);  /* IM current status */
  
@@ -196,7 +196,7 @@ index c23022f..a137b19 100644
 -{
 -    if (State & CMDLINE)
 -	preedit_start_col = cmdline_getvcol_cursor();
--    else if (curwin != NULL)
+-    else if (curwin != NULL && curwin->w_buffer != NULL)
 -	getvcol(curwin, &curwin->w_cursor, &preedit_start_col, NULL, NULL);
 -    /* Prevent that preediting marks the buffer as changed. */
 -    xim_changed_while_preediting = curbuf->b_changed;
@@ -219,7 +219,7 @@ index c23022f..a137b19 100644
      void
  im_set_active(int active)
  {
-@@ -4612,6 +4601,8 @@ im_set_position(int row, int col)
+@@ -4621,6 +4610,8 @@ im_set_position(int row, int col)
  	area.height = gui.char_height;
  
  	gtk_im_context_set_cursor_location(xic, &area);
@@ -228,7 +228,7 @@ index c23022f..a137b19 100644
      }
  }
  
-@@ -4642,42 +4633,95 @@ im_add_to_input(char_u *str, int len)
+@@ -4651,42 +4642,95 @@ im_add_to_input(char_u *str, int len)
  	gui_mch_mousehide(TRUE);
  }
  
@@ -349,7 +349,7 @@ index c23022f..a137b19 100644
  }
  
  static int xim_expected_char = NUL;
-@@ -4690,6 +4734,8 @@ static int xim_ignored_char = FALSE;
+@@ -4699,6 +4743,8 @@ static int xim_ignored_char = FALSE;
  im_show_info(void)
  {
      int	    old_vgetc_busy;
@@ -358,7 +358,7 @@ index c23022f..a137b19 100644
  
      old_vgetc_busy = vgetc_busy;
      vgetc_busy = TRUE;
-@@ -4698,6 +4744,8 @@ im_show_info(void)
+@@ -4707,6 +4753,8 @@ im_show_info(void)
      if ((State & NORMAL) || (State & INSERT))
  	setcursor();
      out_flush();
@@ -367,7 +367,7 @@ index c23022f..a137b19 100644
  }
  
  /*
-@@ -4711,49 +4759,11 @@ im_commit_cb(GtkIMContext *context UNUSED,
+@@ -4720,49 +4768,11 @@ im_commit_cb(GtkIMContext *context UNUSED,
  {
      int		slen = (int)STRLEN(str);
      int		add_to_input = TRUE;
@@ -417,7 +417,7 @@ index c23022f..a137b19 100644
      /* Is this a single character that matches a keypad key that's just
       * been pressed?  If so, we don't want it to be entered as such - let
       * us carry on processing the raw keycode so that it may be used in
-@@ -4777,15 +4787,6 @@ im_commit_cb(GtkIMContext *context UNUSED,
+@@ -4786,15 +4796,6 @@ im_commit_cb(GtkIMContext *context UNUSED,
      if (add_to_input)
  	im_add_to_input((char_u *)str, slen);
  
@@ -433,7 +433,7 @@ index c23022f..a137b19 100644
      if (gtk_main_level() > 0)
  	gtk_main_quit();
  }
-@@ -4818,7 +4819,6 @@ im_preedit_end_cb(GtkIMContext *context UNUSED, gpointer data UNUSED)
+@@ -4827,7 +4828,6 @@ im_preedit_end_cb(GtkIMContext *context UNUSED, gpointer data UNUSED)
      im_delete_preedit();
  
      /* Indicate that preediting has finished */
@@ -441,7 +441,7 @@ index c23022f..a137b19 100644
      xim_has_preediting = FALSE;
  
  #if 0
-@@ -4873,15 +4873,8 @@ im_preedit_end_cb(GtkIMContext *context UNUSED, gpointer data UNUSED)
+@@ -4882,15 +4882,8 @@ im_preedit_end_cb(GtkIMContext *context UNUSED, gpointer data UNUSED)
  im_preedit_changed_cb(GtkIMContext *context, gpointer data UNUSED)
  {
      char    *preedit_string = NULL;
@@ -458,7 +458,7 @@ index c23022f..a137b19 100644
  
  #ifdef XIM_DEBUG
      xim_log("im_preedit_changed_cb(): %s\n", preedit_string);
-@@ -4889,66 +4882,15 @@ im_preedit_changed_cb(GtkIMContext *context, gpointer data UNUSED)
+@@ -4898,66 +4891,15 @@ im_preedit_changed_cb(GtkIMContext *context, gpointer data UNUSED)
  
      g_return_if_fail(preedit_string != NULL); /* just in case */
  
@@ -530,7 +530,7 @@ index c23022f..a137b19 100644
      }
  
      g_free(preedit_string);
-@@ -4957,98 +4899,6 @@ im_preedit_changed_cb(GtkIMContext *context, gpointer data UNUSED)
+@@ -4966,98 +4908,6 @@ im_preedit_changed_cb(GtkIMContext *context, gpointer data UNUSED)
  	gtk_main_quit();
  }
  
@@ -629,7 +629,7 @@ index c23022f..a137b19 100644
      void
  xim_init(void)
  {
-@@ -5089,7 +4939,6 @@ im_shutdown(void)
+@@ -5098,7 +4948,6 @@ im_shutdown(void)
      }
      im_is_active = FALSE;
      im_commit_handler_id = 0;
@@ -637,7 +637,7 @@ index c23022f..a137b19 100644
      xim_has_preediting = FALSE;
  }
  
-@@ -5244,7 +5093,6 @@ xim_reset(void)
+@@ -5253,7 +5102,6 @@ xim_reset(void)
  	}
      }
  
@@ -645,7 +645,7 @@ index c23022f..a137b19 100644
      xim_has_preediting = FALSE;
  }
  
-@@ -5349,21 +5197,6 @@ xim_queue_key_press_event(GdkEventKey *event, int down)
+@@ -5358,21 +5206,6 @@ xim_queue_key_press_event(GdkEventKey *event, int down)
  	{
  	    int imresult = gtk_im_context_filter_keypress(xic, event);
  
@@ -668,7 +668,7 @@ index c23022f..a137b19 100644
  	     * ignore it so we can use the keypad key 'raw', for mappings. */
  	    if (xim_expected_char != NUL && xim_ignored_char)
 diff --git a/src/misc1.c b/src/misc1.c
-index 8b5ea64..6a787c5 100644
+index d1e762c..e14c852 100644
 --- a/src/misc1.c
 +++ b/src/misc1.c
 @@ -2753,15 +2753,6 @@ skip_to_option_part(p)
@@ -712,10 +712,10 @@ index c599dac..b7e1386 100644
  void im_shutdown __ARGS((void));
  int im_xim_isvalid_imactivate __ARGS((void));
 diff --git a/src/screen.c b/src/screen.c
-index b1af862..d055c30 100644
+index 5610d8a..ea38a24 100644
 --- a/src/screen.c
 +++ b/src/screen.c
-@@ -3033,10 +3033,6 @@ win_line(wp, lnum, startrow, endrow, nochange)
+@@ -3034,10 +3034,6 @@ win_line(wp, lnum, startrow, endrow, nochange)
  #endif
  #define WL_LINE		WL_SBR + 1	/* text in the line */
      int		draw_state = WL_START;	/* what to draw next */
@@ -726,7 +726,7 @@ index b1af862..d055c30 100644
  
  #ifdef FEAT_CONCEAL
      int		syntax_flags	= 0;
-@@ -4982,43 +4978,6 @@ win_line(wp, lnum, startrow, endrow, nochange)
+@@ -4988,43 +4984,6 @@ win_line(wp, lnum, startrow, endrow, nochange)
  		&& !attr_pri)
  	    char_attr = extra_attr;
  

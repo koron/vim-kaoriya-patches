@@ -2,10 +2,11 @@
 # Parent 1d03b0abe77114c204201b3dfebe8e7af48270d7
 Add guess encode feature
 
-diff -r 1d03b0abe771 -r 04f21d519b67 src/eval.c
---- a/src/eval.c	Sat Apr 13 23:19:30 2013 +0900
-+++ b/src/eval.c	Sat Apr 13 23:22:54 2013 +0900
-@@ -12206,6 +12206,7 @@
+diff --git a/src/eval.c b/src/eval.c
+index 5d1e5e6..b38ee0b 100644
+--- a/src/eval.c
++++ b/src/eval.c
+@@ -12944,6 +12944,7 @@ f_has(argvars, rettv)
  #ifdef FEAT_GETTEXT
  	"gettext",
  #endif
@@ -13,10 +14,11 @@ diff -r 1d03b0abe771 -r 04f21d519b67 src/eval.c
  #ifdef FEAT_GUI
  	"gui",
  #endif
-diff -r 1d03b0abe771 -r 04f21d519b67 src/fileio.c
---- a/src/fileio.c	Sat Apr 13 23:19:30 2013 +0900
-+++ b/src/fileio.c	Sat Apr 13 23:22:54 2013 +0900
-@@ -191,6 +191,244 @@
+diff --git a/src/fileio.c b/src/fileio.c
+index 75a3876..593bc44 100644
+--- a/src/fileio.c
++++ b/src/fileio.c
+@@ -179,6 +179,244 @@ filemess(buf, name, s, attr)
      msg_scrolled_ign = FALSE;
  }
  
@@ -261,10 +263,12 @@ diff -r 1d03b0abe771 -r 04f21d519b67 src/fileio.c
  /*
   * Read lines from file "fname" into the buffer after line "from".
   *
-@@ -1068,6 +1306,15 @@
+@@ -1025,6 +1263,17 @@ retry:
+ 	}
      }
  
-     /*
++# ifdef FEAT_EVAL
++    /*
 +     * Try to guess encoding of the file.
 +     */
 +    if (STRICMP(fenc, "guess") == 0)
@@ -272,15 +276,16 @@ diff -r 1d03b0abe771 -r 04f21d519b67 src/fileio.c
 +        if (guess_encode(&fenc, &fenc_alloced, fname) != 0)
 +            set_internal_string_var("b:x_guessed_fileencoding", fenc);
 +    }
++# endif
 +
-+    /*
+     /*
       * Conversion may be required when the encoding of the file is different
       * from 'encoding' or 'encoding' is UTF-16, UCS-2 or UCS-4.
-      */
-diff -r 1d03b0abe771 -r 04f21d519b67 src/version.c
---- a/src/version.c	Sat Apr 13 23:19:30 2013 +0900
-+++ b/src/version.c	Sat Apr 13 23:22:54 2013 +0900
-@@ -258,6 +258,7 @@
+diff --git a/src/version.c b/src/version.c
+index 6a944b4..c313cba 100644
+--- a/src/version.c
++++ b/src/version.c
+@@ -269,6 +269,7 @@ static char *(features[]) =
  #else
  	"-gettext",
  #endif

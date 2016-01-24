@@ -26,7 +26,7 @@ index bd5c57e..42dc912 100644
  	/* If exit reversed string, position is fixed */
  	if (revins_scol != -1 && (int)curwin->w_cursor.col >= revins_scol)
 diff --git a/src/ex_getln.c b/src/ex_getln.c
-index 6d76654..ce7db79 100644
+index 8234b0d..a3cfaea 100644
 --- a/src/ex_getln.c
 +++ b/src/ex_getln.c
 @@ -94,9 +94,6 @@ static void	draw_cmdline __ARGS((int start, int len));
@@ -157,10 +157,10 @@ index 6d76654..ce7db79 100644
      mch_update_cursor();
  #endif
 diff --git a/src/globals.h b/src/globals.h
-index d921a4e..a31db1d 100644
+index f252aee..1a15ec0 100644
 --- a/src/globals.h
 +++ b/src/globals.h
-@@ -872,19 +872,6 @@ EXTERN int* (*iconv_errno) (void);
+@@ -873,19 +873,6 @@ EXTERN int* (*iconv_errno) (void);
  #ifdef FEAT_XIM
  # ifdef FEAT_GUI_GTK
  EXTERN GtkIMContext	*xic INIT(= NULL);
@@ -668,7 +668,7 @@ index 8121cf5..65f62b6 100644
  	     * ignore it so we can use the keypad key 'raw', for mappings. */
  	    if (xim_expected_char != NUL && xim_ignored_char)
 diff --git a/src/misc1.c b/src/misc1.c
-index d1e762c..e14c852 100644
+index a44e4d6..bd159a4 100644
 --- a/src/misc1.c
 +++ b/src/misc1.c
 @@ -2753,15 +2753,6 @@ skip_to_option_part(p)
@@ -687,32 +687,8 @@ index d1e762c..e14c852 100644
      if (!curbuf->b_changed)
      {
  	int	save_msg_scroll = msg_scroll;
-diff --git a/src/proto/ex_getln.pro b/src/proto/ex_getln.pro
-index 86e01b5..e6e8a00 100644
---- a/src/proto/ex_getln.pro
-+++ b/src/proto/ex_getln.pro
-@@ -9,7 +9,6 @@ char_u *getexline __ARGS((int c, void *cookie, int indent));
- char_u *getexmodeline __ARGS((int promptc, void *cookie, int indent));
- int cmdline_overstrike __ARGS((void));
- int cmdline_at_end __ARGS((void));
--colnr_T cmdline_getvcol_cursor __ARGS((void));
- void free_cmdline_buf __ARGS((void));
- void putcmdline __ARGS((int c, int shift));
- void unputcmdline __ARGS((void));
-diff --git a/src/proto/mbyte.pro b/src/proto/mbyte.pro
-index c599dac..b7e1386 100644
---- a/src/proto/mbyte.pro
-+++ b/src/proto/mbyte.pro
-@@ -76,7 +76,6 @@ void im_set_active __ARGS((int active));
- void xim_set_focus __ARGS((int focus));
- void im_set_position __ARGS((int row, int col));
- void xim_set_preedit __ARGS((void));
--int im_get_feedback_attr __ARGS((int col));
- void xim_init __ARGS((void));
- void im_shutdown __ARGS((void));
- int im_xim_isvalid_imactivate __ARGS((void));
 diff --git a/src/screen.c b/src/screen.c
-index 5610d8a..ea38a24 100644
+index 69c1f40..4638682 100644
 --- a/src/screen.c
 +++ b/src/screen.c
 @@ -3034,10 +3034,6 @@ win_line(wp, lnum, startrow, endrow, nochange)
@@ -726,7 +702,7 @@ index 5610d8a..ea38a24 100644
  
  #ifdef FEAT_CONCEAL
      int		syntax_flags	= 0;
-@@ -4988,43 +4984,6 @@ win_line(wp, lnum, startrow, endrow, nochange)
+@@ -4993,43 +4989,6 @@ win_line(wp, lnum, startrow, endrow, nochange)
  		&& !attr_pri)
  	    char_attr = extra_attr;
  

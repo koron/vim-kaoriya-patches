@@ -3,7 +3,7 @@
 add 'C' flag to 'guioptions' which control to show the caption of window
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index c813bc7..f1df590 100644
+index a5e6fff..06b1940 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
 @@ -3826,6 +3826,9 @@ A jump table for the options with a short description can be found at |Q_op|.
@@ -17,7 +17,7 @@ index c813bc7..f1df590 100644
  'guipty'		boolean	(default on)
  			global
 diff --git a/src/gui.c b/src/gui.c
-index 0736522..cb837e5 100644
+index ec732e0..91a8f10 100644
 --- a/src/gui.c
 +++ b/src/gui.c
 @@ -3367,6 +3367,8 @@ gui_init_which_components(oldval)
@@ -55,7 +55,7 @@ index 0736522..cb837e5 100644
  	{
  #ifdef FEAT_GUI_GTK
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index dbed639..71723bd 100644
+index 1ae049c..67228f7 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
 @@ -590,6 +590,57 @@ gui_is_win32s(void)
@@ -125,7 +125,7 @@ index dbed639..71723bd 100644
  
  		/* get window rect of s_hwnd
  		 * get client rect of s_hwnd
-@@ -1868,10 +1919,11 @@ gui_mch_set_shellsize(int width, int height,
+@@ -1870,10 +1921,11 @@ gui_mch_set_shellsize(int width, int height,
  
      /* compute the size of the outside of the window */
      win_width = width + (GetSystemMetrics(SM_CXFRAME) +
@@ -139,7 +139,7 @@ index dbed639..71723bd 100644
  #ifdef FEAT_MENU
  			+ gui_mswin_get_menu_height(FALSE)
  #endif
-@@ -2790,7 +2842,8 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
+@@ -2792,7 +2844,8 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
  
      *screen_w = workarea_rect.right - workarea_rect.left
  		- (GetSystemMetrics(SM_CXFRAME) +
@@ -149,7 +149,7 @@ index dbed639..71723bd 100644
  
      /* FIXME: dirty trick: Because the gui_get_base_height() doesn't include
       * the menubar for MSwin, we subtract it from the screen height, so that
-@@ -2798,7 +2851,7 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
+@@ -2800,7 +2853,7 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
      *screen_h = workarea_rect.bottom - workarea_rect.top
  		- (GetSystemMetrics(SM_CYFRAME) +
  		   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
@@ -159,7 +159,7 @@ index dbed639..71723bd 100644
  		- gui_mswin_get_menu_height(FALSE)
  #endif
 diff --git a/src/gui_w48.c b/src/gui_w48.c
-index dd2aeca..a8dcd83 100644
+index c38bcfb..6d06f3f 100644
 --- a/src/gui_w48.c
 +++ b/src/gui_w48.c
 @@ -139,6 +139,8 @@ typedef int WNDPROC;
@@ -171,7 +171,7 @@ index dd2aeca..a8dcd83 100644
  
  static WORD		s_dlgfntheight;		/* height of the dialog font */
  static WORD		s_dlgfntwidth;		/* width of the dialog font */
-@@ -2931,11 +2933,12 @@ gui_mswin_get_valid_dimensions(
+@@ -3001,11 +3003,12 @@ gui_mswin_get_valid_dimensions(
  
      base_width = gui_get_base_width()
  	+ (GetSystemMetrics(SM_CXFRAME) +
@@ -186,7 +186,7 @@ index dd2aeca..a8dcd83 100644
  #ifdef FEAT_MENU
  	+ gui_mswin_get_menu_height(FALSE)
  #endif
-@@ -3338,9 +3341,11 @@ gui_mch_newfont()
+@@ -3408,9 +3411,11 @@ gui_mch_newfont()
      if (win_socket_id == 0)
      {
  	gui_resize_shell(rect.right - rect.left
@@ -199,7 +199,7 @@ index dd2aeca..a8dcd83 100644
  	       GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
  	    - GetSystemMetrics(SM_CYCAPTION)
 diff --git a/src/option.h b/src/option.h
-index ba1523b..323163b 100644
+index 078d89f..a4a6e42 100644
 --- a/src/option.h
 +++ b/src/option.h
 @@ -238,7 +238,8 @@
@@ -213,14 +213,14 @@ index ba1523b..323163b 100644
  /* flags for 'comments' option */
  #define COM_NEST	'n'		/* comments strings nest */
 diff --git a/src/proto/gui_w32.pro b/src/proto/gui_w32.pro
-index 5504218..d1fac73 100644
+index ccddf53..e3cea9f 100644
 --- a/src/proto/gui_w32.pro
 +++ b/src/proto/gui_w32.pro
-@@ -61,6 +61,7 @@ char_u *gui_mch_browsedir __ARGS((char_u *title, char_u *initdir));
- char_u *gui_mch_browse __ARGS((int saving, char_u *title, char_u *dflt, char_u *ext, char_u *initdir, char_u *filter));
- int get_cmd_args __ARGS((char *prog, char *cmdline, char ***argvp, char **tofree));
- int gui_is_win32s __ARGS((void));
-+void gui_mch_show_caption __ARGS((int show));
- void gui_mch_set_parent __ARGS((char *title));
- void gui_mch_prepare __ARGS((int *argc, char **argv));
- int gui_mch_init __ARGS((void));
+@@ -61,6 +61,7 @@ char_u *gui_mch_browsedir(char_u *title, char_u *initdir);
+ char_u *gui_mch_browse(int saving, char_u *title, char_u *dflt, char_u *ext, char_u *initdir, char_u *filter);
+ int get_cmd_args(char *prog, char *cmdline, char ***argvp, char **tofree);
+ int gui_is_win32s(void);
++void gui_mch_show_caption(int show);
+ void gui_mch_set_parent(char *title);
+ void gui_mch_prepare(int *argc, char **argv);
+ int gui_mch_init(void);

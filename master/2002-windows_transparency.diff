@@ -2,10 +2,11 @@
 # Parent fde93adeda8d91c54211d002010c4476c27e8dcc
 implement 'transparency' for Windows GUI
 
-diff -r fde93adeda8d src/gui_w32.c
---- a/src/gui_w32.c	Sat Apr 13 21:44:19 2013 +0900
-+++ b/src/gui_w32.c	Sat Apr 13 21:57:35 2013 +0900
-@@ -417,6 +417,19 @@
+diff --git a/src/gui_w32.c b/src/gui_w32.c
+index db0a9d5..1ae049c 100644
+--- a/src/gui_w32.c
++++ b/src/gui_w32.c
+@@ -556,6 +556,19 @@ static HANDLE		    user32_lib = NULL;
  #ifdef FEAT_NETBEANS_INTG
  int WSInitialized = FALSE; /* WinSock is initialized */
  #endif
@@ -25,7 +26,7 @@ diff -r fde93adeda8d src/gui_w32.c
  /*
   * Return TRUE when running under Windows NT 3.x or Win32s, both of which have
   * less fancy GUI APIs.
-@@ -1467,6 +1480,8 @@
+@@ -1614,6 +1627,8 @@ gui_mch_init(void)
      if (s_hwnd == NULL)
  	return FAIL;
  
@@ -34,7 +35,7 @@ diff -r fde93adeda8d src/gui_w32.c
  #ifdef GLOBAL_IME
      global_ime_init(atom, s_hwnd);
  #endif
-@@ -1810,6 +1825,46 @@
+@@ -1974,6 +1989,46 @@ gui_mch_set_sp_color(guicolor_T color)
      gui.currSpColor = color;
  }
  
@@ -81,10 +82,11 @@ diff -r fde93adeda8d src/gui_w32.c
  #if defined(FEAT_MBYTE) && defined(FEAT_MBYTE_IME)
  /*
   * Multi-byte handling, originally by Sung-Hoon Baek.
-diff -r fde93adeda8d src/option.c
---- a/src/option.c	Sat Apr 13 21:44:19 2013 +0900
-+++ b/src/option.c	Sat Apr 13 21:57:35 2013 +0900
-@@ -2620,6 +2620,11 @@
+diff --git a/src/option.c b/src/option.c
+index 41d6ceb..0cbd536 100644
+--- a/src/option.c
++++ b/src/option.c
+@@ -2711,6 +2711,11 @@ static struct vimoption
  			    (char_u *)&p_tbis, PV_NONE,
  			    {(char_u *)"small", (char_u *)0L} SCRIPTID_INIT},
  #endif
@@ -96,7 +98,7 @@ diff -r fde93adeda8d src/option.c
      {"ttimeout",    NULL,   P_BOOL|P_VI_DEF|P_VIM,
  			    (char_u *)&p_ttimeout, PV_NONE,
  			    {(char_u *)FALSE, (char_u *)0L} SCRIPTID_INIT},
-@@ -8360,6 +8365,15 @@
+@@ -8648,6 +8653,15 @@ set_num_option(opt_idx, varp, value, errbuf, errbuflen, opt_flags)
      }
  #endif
  
@@ -112,10 +114,11 @@ diff -r fde93adeda8d src/option.c
      else if (pp == &curbuf->b_p_iminsert)
      {
  	if (curbuf->b_p_iminsert < 0 || curbuf->b_p_iminsert > B_IMODE_LAST)
-diff -r fde93adeda8d src/option.h
---- a/src/option.h	Sat Apr 13 21:44:19 2013 +0900
-+++ b/src/option.h	Sat Apr 13 21:57:35 2013 +0900
-@@ -792,6 +792,9 @@
+diff --git a/src/option.h b/src/option.h
+index f178ea7..ecffa2c 100644
+--- a/src/option.h
++++ b/src/option.h
+@@ -855,6 +855,9 @@ EXTERN char_u	*p_titlestring;	/* 'titlestring' */
  #ifdef FEAT_INS_EXPAND
  EXTERN char_u	*p_tsr;		/* 'thesaurus' */
  #endif
@@ -125,10 +128,11 @@ diff -r fde93adeda8d src/option.h
  EXTERN int	p_ttimeout;	/* 'ttimeout' */
  EXTERN long	p_ttm;		/* 'ttimeoutlen' */
  EXTERN int	p_tbi;		/* 'ttybuiltin' */
-diff -r fde93adeda8d src/os_win32.h
---- a/src/os_win32.h	Sat Apr 13 21:44:19 2013 +0900
-+++ b/src/os_win32.h	Sat Apr 13 21:57:35 2013 +0900
-@@ -86,6 +86,7 @@
+diff --git a/src/os_win32.h b/src/os_win32.h
+index a6ac891..66b4e9a 100644
+--- a/src/os_win32.h
++++ b/src/os_win32.h
+@@ -84,6 +84,7 @@
  
  #ifdef FEAT_GUI_W32
  # define NO_CONSOLE		/* don't included console-only code */
@@ -136,14 +140,15 @@ diff -r fde93adeda8d src/os_win32.h
  #endif
  
  /* toupper() is not really broken, but it's very slow.	Probably because of
-diff -r fde93adeda8d src/proto/gui_w32.pro
---- a/src/proto/gui_w32.pro	Sat Apr 13 21:44:19 2013 +0900
-+++ b/src/proto/gui_w32.pro	Sat Apr 13 21:57:35 2013 +0900
-@@ -68,6 +68,7 @@
- void gui_mch_set_fg_color __ARGS((guicolor_T color));
- void gui_mch_set_bg_color __ARGS((guicolor_T color));
- void gui_mch_set_sp_color __ARGS((guicolor_T color));
-+void gui_mch_set_transparency __ARGS((int alpha));
- void im_set_font __ARGS((LOGFONT *lf));
- void im_set_position __ARGS((int row, int col));
- void im_set_active __ARGS((int active));
+diff --git a/src/proto/gui_w32.pro b/src/proto/gui_w32.pro
+index 6752d91..ccddf53 100644
+--- a/src/proto/gui_w32.pro
++++ b/src/proto/gui_w32.pro
+@@ -70,6 +70,7 @@ void gui_mch_set_font(GuiFont font);
+ void gui_mch_set_fg_color(guicolor_T color);
+ void gui_mch_set_bg_color(guicolor_T color);
+ void gui_mch_set_sp_color(guicolor_T color);
++void gui_mch_set_transparency(int alpha);
+ void im_set_font(LOGFONT *lf);
+ void im_set_position(int row, int col);
+ void im_set_active(int active);

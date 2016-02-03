@@ -16,15 +16,11 @@ lambda-r23-ex1.diff #+lambda
 2530-guess_encode_feature.diff #-no_kaoriya
 4001-ftp_autolink_2html.diff #-no_kaoriya
 4002-japanese_punctuation_javadoc.diff #-no_kaoriya
-5001-update-translations-ja.diff #-no_kaoriya
 X003-csearch_highlight.diff #+experiments
-X004-eval_rmdir.diff #+experiments
-X004_01-rmdir_support_symlinks.diff #+experiments
 X005-eval_marks.diff #+experiments
 X006-enc_considered_setenv.diff #+experiments
 X007-make_compact_func.diff #+experiments
 X008-async_job.diff #+experiments
-X009-lasteol_impl.diff #+experiments
 X010-autoload_cache.diff #+experiments
 X011-GH592-fix-height-adjustment.diff #-no_kaoriya
 X012-ynkdir-im_over_the_spot.diff #-no_kaoriya

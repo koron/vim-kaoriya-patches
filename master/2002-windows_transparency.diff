@@ -3,13 +3,13 @@
 implement 'transparency' for Windows GUI
 
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index db0a9d5..1ae049c 100644
+index 05d8e30..3dfedcb 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
-@@ -556,6 +556,19 @@ static HANDLE		    user32_lib = NULL;
- #ifdef FEAT_NETBEANS_INTG
- int WSInitialized = FALSE; /* WinSock is initialized */
- #endif
+@@ -553,6 +553,19 @@ typedef BOOL (WINAPI *TGetMonitorInfo)(_HMONITOR, _MONITORINFO *);
+ static TMonitorFromWindow   pMonitorFromWindow = NULL;
+ static TGetMonitorInfo	    pGetMonitorInfo = NULL;
+ static HANDLE		    user32_lib = NULL;
 +
 +/*
 + * For Transparent Window (for only Windows 2000)
@@ -26,7 +26,7 @@ index db0a9d5..1ae049c 100644
  /*
   * Return TRUE when running under Windows NT 3.x or Win32s, both of which have
   * less fancy GUI APIs.
-@@ -1614,6 +1627,8 @@ gui_mch_init(void)
+@@ -1612,6 +1625,8 @@ gui_mch_init(void)
      if (s_hwnd == NULL)
  	return FAIL;
  
@@ -35,7 +35,7 @@ index db0a9d5..1ae049c 100644
  #ifdef GLOBAL_IME
      global_ime_init(atom, s_hwnd);
  #endif
-@@ -1974,6 +1989,46 @@ gui_mch_set_sp_color(guicolor_T color)
+@@ -1972,6 +1987,46 @@ gui_mch_set_sp_color(guicolor_T color)
      gui.currSpColor = color;
  }
  
@@ -83,7 +83,7 @@ index db0a9d5..1ae049c 100644
  /*
   * Multi-byte handling, originally by Sung-Hoon Baek.
 diff --git a/src/option.c b/src/option.c
-index 41d6ceb..0cbd536 100644
+index 72d8cf7..ce8398c 100644
 --- a/src/option.c
 +++ b/src/option.c
 @@ -2711,6 +2711,11 @@ static struct vimoption
@@ -98,7 +98,7 @@ index 41d6ceb..0cbd536 100644
      {"ttimeout",    NULL,   P_BOOL|P_VI_DEF|P_VIM,
  			    (char_u *)&p_ttimeout, PV_NONE,
  			    {(char_u *)FALSE, (char_u *)0L} SCRIPTID_INIT},
-@@ -8648,6 +8653,15 @@ set_num_option(opt_idx, varp, value, errbuf, errbuflen, opt_flags)
+@@ -8616,6 +8621,15 @@ set_num_option(
      }
  #endif
  
@@ -129,10 +129,10 @@ index f178ea7..ecffa2c 100644
  EXTERN long	p_ttm;		/* 'ttimeoutlen' */
  EXTERN int	p_tbi;		/* 'ttybuiltin' */
 diff --git a/src/os_win32.h b/src/os_win32.h
-index a6ac891..66b4e9a 100644
+index 129117a..a910264 100644
 --- a/src/os_win32.h
 +++ b/src/os_win32.h
-@@ -84,6 +84,7 @@
+@@ -81,6 +81,7 @@
  
  #ifdef FEAT_GUI_W32
  # define NO_CONSOLE		/* don't included console-only code */
@@ -141,7 +141,7 @@ index a6ac891..66b4e9a 100644
  
  /* toupper() is not really broken, but it's very slow.	Probably because of
 diff --git a/src/proto/gui_w32.pro b/src/proto/gui_w32.pro
-index 6752d91..ccddf53 100644
+index c8411f9..0c31f9c 100644
 --- a/src/proto/gui_w32.pro
 +++ b/src/proto/gui_w32.pro
 @@ -70,6 +70,7 @@ void gui_mch_set_font(GuiFont font);

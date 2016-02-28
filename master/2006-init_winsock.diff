@@ -2,10 +2,11 @@
 # Parent 5a2d7f302b1d42b1ed917be4a2c09966f36cc99b
 Some embeded languages require init WinSock by hosting application
 
-diff -r 5a2d7f302b1d -r 17043ccfead3 src/gui_w32.c
---- a/src/gui_w32.c	Sat Apr 13 22:11:26 2013 +0900
-+++ b/src/gui_w32.c	Sat Apr 13 22:19:45 2013 +0900
-@@ -1315,9 +1315,26 @@
+diff --git a/src/gui_w32.c b/src/gui_w32.c
+index 601cd7b..00cb1ad 100644
+--- a/src/gui_w32.c
++++ b/src/gui_w32.c
+@@ -5595,9 +5595,27 @@ gui_mch_prepare(int *argc, char **argv)
  		argv[*argc] = NULL;
  		break;	/* enough? */
  	    }
@@ -20,6 +21,7 @@ diff -r 5a2d7f302b1d -r 17043ccfead3 src/gui_w32.c
 +    {
 +	WSADATA wsaData;
 +	int wsaerr;
++	extern int WSInitialized;
 +
 +	/* Init WinSock */
 +	wsaerr = WSAStartup(MAKEWORD(2, 2), &wsaData);

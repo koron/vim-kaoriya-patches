@@ -3,30 +3,25 @@
 implement 'transparency' for Windows GUI
 
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index 05d8e30..3dfedcb 100644
+index 6cc2e06..8bb4cec 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
-@@ -553,6 +553,19 @@ typedef BOOL (WINAPI *TGetMonitorInfo)(_HMONITOR, _MONITORINFO *);
+@@ -4617,6 +4617,14 @@ typedef BOOL (WINAPI *TGetMonitorInfo)(_HMONITOR, _MONITORINFO *);
  static TMonitorFromWindow   pMonitorFromWindow = NULL;
  static TGetMonitorInfo	    pGetMonitorInfo = NULL;
  static HANDLE		    user32_lib = NULL;
 +
 +/*
-+ * For Transparent Window (for only Windows 2000)
++ * For Transparent Window.
 + */
-+#define USE_LAYERED_WINDOW 1
-+#if USE_LAYERED_WINDOW
-+# define WS_EX_LAYERED 0x80000
-+# define LWA_ALPHA 2
 +typedef DWORD (WINAPI *FWINLAYER)(HWND hwnd, DWORD crKey, BYTE bAlpha,
 +	DWORD dwFlags);
 +static void w32_set_transparency(HWND hwnd, BYTE bAlpha);
-+#endif /* USE_LAYERED_WINDOW */
 +
  /*
   * Return TRUE when running under Windows NT 3.x or Win32s, both of which have
   * less fancy GUI APIs.
-@@ -1612,6 +1625,8 @@ gui_mch_init(void)
+@@ -5676,6 +5684,8 @@ gui_mch_init(void)
      if (s_hwnd == NULL)
  	return FAIL;
  
@@ -35,11 +30,10 @@ index 05d8e30..3dfedcb 100644
  #ifdef GLOBAL_IME
      global_ime_init(atom, s_hwnd);
  #endif
-@@ -1972,6 +1987,46 @@ gui_mch_set_sp_color(guicolor_T color)
+@@ -6034,6 +6044,44 @@ gui_mch_set_sp_color(guicolor_T color)
      gui.currSpColor = color;
  }
  
-+#if USE_LAYERED_WINDOW
 +    void
 +w32_set_transparency(HWND hwnd, BYTE bAlpha)
 +{
@@ -77,16 +71,15 @@ index 05d8e30..3dfedcb 100644
 +{
 +    w32_set_transparency(NULL, (BYTE)alpha);
 +}
-+#endif /* USE_LAYERED_WINDOW */
 +
  #if defined(FEAT_MBYTE) && defined(FEAT_MBYTE_IME)
  /*
   * Multi-byte handling, originally by Sung-Hoon Baek.
 diff --git a/src/option.c b/src/option.c
-index 72d8cf7..ce8398c 100644
+index b624aad..e98086e 100644
 --- a/src/option.c
 +++ b/src/option.c
-@@ -2711,6 +2711,11 @@ static struct vimoption
+@@ -2687,6 +2687,11 @@ static struct vimoption options[] =
  			    (char_u *)&p_tbis, PV_NONE,
  			    {(char_u *)"small", (char_u *)0L} SCRIPTID_INIT},
  #endif
@@ -98,7 +91,7 @@ index 72d8cf7..ce8398c 100644
      {"ttimeout",    NULL,   P_BOOL|P_VI_DEF|P_VIM,
  			    (char_u *)&p_ttimeout, PV_NONE,
  			    {(char_u *)FALSE, (char_u *)0L} SCRIPTID_INIT},
-@@ -8616,6 +8621,15 @@ set_num_option(
+@@ -8588,6 +8593,15 @@ set_num_option(
      }
  #endif
  
@@ -115,10 +108,10 @@ index 72d8cf7..ce8398c 100644
      {
  	if (curbuf->b_p_iminsert < 0 || curbuf->b_p_iminsert > B_IMODE_LAST)
 diff --git a/src/option.h b/src/option.h
-index f178ea7..ecffa2c 100644
+index 2f1f04f..1fda926 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -855,6 +855,9 @@ EXTERN char_u	*p_titlestring;	/* 'titlestring' */
+@@ -852,6 +852,9 @@ EXTERN char_u	*p_titlestring;	/* 'titlestring' */
  #ifdef FEAT_INS_EXPAND
  EXTERN char_u	*p_tsr;		/* 'thesaurus' */
  #endif

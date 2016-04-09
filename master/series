@@ -16,6 +16,7 @@ lambda-r23-ex1.diff #+lambda
 2530-guess_encode_feature.diff #-no_kaoriya
 4001-ftp_autolink_2html.diff #-no_kaoriya
 4002-japanese_punctuation_javadoc.diff #-no_kaoriya
+4003-disable-irreparable-settings.diff #-no_kaoriya
 X003-csearch_highlight.diff #+experiments
 X005-eval_marks.diff #+experiments
 X006-enc_considered_setenv.diff #+experiments

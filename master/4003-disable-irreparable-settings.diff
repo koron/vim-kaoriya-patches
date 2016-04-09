@@ -1,0 +1,27 @@
+diff --git a/runtime/vimrc_example.vim b/runtime/vimrc_example.vim
+index 6d5eac4..bad4cfb 100644
+--- a/runtime/vimrc_example.vim
++++ b/runtime/vimrc_example.vim
+@@ -72,8 +72,9 @@ if has("autocmd")
+   augroup vimrcEx
+   au!
+ 
+-  " For all text files set 'textwidth' to 78 characters.
+-  autocmd FileType text setlocal textwidth=78
++  " +kaoriya: disabled, it is hard to repressed.
++  "" For all text files set 'textwidth' to 78 characters.
++  "autocmd FileType text setlocal textwidth=78
+ 
+   " When editing a file, always jump to the last known cursor position.
+   " Don't do it when the position is invalid or when inside an event handler
+@@ -109,6 +110,7 @@ endif
+ 
+ " Add optional packages.
+ "
+-" The matchit plugin makes the % command work better, but it is not backwards
+-" compatible.
+-packadd matchit
++" +kaoriya: disabled, it is hard to repressed.
++"" The matchit plugin makes the % command work better, but it is not backwards
++"" compatible.
++"packadd matchit

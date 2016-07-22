@@ -4,10 +4,10 @@
 Add C/Migemo feature
 
 diff --git a/src/Make_mvc.mak b/src/Make_mvc.mak
-index 6cd3b9c..ab56353 100644
+index 7763422..f0da4a8 100644
 --- a/src/Make_mvc.mak
 +++ b/src/Make_mvc.mak
-@@ -696,6 +696,14 @@ GETTEXT = yes
+@@ -697,6 +697,14 @@ GETTEXT = yes
  CFLAGS = $(CFLAGS) -DDYNAMIC_GETTEXT
  !endif
  
@@ -75,23 +75,8 @@ index 279ed47..d4157f4 100644
  dnl Check for dynamic linking loader
  AC_CHECK_HEADER(dlfcn.h, DLL=dlfcn.h, [AC_CHECK_HEADER(dl.h, DLL=dl.h)])
  if test x${DLL} = xdlfcn.h; then
-diff --git a/src/eval.c b/src/eval.c
-index 5821079..d8c2887 100644
---- a/src/eval.c
-+++ b/src/eval.c
-@@ -5281,6 +5281,10 @@ garbage_collect(int testing)
-     abort = abort || set_ref_in_channel(copyID);
-     abort = abort || set_ref_in_job(copyID);
- #endif
-+#if defined(USE_MIGEMO)
-+	else if (STRICMP(name, "migemo") == 0)
-+	    n = migemo_enabled() ? TRUE : FALSE;
-+#endif
- #ifdef FEAT_NETBEANS_INTG
-     abort = abort || set_ref_in_nb_channel(copyID);
- #endif
 diff --git a/src/evalfunc.c b/src/evalfunc.c
-index 07c7575..a8a13d8 100644
+index 54b5a53..646c591 100644
 --- a/src/evalfunc.c
 +++ b/src/evalfunc.c
 @@ -254,6 +254,7 @@ static void f_matchlist(typval_T *argvars, typval_T *rettv);
@@ -122,7 +107,18 @@ index 07c7575..a8a13d8 100644
  #ifdef FEAT_SESSION
  	"mksession",
  #endif
-@@ -7197,6 +7204,24 @@ f_max(typval_T *argvars, typval_T *rettv)
+@@ -5567,6 +5574,10 @@ f_has(typval_T *argvars, typval_T *rettv)
+ 	else if (STRICMP(name, "netbeans_enabled") == 0)
+ 	    n = netbeans_active();
+ #endif
++#ifdef USE_MIGEMO
++	else if (STRICMP(name, "migemo") == 0)
++	    n = migemo_enabled() ? TRUE : FALSE;
++#endif
+     }
+ 
+     rettv->vval.v_number = n;
+@@ -7197,6 +7208,24 @@ f_max(typval_T *argvars, typval_T *rettv)
      max_min(argvars, rettv, TRUE);
  }
  
@@ -391,7 +387,7 @@ index 339aa34..66ae180 100644
  int search_for_exact_line(buf_T *buf, pos_T *pos, int dir, char_u *pat);
  int searchc(cmdarg_T *cap, int t_cmd);
 diff --git a/src/search.c b/src/search.c
-index 36430bb..c5a2751 100644
+index 36430bb..dccccc4 100644
 --- a/src/search.c
 +++ b/src/search.c
 @@ -1110,6 +1110,305 @@ first_submatch(regmmatch_T *rp)
@@ -482,7 +478,7 @@ index 36430bb..c5a2751 100644
 +}
 +# endif /* DYNAMIC_MIGEMO */
 +
-+    static int 
++    static int
 +vimigemo_char2int(unsigned char* p, unsigned int* code)
 +{
 +    unsigned int ch = *p;
@@ -663,7 +659,7 @@ index 36430bb..c5a2751 100644
 +	{
 +	    char	*query;
 +	    char_u	*newstr = NULL;
-+	    
++
 +	    /* Remove backslash in str */
 +	    if (vim_strchr(str, '\\') && (newstr = vim_strsave(str)))
 +	    {
@@ -732,10 +728,10 @@ index 36430bb..c5a2751 100644
  	if (dircp != NULL)
  	    *dircp = dirc;	/* restore second '/' or '?' for normal_cmd() */
 diff --git a/src/structs.h b/src/structs.h
-index 00a8e03..956e835 100644
+index 191fa1f..7515555 100644
 --- a/src/structs.h
 +++ b/src/structs.h
-@@ -1971,6 +1971,9 @@ struct file_buffer
+@@ -1973,6 +1973,9 @@ struct file_buffer
      int		b_p_lisp;	/* 'lisp' */
  #endif
      char_u	*b_p_mps;	/* 'matchpairs' */
@@ -746,7 +742,7 @@ index 00a8e03..956e835 100644
      int		b_p_ml_nobin;	/* b_p_ml saved for binary mode */
      int		b_p_ma;		/* 'modifiable' */
 diff --git a/src/version.c b/src/version.c
-index 8f6134b..7001152 100644
+index dccf2ce..f15066d 100644
 --- a/src/version.c
 +++ b/src/version.c
 @@ -348,6 +348,15 @@ static char *(features[]) =
@@ -766,7 +762,7 @@ index 8f6134b..7001152 100644
  	"+mksession",
  #else
 diff --git a/src/vim.h b/src/vim.h
-index c2b65d9..b6c1e85 100644
+index 0ed2120..7a016ea 100644
 --- a/src/vim.h
 +++ b/src/vim.h
 @@ -917,6 +917,9 @@ extern char *(*dyn_libintl_textdomain)(const char *domainname);

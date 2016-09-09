@@ -4,7 +4,7 @@
 Add C/Migemo feature
 
 diff --git a/src/Make_mvc.mak b/src/Make_mvc.mak
-index 7763422..f0da4a8 100644
+index 549850b..bc67a69 100644
 --- a/src/Make_mvc.mak
 +++ b/src/Make_mvc.mak
 @@ -697,6 +697,14 @@ GETTEXT = yes
@@ -43,7 +43,7 @@ index 9d35e48..ac931a5 100644
  #undef HAVE_NDIR_H
  #undef HAVE_POLL_H
 diff --git a/src/configure.in b/src/configure.in
-index 279ed47..d4157f4 100644
+index c0a60b2..a6559e7 100644
 --- a/src/configure.in
 +++ b/src/configure.in
 @@ -3104,7 +3104,7 @@ fi
@@ -76,10 +76,10 @@ index 279ed47..d4157f4 100644
  AC_CHECK_HEADER(dlfcn.h, DLL=dlfcn.h, [AC_CHECK_HEADER(dl.h, DLL=dl.h)])
  if test x${DLL} = xdlfcn.h; then
 diff --git a/src/evalfunc.c b/src/evalfunc.c
-index 54b5a53..646c591 100644
+index 906fa39..c70fcad 100644
 --- a/src/evalfunc.c
 +++ b/src/evalfunc.c
-@@ -254,6 +254,7 @@ static void f_matchlist(typval_T *argvars, typval_T *rettv);
+@@ -261,6 +261,7 @@ static void f_matchlist(typval_T *argvars, typval_T *rettv);
  static void f_matchstr(typval_T *argvars, typval_T *rettv);
  static void f_matchstrpos(typval_T *argvars, typval_T *rettv);
  static void f_max(typval_T *argvars, typval_T *rettv);
@@ -87,7 +87,7 @@ index 54b5a53..646c591 100644
  static void f_min(typval_T *argvars, typval_T *rettv);
  #ifdef vim_mkdir
  static void f_mkdir(typval_T *argvars, typval_T *rettv);
-@@ -671,6 +672,7 @@ static struct fst
+@@ -687,6 +688,7 @@ static struct fst
      {"matchstr",	2, 4, f_matchstr},
      {"matchstrpos",	2, 4, f_matchstrpos},
      {"max",		1, 1, f_max},
@@ -95,7 +95,7 @@ index 54b5a53..646c591 100644
      {"min",		1, 1, f_min},
  #ifdef vim_mkdir
      {"mkdir",		1, 3, f_mkdir},
-@@ -5220,6 +5222,11 @@ f_has(typval_T *argvars, typval_T *rettv)
+@@ -5669,6 +5671,11 @@ f_has(typval_T *argvars, typval_T *rettv)
  #ifdef FEAT_MENU
  	"menu",
  #endif
@@ -107,7 +107,7 @@ index 54b5a53..646c591 100644
  #ifdef FEAT_SESSION
  	"mksession",
  #endif
-@@ -5567,6 +5574,10 @@ f_has(typval_T *argvars, typval_T *rettv)
+@@ -6012,6 +6019,10 @@ f_has(typval_T *argvars, typval_T *rettv)
  	else if (STRICMP(name, "netbeans_enabled") == 0)
  	    n = netbeans_active();
  #endif
@@ -118,7 +118,7 @@ index 54b5a53..646c591 100644
      }
  
      rettv->vval.v_number = n;
-@@ -7197,6 +7208,24 @@ f_max(typval_T *argvars, typval_T *rettv)
+@@ -7642,6 +7653,24 @@ f_max(typval_T *argvars, typval_T *rettv)
      max_min(argvars, rettv, TRUE);
  }
  
@@ -144,10 +144,10 @@ index 54b5a53..646c591 100644
   * "min()" function
   */
 diff --git a/src/ex_getln.c b/src/ex_getln.c
-index 642e090..f1fbe6b 100644
+index 4ff9ae1..c91d647 100644
 --- a/src/ex_getln.c
 +++ b/src/ex_getln.c
-@@ -207,7 +207,17 @@ getcmdline(
+@@ -218,7 +218,17 @@ getcmdline(
       * custom status line may invoke ":normal". */
      struct cmdline_info save_ccline;
  #endif
@@ -159,13 +159,13 @@ index 642e090..f1fbe6b 100644
 +    if (count < 0)
 +    {
 +	migemo_enabled = 1;
-+	count = -count;
++	count = -count - 1;
 +    }
 +#endif
  #ifdef FEAT_EVAL
      if (firstc == -1)
      {
-@@ -1774,15 +1784,22 @@ cmdline_changed:
+@@ -1888,15 +1898,22 @@ cmdline_changed:
  		i = 0;
  	    else
  	    {
@@ -190,10 +190,10 @@ index 642e090..f1fbe6b 100644
  			&tm
  #else
 diff --git a/src/feature.h b/src/feature.h
-index 9dc7dc2..70606f5 100644
+index 138279e..a1fb329 100644
 --- a/src/feature.h
 +++ b/src/feature.h
-@@ -1353,3 +1353,13 @@
+@@ -1358,3 +1358,13 @@
  	    || (defined(WIN3264) && defined(FEAT_GUI_W32))
  # define FEAT_FILTERPIPE
  #endif
@@ -208,10 +208,10 @@ index 9dc7dc2..70606f5 100644
 +# define USE_MIGEMO
 +#endif
 diff --git a/src/main.c b/src/main.c
-index ff82a9f..a70e690 100644
+index acc51f1..9d04849 100644
 --- a/src/main.c
 +++ b/src/main.c
-@@ -1473,6 +1473,9 @@ getout(int exitval)
+@@ -1475,6 +1475,9 @@ getout(int exitval)
  #ifdef FEAT_PERL
      perl_end();
  #endif
@@ -222,33 +222,33 @@ index ff82a9f..a70e690 100644
      iconv_end();
  #endif
 diff --git a/src/normal.c b/src/normal.c
-index bc72c81..2ed1923 100644
+index 92ef575..98e45cd 100644
 --- a/src/normal.c
 +++ b/src/normal.c
-@@ -6238,7 +6238,12 @@ nv_search(cmdarg_T *cap)
- 	return;
-     }
+@@ -6243,7 +6243,12 @@ nv_search(cmdarg_T *cap)
  
+     /* When using 'incsearch' the cursor may be moved to set a different search
+      * start position. */
 +#ifdef USE_MIGEMO
 +    cap->searchbuf = getcmdline(cap->cmdchar,
-+	    (cap->nchar == 'g' ? -cap->count1 : cap->count1), 0);
++	    (cap->nchar == 'g' ? -cap->count1 - 1 : cap->count1), 0);
 +#else
      cap->searchbuf = getcmdline(cap->cmdchar, cap->count1, 0);
 +#endif
  
      if (cap->searchbuf == NULL)
      {
-@@ -6247,6 +6252,9 @@ nv_search(cmdarg_T *cap)
+@@ -6252,6 +6257,9 @@ nv_search(cmdarg_T *cap)
      }
  
      (void)normal_search(cap, cap->cmdchar, cap->searchbuf,
 +#ifdef USE_MIGEMO
-+	    (cap->nchar == 'g' ? SEARCH_MIGEMO : 0) |
++			(cap->nchar == 'g' ? SEARCH_MIGEMO : 0) |
 +#endif
- 						(cap->arg ? 0 : SEARCH_MARK));
+ 			(cap->arg || !equalpos(save_cursor, curwin->w_cursor))
+ 							   ? 0 : SEARCH_MARK);
  }
- 
-@@ -8257,7 +8265,9 @@ nv_g_cmd(cmdarg_T *cap)
+@@ -8263,7 +8271,9 @@ nv_g_cmd(cmdarg_T *cap)
      case '~':
      case 'u':
      case 'U':
@@ -258,7 +258,7 @@ index bc72c81..2ed1923 100644
      case '@':
  	nv_operator(cap);
  	break;
-@@ -8356,6 +8366,25 @@ nv_g_cmd(cmdarg_T *cap)
+@@ -8362,6 +8372,25 @@ nv_g_cmd(cmdarg_T *cap)
  							 FALSE, FALSE, FALSE);
  	break;
  
@@ -285,7 +285,7 @@ index bc72c81..2ed1923 100644
  	clearopbeep(oap);
  	break;
 diff --git a/src/option.c b/src/option.c
-index 4d8abaa..869b18d 100644
+index dfe2f04..62f4272 100644
 --- a/src/option.c
 +++ b/src/option.c
 @@ -139,6 +139,9 @@
@@ -298,7 +298,7 @@ index 4d8abaa..869b18d 100644
  #define PV_ML		OPT_BUF(BV_ML)
  #define PV_MOD		OPT_BUF(BV_MOD)
  #define PV_MPS		OPT_BUF(BV_MPS)
-@@ -1854,6 +1857,14 @@ static struct vimoption options[] =
+@@ -1864,6 +1867,14 @@ static struct vimoption options[] =
      {"mesg",	    NULL,   P_BOOL|P_VI_DEF,
  			    (char_u *)NULL, PV_NONE,
  			    {(char_u *)FALSE, (char_u *)0L} SCRIPTID_INIT},
@@ -313,7 +313,7 @@ index 4d8abaa..869b18d 100644
      {"mkspellmem",  "msm",  P_STRING|P_VI_DEF|P_EXPAND|P_SECURE,
  #ifdef FEAT_SPELL
  			    (char_u *)&p_msm, PV_NONE,
-@@ -5743,6 +5754,11 @@ set_string_option_global(
+@@ -5773,6 +5784,11 @@ set_string_option_global(
  	free_string_option(*p);
  	*p = s;
      }
@@ -325,7 +325,7 @@ index 4d8abaa..869b18d 100644
  }
  
  /*
-@@ -10405,6 +10421,9 @@ get_varp(struct vimoption *p)
+@@ -10453,6 +10469,9 @@ get_varp(struct vimoption *p)
  	case PV_ML:	return (char_u *)&(curbuf->b_p_ml);
  	case PV_MPS:	return (char_u *)&(curbuf->b_p_mps);
  	case PV_MA:	return (char_u *)&(curbuf->b_p_ma);
@@ -335,7 +335,7 @@ index 4d8abaa..869b18d 100644
  	case PV_MOD:	return (char_u *)&(curbuf->b_changed);
  	case PV_NF:	return (char_u *)&(curbuf->b_p_nf);
  	case PV_PI:	return (char_u *)&(curbuf->b_p_pi);
-@@ -10805,6 +10824,11 @@ buf_copy_options(buf_T *buf, int flags)
+@@ -10865,6 +10884,11 @@ buf_copy_options(buf_T *buf, int flags)
  	    buf->b_p_iminsert = p_iminsert;
  	    buf->b_p_imsearch = p_imsearch;
  
@@ -348,10 +348,10 @@ index 4d8abaa..869b18d 100644
  	     * are not copied, start using the global value */
  	    buf->b_p_ar = -1;
 diff --git a/src/option.h b/src/option.h
-index 1fc011b..97a7c67 100644
+index b65782c..d765d70 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -654,6 +654,10 @@ EXTERN long	p_mmt;		/* 'maxmemtot' */
+@@ -659,6 +659,10 @@ EXTERN long	p_mmt;		/* 'maxmemtot' */
  #ifdef FEAT_MENU
  EXTERN long	p_mis;		/* 'menuitems' */
  #endif
@@ -362,7 +362,7 @@ index 1fc011b..97a7c67 100644
  #ifdef FEAT_SPELL
  EXTERN char_u	*p_msm;		/* 'mkspellmem' */
  #endif
-@@ -1062,6 +1066,9 @@ enum
+@@ -1069,6 +1073,9 @@ enum
      , BV_LW
  #endif
      , BV_MA
@@ -373,10 +373,10 @@ index 1fc011b..97a7c67 100644
      , BV_MOD
      , BV_MPS
 diff --git a/src/proto/search.pro b/src/proto/search.pro
-index 339aa34..66ae180 100644
+index 3b9ca5c..db19a40 100644
 --- a/src/proto/search.pro
 +++ b/src/proto/search.pro
-@@ -20,6 +20,9 @@ void set_last_search_pat(char_u *s, int idx, int magic, int setlast);
+@@ -21,6 +21,9 @@ void set_last_search_pat(char_u *s, int idx, int magic, int setlast);
  void last_pat_prog(regmmatch_T *regmatch);
  int searchit(win_T *win, buf_T *buf, pos_T *pos, int dir, char_u *pat, long count, int options, int pat_use, linenr_T stop_lnum, proftime_T *tm);
  void set_search_direction(int cdir);
@@ -387,10 +387,10 @@ index 339aa34..66ae180 100644
  int search_for_exact_line(buf_T *buf, pos_T *pos, int dir, char_u *pat);
  int searchc(cmdarg_T *cap, int t_cmd);
 diff --git a/src/search.c b/src/search.c
-index 36430bb..dccccc4 100644
+index 814eccc..51bbbc6 100644
 --- a/src/search.c
 +++ b/src/search.c
-@@ -1110,6 +1110,305 @@ first_submatch(regmmatch_T *rp)
+@@ -1119,6 +1119,305 @@ first_submatch(regmmatch_T *rp)
  }
  #endif
  
@@ -696,7 +696,7 @@ index 36430bb..dccccc4 100644
  /*
   * Highest level string search function.
   * Search for the 'count'th occurrence of pattern 'pat' in direction 'dirc'
-@@ -1420,12 +1719,30 @@ do_search(
+@@ -1429,12 +1728,30 @@ do_search(
  	     lrFswap(searchstr,0);
  #endif
  
@@ -728,10 +728,10 @@ index 36430bb..dccccc4 100644
  	if (dircp != NULL)
  	    *dircp = dirc;	/* restore second '/' or '?' for normal_cmd() */
 diff --git a/src/structs.h b/src/structs.h
-index 191fa1f..7515555 100644
+index 2a4284a..96aaa07 100644
 --- a/src/structs.h
 +++ b/src/structs.h
-@@ -1973,6 +1973,9 @@ struct file_buffer
+@@ -2099,6 +2099,9 @@ struct file_buffer
      int		b_p_lisp;	/* 'lisp' */
  #endif
      char_u	*b_p_mps;	/* 'matchpairs' */
@@ -742,10 +742,10 @@ index 191fa1f..7515555 100644
      int		b_p_ml_nobin;	/* b_p_ml saved for binary mode */
      int		b_p_ma;		/* 'modifiable' */
 diff --git a/src/version.c b/src/version.c
-index dccf2ce..f15066d 100644
+index 8740a98..58957c2 100644
 --- a/src/version.c
 +++ b/src/version.c
-@@ -348,6 +348,15 @@ static char *(features[]) =
+@@ -353,6 +353,15 @@ static char *(features[]) =
  #else
  	"-menu",
  #endif
@@ -762,10 +762,10 @@ index dccf2ce..f15066d 100644
  	"+mksession",
  #else
 diff --git a/src/vim.h b/src/vim.h
-index 0ed2120..7a016ea 100644
+index 6caae58..a5bab40 100644
 --- a/src/vim.h
 +++ b/src/vim.h
-@@ -917,6 +917,9 @@ extern char *(*dyn_libintl_textdomain)(const char *domainname);
+@@ -931,6 +931,9 @@ extern char *(*dyn_libintl_textdomain)(const char *domainname);
  #define SEARCH_KEEP  0x400  /* keep previous search pattern */
  #define SEARCH_PEEK  0x800  /* peek for typed char, cancel search */
  #define SEARCH_COL  0x1000  /* start at specified column instead of zero */

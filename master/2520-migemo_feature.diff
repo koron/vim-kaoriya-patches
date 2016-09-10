@@ -144,7 +144,7 @@ index 906fa39..c70fcad 100644
   * "min()" function
   */
 diff --git a/src/ex_getln.c b/src/ex_getln.c
-index 4ff9ae1..c91d647 100644
+index 4ff9ae1..539f038 100644
 --- a/src/ex_getln.c
 +++ b/src/ex_getln.c
 @@ -218,7 +218,17 @@ getcmdline(
@@ -165,7 +165,18 @@ index 4ff9ae1..c91d647 100644
  #ifdef FEAT_EVAL
      if (firstc == -1)
      {
-@@ -1888,15 +1898,22 @@ cmdline_changed:
+@@ -1689,6 +1699,10 @@ getcmdline(
+ 		    else
+ 			t = match_start;
+ 		    ++emsg_off;
++#ifdef USE_MIGEMO
++		    if (migemo_enabled)
++			search_flags += SEARCH_MIGEMO;
++#endif
+ 		    i = searchit(curwin, curbuf, &t,
+ 				 c == Ctrl_G ? FORWARD : BACKWARD,
+ 				 ccline.cmdbuff, count, search_flags,
+@@ -1888,15 +1902,22 @@ cmdline_changed:
  		i = 0;
  	    else
  	    {
@@ -177,7 +188,7 @@ index 4ff9ae1..c91d647 100644
  		++emsg_off;    /* So it doesn't beep if bad expr */
 +#ifdef USE_MIGEMO
 +		if (migemo_enabled)
-+		    search_options |= SEARCH_MIGEMO;
++		    search_options += SEARCH_MIGEMO;
 +#endif
  #ifdef FEAT_RELTIME
  		/* Set the time limit to half a second. */
@@ -222,7 +233,7 @@ index acc51f1..9d04849 100644
      iconv_end();
  #endif
 diff --git a/src/normal.c b/src/normal.c
-index 92ef575..98e45cd 100644
+index 92ef575..b205106 100644
 --- a/src/normal.c
 +++ b/src/normal.c
 @@ -6243,7 +6243,12 @@ nv_search(cmdarg_T *cap)
@@ -238,16 +249,20 @@ index 92ef575..98e45cd 100644
  
      if (cap->searchbuf == NULL)
      {
-@@ -6252,6 +6257,9 @@ nv_search(cmdarg_T *cap)
+@@ -6252,8 +6257,11 @@ nv_search(cmdarg_T *cap)
      }
  
      (void)normal_search(cap, cap->cmdchar, cap->searchbuf,
+-			(cap->arg || !equalpos(save_cursor, curwin->w_cursor))
+-							   ? 0 : SEARCH_MARK);
 +#ifdef USE_MIGEMO
 +			(cap->nchar == 'g' ? SEARCH_MIGEMO : 0) |
 +#endif
- 			(cap->arg || !equalpos(save_cursor, curwin->w_cursor))
- 							   ? 0 : SEARCH_MARK);
++			((cap->arg || !equalpos(save_cursor, curwin->w_cursor))
++							   ? 0 : SEARCH_MARK));
  }
+ 
+ /*
 @@ -8263,7 +8271,9 @@ nv_g_cmd(cmdarg_T *cap)
      case '~':
      case 'u':
@@ -387,10 +402,21 @@ index 3b9ca5c..db19a40 100644
  int search_for_exact_line(buf_T *buf, pos_T *pos, int dir, char_u *pat);
  int searchc(cmdarg_T *cap, int t_cmd);
 diff --git a/src/search.c b/src/search.c
-index 814eccc..51bbbc6 100644
+index 814eccc..9e46a43 100644
 --- a/src/search.c
 +++ b/src/search.c
-@@ -1119,6 +1119,305 @@ first_submatch(regmmatch_T *rp)
+@@ -581,8 +581,8 @@ last_pat_prog(regmmatch_T *regmatch)
+  * When FEAT_EVAL is defined, returns the index of the first matching
+  * subpattern plus one; one if there was none.
+  */
+-    int
+-searchit(
++    static int
++searchit_original(		/* renamed from "searchit" (USE_MIGEMO) */
+     win_T	*win,		/* window to search in; can be NULL for a
+ 				   buffer without a window! */
+     buf_T	*buf,
+@@ -1119,6 +1119,342 @@ first_submatch(regmmatch_T *rp)
  }
  #endif
  
@@ -634,20 +660,22 @@ index 814eccc..51bbbc6 100644
 +    return 1;
 +}
 +
++/*
++ * Search with migemo, mimic of searchit()
++ */
 +    static int
-+searchit_migemo(win, buf, pos, dir, str, count, options, pat_use, stop_lnum,
-+	tm, did)
-+    win_T	*win;
-+    buf_T	*buf;
-+    pos_T	*pos;
-+    int		dir;
-+    char_u	*str;
-+    long	count;
-+    int		options;
-+    int		pat_use;
-+    linenr_T	stop_lnum;	/* stop after this line number when != 0 */
-+    proftime_T*	tm;
-+    int		*did;
++searchit_migemo(
++    win_T	*win,
++    buf_T	*buf,
++    pos_T	*pos,
++    int		dir,
++    char_u	*str,
++    long	count,
++    int		options,
++    int		pat_use,
++    linenr_T	stop_lnum,
++    proftime_T*	tm,
++    int		*did)
 +{
 +    int retval = 0;
 +    int didval = 0;
@@ -676,8 +704,8 @@ index 814eccc..51bbbc6 100644
 +	    query = migemo_query(migemo_object, str);
 +	    if (query && STRLEN(query) < MIGEMO_QUERY_MAXSIZE)
 +	    {
-+		retval = searchit(win, buf, pos, dir, query, count, options,
-+			pat_use, stop_lnum, tm);
++		retval = searchit_original(win, buf, pos, dir, query, count,
++			options, pat_use, stop_lnum, tm);
 +		didval = 1;
 +	    }
 +	    if (query)
@@ -691,42 +719,56 @@ index 814eccc..51bbbc6 100644
 +	*did = didval;
 +    return retval;
 +}
++
++/*
++ * wrapper of searchit_original().
++ *
++ * This extends original one to accept SEARCH_MIGEMO for options.
++ * If this flag is set, migemo feature is enabled for the search.
++ */
++    int
++searchit(
++    win_T	*win,
++    buf_T	*buf,
++    pos_T	*pos,
++    int		dir,
++    char_u	*pat,
++    long	count,
++    int		options,
++    int		pat_use,
++    linenr_T	stop_lnum,
++    proftime_T	*tm UNUSED)
++{
++    if (options & SEARCH_MIGEMO)
++    {
++	int did = 0;
++	int ret;
++
++	options &= ~SEARCH_MIGEMO;
++	ret = searchit_migemo(win, buf, pos, dir, pat, count, options, pat_use,
++		stop_lnum, tm, &did);
++	if (did)
++	    return ret;
++    }
++    return searchit_original(win, buf, pos, dir, pat, count, options, pat_use,
++	    stop_lnum, tm);
++}
++
 +#endif /* USE_MIGEMO */
 +
  /*
   * Highest level string search function.
   * Search for the 'count'th occurrence of pattern 'pat' in direction 'dirc'
-@@ -1429,12 +1728,30 @@ do_search(
- 	     lrFswap(searchstr,0);
- #endif
- 
-+#ifdef USE_MIGEMO
-+	{
-+	    int did_migemo = 0;
-+	    if (options & SEARCH_MIGEMO)
-+		c = searchit_migemo(
-+			curwin, curbuf, &pos,
-+			dirc == '/' ? FORWARD : BACKWARD,
-+			searchstr, count, spats[0].off.end + (options &
-+			    (SEARCH_KEEP + SEARCH_PEEK + SEARCH_HIS
-+			     + SEARCH_MSG + SEARCH_START
-+			     + ((pat != NULL && *pat == ';') ?
-+				 0 : SEARCH_NOOF))),
-+			RE_LAST, (linenr_T)0, tm, &did_migemo);
-+	    if (!did_migemo)
-+#endif /* USE_MIGEMO */
- 	c = searchit(curwin, curbuf, &pos, dirc == '/' ? FORWARD : BACKWARD,
+@@ -1433,6 +1769,9 @@ do_search(
  		searchstr, count, spats[0].off.end + (options &
  		       (SEARCH_KEEP + SEARCH_PEEK + SEARCH_HIS
  			+ SEARCH_MSG + SEARCH_START
++#ifdef USE_MIGEMO
++			+ SEARCH_MIGEMO
++#endif
  			+ ((pat != NULL && *pat == ';') ? 0 : SEARCH_NOOF))),
  		RE_LAST, (linenr_T)0, tm);
-+#ifdef USE_MIGEMO
-+	}
-+#endif /* USE_MIGEMO */
  
- 	if (dircp != NULL)
- 	    *dircp = dirc;	/* restore second '/' or '?' for normal_cmd() */
 diff --git a/src/structs.h b/src/structs.h
 index 2a4284a..96aaa07 100644
 --- a/src/structs.h

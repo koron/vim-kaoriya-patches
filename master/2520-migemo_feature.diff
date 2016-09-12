@@ -118,11 +118,10 @@ index 906fa39..c70fcad 100644
      }
  
      rettv->vval.v_number = n;
-@@ -7642,6 +7653,24 @@ f_max(typval_T *argvars, typval_T *rettv)
-     max_min(argvars, rettv, TRUE);
+@@ -7643,6 +7654,24 @@ f_max(typval_T *argvars, typval_T *rettv)
  }
  
-+/*
+ /*
 + * "migemo()" function
 + */
 +    static void
@@ -140,11 +139,12 @@ index 906fa39..c70fcad 100644
 +#endif
 +}
 +
- /*
++/*
   * "min()" function
   */
+     static void
 diff --git a/src/ex_getln.c b/src/ex_getln.c
-index 4ff9ae1..539f038 100644
+index 25a12be..06626d7 100644
 --- a/src/ex_getln.c
 +++ b/src/ex_getln.c
 @@ -218,7 +218,17 @@ getcmdline(
@@ -402,21 +402,26 @@ index 3b9ca5c..db19a40 100644
  int search_for_exact_line(buf_T *buf, pos_T *pos, int dir, char_u *pat);
  int searchc(cmdarg_T *cap, int t_cmd);
 diff --git a/src/search.c b/src/search.c
-index 814eccc..9e46a43 100644
+index d20c673..a2f5856 100644
 --- a/src/search.c
 +++ b/src/search.c
-@@ -581,8 +581,8 @@ last_pat_prog(regmmatch_T *regmatch)
+@@ -581,8 +581,14 @@ last_pat_prog(regmmatch_T *regmatch)
   * When FEAT_EVAL is defined, returns the index of the first matching
   * subpattern plus one; one if there was none.
   */
--    int
++#ifndef USE_MIGEMO
+     int
 -searchit(
++searchit
++#else
 +    static int
-+searchit_original(		/* renamed from "searchit" (USE_MIGEMO) */
++searchit_original		/* renamed from "searchit" (USE_MIGEMO) */
++#endif
++(
      win_T	*win,		/* window to search in; can be NULL for a
  				   buffer without a window! */
      buf_T	*buf,
-@@ -1119,6 +1119,342 @@ first_submatch(regmmatch_T *rp)
+@@ -1119,6 +1125,342 @@ first_submatch(regmmatch_T *rp)
  }
  #endif
  
@@ -759,7 +764,7 @@ index 814eccc..9e46a43 100644
  /*
   * Highest level string search function.
   * Search for the 'count'th occurrence of pattern 'pat' in direction 'dirc'
-@@ -1433,6 +1769,9 @@ do_search(
+@@ -1432,6 +1774,9 @@ do_search(
  		searchstr, count, spats[0].off.end + (options &
  		       (SEARCH_KEEP + SEARCH_PEEK + SEARCH_HIS
  			+ SEARCH_MSG + SEARCH_START
@@ -784,7 +789,7 @@ index 2a4284a..96aaa07 100644
      int		b_p_ml_nobin;	/* b_p_ml saved for binary mode */
      int		b_p_ma;		/* 'modifiable' */
 diff --git a/src/version.c b/src/version.c
-index 8740a98..58957c2 100644
+index 0767d4a..f018dde 100644
 --- a/src/version.c
 +++ b/src/version.c
 @@ -353,6 +353,15 @@ static char *(features[]) =

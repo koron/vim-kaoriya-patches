@@ -3,13 +3,14 @@
 Some embeded languages require init WinSock by hosting application
 
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index f2f6a28..57a2548 100644
+index 9c60934..2e4e0db 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
-@@ -5493,6 +5493,23 @@ gui_mch_prepare(int *argc, char **argv)
+@@ -5333,6 +5333,23 @@ gui_mch_prepare(int *argc, char **argv)
+ 	    }
      }
  #endif
- 
++
 +    /*
 +     * Some embeded languages (if_*) require to initialize WinSock2 by hosting
 +     * application.
@@ -26,7 +27,6 @@ index f2f6a28..57a2548 100644
 +	    WSInitialized = TRUE;
 +#endif
 +    }
-+
-     /* get the OS version info */
-     os_version.dwOSVersionInfoSize = sizeof(os_version);
-     GetVersionEx(&os_version); /* this call works on Win32s, Win95 and WinNT */
+ }
+ 
+ /*

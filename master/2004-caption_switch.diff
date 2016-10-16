@@ -3,10 +3,10 @@
 add 'C' flag to 'guioptions' which control to show the caption of window
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index 67b0431..aaa6ce0 100644
+index 390fab0..95ba3b5 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
-@@ -3843,6 +3843,9 @@ A jump table for the options with a short description can be found at |Q_op|.
+@@ -3851,6 +3851,9 @@ A jump table for the options with a short description can be found at |Q_op|.
  	  'F'	Add a footer.  Only for Motif.  See |gui-footer|.
  
  
@@ -17,7 +17,7 @@ index 67b0431..aaa6ce0 100644
  'guipty'		boolean	(default on)
  			global
 diff --git a/src/gui.c b/src/gui.c
-index 31ddd03..cee9255 100644
+index 87b0839..e97cf36 100644
 --- a/src/gui.c
 +++ b/src/gui.c
 @@ -3372,6 +3372,8 @@ gui_init_which_components(char_u *oldval UNUSED)
@@ -55,12 +55,12 @@ index 31ddd03..cee9255 100644
  	{
  #ifdef FEAT_GUI_GTK
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index 1615d17..72a68e8 100644
+index 93fe465..a5d7a89 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
-@@ -40,6 +40,9 @@ static int s_directx_load_attempted = 0;
- static int gui_mswin_get_menu_height(int fix_window);
- #endif
+@@ -47,6 +47,9 @@ typedef DWORD (WINAPI *FWINLAYER)(HWND hwnd, DWORD crKey, BYTE bAlpha,
+ 	DWORD dwFlags);
+ static void w32_set_transparency(HWND hwnd, BYTE bAlpha);
  
 +static int get_caption_height(void);
 +static int get_caption_width_adjustment(void);
@@ -68,35 +68,8 @@ index 1615d17..72a68e8 100644
  #if defined(FEAT_DIRECTX) || defined(PROTO)
      int
  directx_enabled(void)
-@@ -3011,11 +3014,12 @@ gui_mswin_get_valid_dimensions(
- 
-     base_width = gui_get_base_width()
- 	+ (GetSystemMetrics(SM_CXFRAME) +
--	   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2;
-+	   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
-+	+ get_caption_width_adjustment();
-     base_height = gui_get_base_height()
- 	+ (GetSystemMetrics(SM_CYFRAME) +
- 	   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
--	+ GetSystemMetrics(SM_CYCAPTION)
-+	+ get_caption_height()
- #ifdef FEAT_MENU
- 	+ gui_mswin_get_menu_height(FALSE)
- #endif
-@@ -3418,9 +3422,11 @@ gui_mch_newfont(void)
-     if (win_socket_id == 0)
-     {
- 	gui_resize_shell(rect.right - rect.left
-+	    - get_caption_width_adjustment()
- 	    - (GetSystemMetrics(SM_CXFRAME) +
- 	       GetSystemMetrics(SM_CXPADDEDBORDER)) * 2,
- 	    rect.bottom - rect.top
-+	    - get_caption_height()
- 	    - (GetSystemMetrics(SM_CYFRAME) +
- 	       GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
- 	    - GetSystemMetrics(SM_CYCAPTION)
-@@ -4541,6 +4547,57 @@ is_winnt_3(void)
- 	    || (os_version.dwPlatformId == VER_PLATFORM_WIN32s));
+@@ -1016,6 +1019,57 @@ _OnMouseMoveOrRelease(
+     _OnMouseEvent(button, x, y, FALSE, keyFlags);
  }
  
 +    static int
@@ -152,17 +125,38 @@ index 1615d17..72a68e8 100644
 +
  #ifdef FEAT_MENU
  /*
-  * Figure out how high the menu bar is at the moment.
-@@ -4580,7 +4637,7 @@ gui_mswin_get_menu_height(
- 	    {
- 		RECT r1, r2;
- 		int frameht = GetSystemMetrics(SM_CYFRAME);
--		int capht = GetSystemMetrics(SM_CYCAPTION);
-+		int capht = get_caption_height();
+  * Find the vimmenu_T with the given id
+@@ -2978,11 +3032,12 @@ gui_mswin_get_valid_dimensions(
  
- 		/* get window rect of s_hwnd
- 		 * get client rect of s_hwnd
-@@ -5820,10 +5877,11 @@ gui_mch_set_shellsize(int width, int height,
+     base_width = gui_get_base_width()
+ 	+ (GetSystemMetrics(SM_CXFRAME) +
+-	   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2;
++	   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
++	+ get_caption_width_adjustment();
+     base_height = gui_get_base_height()
+ 	+ (GetSystemMetrics(SM_CYFRAME) +
+ 	   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
+-	+ GetSystemMetrics(SM_CYCAPTION)
++	+ get_caption_height()
+ #ifdef FEAT_MENU
+ 	+ gui_mswin_get_menu_height(FALSE)
+ #endif
+@@ -3385,12 +3440,13 @@ gui_mch_newfont(void)
+     if (win_socket_id == 0)
+     {
+ 	gui_resize_shell(rect.right - rect.left
++	    - get_caption_width_adjustment()
+ 	    - (GetSystemMetrics(SM_CXFRAME) +
+ 	       GetSystemMetrics(SM_CXPADDEDBORDER)) * 2,
+ 	    rect.bottom - rect.top
+ 	    - (GetSystemMetrics(SM_CYFRAME) +
+ 	       GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
+-	    - GetSystemMetrics(SM_CYCAPTION)
++	    - get_caption_height()
+ #ifdef FEAT_MENU
+ 	    - gui_mswin_get_menu_height(FALSE)
+ #endif
+@@ -5617,10 +5673,11 @@ gui_mch_set_shellsize(int width, int height,
  
      /* compute the size of the outside of the window */
      win_width = width + (GetSystemMetrics(SM_CXFRAME) +
@@ -176,7 +170,7 @@ index 1615d17..72a68e8 100644
  #ifdef FEAT_MENU
  			+ gui_mswin_get_menu_height(FALSE)
  #endif
-@@ -6734,7 +6792,8 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
+@@ -6512,7 +6569,8 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
  
      *screen_w = workarea_rect.right - workarea_rect.left
  		- (GetSystemMetrics(SM_CXFRAME) +
@@ -186,7 +180,7 @@ index 1615d17..72a68e8 100644
  
      /* FIXME: dirty trick: Because the gui_get_base_height() doesn't include
       * the menubar for MSwin, we subtract it from the screen height, so that
-@@ -6742,7 +6801,7 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
+@@ -6520,7 +6578,7 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
      *screen_h = workarea_rect.bottom - workarea_rect.top
  		- (GetSystemMetrics(SM_CYFRAME) +
  		   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
@@ -196,7 +190,7 @@ index 1615d17..72a68e8 100644
  		- gui_mswin_get_menu_height(FALSE)
  #endif
 diff --git a/src/option.h b/src/option.h
-index b4f3ada..8530e16 100644
+index 442a1e7..b65782c 100644
 --- a/src/option.h
 +++ b/src/option.h
 @@ -235,7 +235,8 @@

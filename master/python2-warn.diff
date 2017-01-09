@@ -1,0 +1,136 @@
+diff --git a/src/ex_cmds.h b/src/ex_cmds.h
+index cb2fadc..bfad5ae 100644
+--- a/src/ex_cmds.h
++++ b/src/ex_cmds.h
+@@ -1120,6 +1120,9 @@ EX(CMD_pydo,		"pydo",		ex_pydo,
+ EX(CMD_pyfile,		"pyfile",	ex_pyfile,
+ 			RANGE|FILE1|NEEDARG|CMDWIN,
+ 			ADDR_LINES),
++EX(CMD_py2usingfrom,	"py2usingfrom",	ex_py2usingfrom,
++			TRLBAR|CMDWIN,
++			ADDR_LINES),
+ EX(CMD_py3,		"py3",		ex_py3,
+ 			RANGE|EXTRA|NEEDARG|CMDWIN,
+ 			ADDR_LINES),
+diff --git a/src/ex_docmd.c b/src/ex_docmd.c
+index 134a488..d6e8b12 100644
+--- a/src/ex_docmd.c
++++ b/src/ex_docmd.c
+@@ -282,6 +282,7 @@ static void	ex_popup(exarg_T *eap);
+ # define ex_python		ex_script_ni
+ # define ex_pydo		ex_ni
+ # define ex_pyfile		ex_ni
++# define ex_py2usingfrom	ex_ni
+ #endif
+ #ifndef FEAT_PYTHON3
+ # define ex_py3			ex_script_ni
+diff --git a/src/globals.h b/src/globals.h
+index 0b6abb0..d804d78 100644
+--- a/src/globals.h
++++ b/src/globals.h
+@@ -1653,6 +1653,17 @@ EXTERN int  disable_char_avail_for_testing INIT(= 0);
+ EXTERN int  in_free_unref_items INIT(= FALSE);
+ #endif
+ 
++#ifdef FEAT_PYTHON
++/*
++ * State to indicate whether python2 is used and warned.
++ *
++ *  0 - not used.
++ *  1 - used but not warned.
++ *  2 - used and warned.
++ */
++EXTERN int  py2_used INIT(= 0);
++#endif
++
+ #ifdef FEAT_TIMERS
+ EXTERN int  did_add_timer INIT(= FALSE);
+ #endif
+diff --git a/src/if_python.c b/src/if_python.c
+index 622634d..ba6fe67 100644
+--- a/src/if_python.c
++++ b/src/if_python.c
+@@ -828,6 +828,54 @@ typedef PySliceObject PySliceObject_T;
+  */
+ #include "if_py_both.h"
+ 
++static hashtab_T using_from;
++
++    static void
++mark_py2_used(void)
++{
++    if (py2_used == 0)
++    {
++	py2_used = 1;
++	hash_init(&using_from);
++    }
++    if (sourcing_name != NULL)
++    {
++	hash_T	    hash = hash_hash(sourcing_name);
++	hashitem_T  *hi;
++
++	hi = hash_lookup(&using_from, sourcing_name, hash);
++	if (!HASHITEM_EMPTY(hi))
++	    return;
++	hash_add_item(&using_from, hi, sourcing_name, hash);
++    }
++}
++
++    void
++ex_py2usingfrom(exarg_T *eap)
++{
++    hashtab_T	*ht = &using_from;
++    hashitem_T	*hi;
++    long	todo;
++
++    todo = (long)ht->ht_used;
++    if (todo == 0)
++    {
++	if (py2_used == 0)
++	    msg((char_u *)"Python 2 isn't used yet.");
++	else
++	    msg((char_u *)"Python 2 is used from command line.");
++	return;
++    }
++    msg((char_u *)"Python 2 is used from these files:");
++    for (hi = ht->ht_array; todo > 0; ++hi)
++    {
++	if (!HASHITEM_EMPTY(hi))
++	{
++	    smsg((char_u *)"  %s", hi->hi_key);
++	    --todo;
++	}
++    }
++}
+ 
+ /******************************************************
+  * Internal function prototypes.
+@@ -878,6 +926,9 @@ python_end(void)
+     if (recurse != 0)
+ 	return;
+ 
++    if (py2_used != 0)
++	hash_clear_all(&using_from, 0);
++
+     ++recurse;
+ 
+ #ifdef DYNAMIC_PYTHON
+@@ -1050,6 +1101,8 @@ DoPyCommand(const char *cmd, rangeinitializer init_range, runner run, void *arg)
+     if (Python_Init())
+ 	goto theend;
+ 
++    mark_py2_used();
++
+     init_range(arg);
+ 
+     Python_Release_Vim();	    /* leave vim */
+diff --git a/src/proto/if_python.pro b/src/proto/if_python.pro
+index 51054ca..5db6b87 100644
+--- a/src/proto/if_python.pro
++++ b/src/proto/if_python.pro
+@@ -1,4 +1,5 @@
+ /* if_python.c */
++void ex_py2usingfrom(exarg_T *eap);
+ int python_enabled(int verbose);
+ void python_end(void);
+ int python_loaded(void);

@@ -1,7 +1,4 @@
 disable_regexp_logs.diff #-no_kaoriya
-GH632-lambda-r23.diff #+lambda
-lambda-r23-p1.diff #+lambda
-lambda-r23-ex1.diff #+lambda
 0001-rich_icon.diff #-no_kaoriya
 0100-embed_manifest.diff #-no_kaoriya
 2001-improve_modelines.diff #-no_kaoriya

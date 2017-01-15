@@ -1,3 +1,41 @@
+diff --git a/runtime/doc/if_pyth.txt b/runtime/doc/if_pyth.txt
+index 5929bcf..d226bf2 100644
+--- a/runtime/doc/if_pyth.txt
++++ b/runtime/doc/if_pyth.txt
+@@ -811,5 +811,17 @@ dynamically, these has() calls will try to load them.  If only one can be
+ loaded at a time, just checking if Python 2 or 3 are available will prevent
+ the other one from being available.
+ 
++
++							*:py2usingfrom*
++Python 2.x will retire at 2020. (See https://pythonclock.org/).  To help move
++Python 3, vim has a command to detect use of Python 2.x
++
++To see which scripts are using python 2, use `:py2usingfrom` comand: >
++	:py2usingfrom
++	Python 2 is used from these files:
++	  /path/to/your/scirpt/uses/python2a.vim
++	  /path/to/your/scirpt/uses/python2b.vim
++	  /path/to/your/scirpt/uses/python2c.vim
++<
+ ==============================================================================
+  vim:tw=78:ts=8:ft=help:norl:
+diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
+index 88dca60..7f4fc04 100644
+--- a/runtime/doc/options.txt
++++ b/runtime/doc/options.txt
+@@ -5765,6 +5765,11 @@ A jump table for the options with a short description can be found at |Q_op|.
+ 	Insert mode completion.  When zero as much space as available is used.
+ 	|ins-completion-menu|.
+ 
++						*'py2warn'* *'nopy2warn'*
++'py2warn'		boolean	(default on)
++			global
++	Show a warning at first use of Python 2.x.  See |:py2usingfrom| also.
++
+ 						*'pythondll'*
+ 'pythondll'		string	(default depends on the build)
+ 			global
 diff --git a/src/ex_cmds.h b/src/ex_cmds.h
 index cb2fadc..bfad5ae 100644
 --- a/src/ex_cmds.h
@@ -13,7 +51,7 @@ index cb2fadc..bfad5ae 100644
  			RANGE|EXTRA|NEEDARG|CMDWIN,
  			ADDR_LINES),
 diff --git a/src/ex_docmd.c b/src/ex_docmd.c
-index 134a488..d6e8b12 100644
+index 295e539..61e709d 100644
 --- a/src/ex_docmd.c
 +++ b/src/ex_docmd.c
 @@ -282,6 +282,7 @@ static void	ex_popup(exarg_T *eap);
@@ -124,6 +162,56 @@ index 622634d..ba6fe67 100644
      init_range(arg);
  
      Python_Release_Vim();	    /* leave vim */
+diff --git a/src/main.c b/src/main.c
+index f3c471a..a3a92e6 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -1078,6 +1078,15 @@ main_loop(
+ 		 * after insert mode finishes! */
+ 		need_fileinfo = FALSE;
+ 	    }
++#ifdef FEAT_PYTHON
++	    if (py2_used == 1)
++	    {
++		if (p_py2warn)
++		    MSG_ATTR("Python 2 is used, check :py2usingfrom for details.",
++			    hl_attr(HLF_W));
++		py2_used = 2;
++	    }
++#endif
+ 	}
+ 
+ 	/* Reset "got_int" now that we got back to the main loop.  Except when
+diff --git a/src/option.c b/src/option.c
+index 6f9610d..67e075c 100644
+--- a/src/option.c
++++ b/src/option.c
+@@ -2131,6 +2131,11 @@ static struct vimoption options[] =
+ 			    (char_u *)NULL, PV_NONE,
+ #endif
+ 			    {(char_u *)0L, (char_u *)0L} SCRIPTID_INIT},
++#ifdef FEAT_PYTHON
++    {"py2warn",	    NULL,   P_BOOL|P_VI_DEF,
++			    (char_u *)&p_py2warn, PV_NONE,
++			    {(char_u *)TRUE, (char_u *)0L} SCRIPTID_INIT},
++#endif
+ #if defined(DYNAMIC_PYTHON3)
+     {"pythonthreedll",  NULL,   P_STRING|P_EXPAND|P_VI_DEF|P_SECURE,
+ 			    (char_u *)&p_py3dll, PV_NONE,
+diff --git a/src/option.h b/src/option.h
+index 0ad2fef..91c0905 100644
+--- a/src/option.h
++++ b/src/option.h
+@@ -524,6 +524,9 @@ EXTERN char_u	*p_popt;	/* 'printoptions' */
+ EXTERN char_u	*p_header;	/* 'printheader' */
+ #endif
+ EXTERN int	p_prompt;	/* 'prompt' */
++#ifdef FEAT_PYTHON
++EXTERN int	p_py2warn;	/* 'py2warn' */
++#endif
+ #ifdef FEAT_GUI
+ EXTERN char_u	*p_guifont;	/* 'guifont' */
+ # ifdef FEAT_XFONTSET
 diff --git a/src/proto/if_python.pro b/src/proto/if_python.pro
 index 51054ca..5db6b87 100644
 --- a/src/proto/if_python.pro

@@ -1,8 +1,8 @@
 diff --git a/runtime/doc/if_pyth.txt b/runtime/doc/if_pyth.txt
-index 5929bcf..d226bf2 100644
+index 6f1c202d9..40c065529 100644
 --- a/runtime/doc/if_pyth.txt
 +++ b/runtime/doc/if_pyth.txt
-@@ -811,5 +811,17 @@ dynamically, these has() calls will try to load them.  If only one can be
+@@ -816,6 +816,18 @@ dynamically, these has() calls will try to load them.  If only one can be
  loaded at a time, just checking if Python 2 or 3 are available will prevent
  the other one from being available.
  
@@ -19,12 +19,13 @@ index 5929bcf..d226bf2 100644
 +	  /path/to/your/scirpt/uses/python2c.vim
 +<
  ==============================================================================
-  vim:tw=78:ts=8:ft=help:norl:
+ 11. Python X						*python_x* *pythonx*
+ 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index 88dca60..7f4fc04 100644
+index 927931c07..1b3b33ea3 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
-@@ -5765,6 +5765,11 @@ A jump table for the options with a short description can be found at |Q_op|.
+@@ -5846,6 +5846,11 @@ A jump table for the options with a short description can be found at |Q_op|.
  	Insert mode completion.  When zero as much space as available is used.
  	|ins-completion-menu|.
  
@@ -37,10 +38,10 @@ index 88dca60..7f4fc04 100644
  'pythondll'		string	(default depends on the build)
  			global
 diff --git a/src/ex_cmds.h b/src/ex_cmds.h
-index cb2fadc..bfad5ae 100644
+index 531bd0e16..d9f7e0023 100644
 --- a/src/ex_cmds.h
 +++ b/src/ex_cmds.h
-@@ -1120,6 +1120,9 @@ EX(CMD_pydo,		"pydo",		ex_pydo,
+@@ -1121,6 +1121,9 @@ EX(CMD_pydo,		"pydo",		ex_pydo,
  EX(CMD_pyfile,		"pyfile",	ex_pyfile,
  			RANGE|FILE1|NEEDARG|CMDWIN,
  			ADDR_LINES),
@@ -51,7 +52,7 @@ index cb2fadc..bfad5ae 100644
  			RANGE|EXTRA|NEEDARG|CMDWIN,
  			ADDR_LINES),
 diff --git a/src/ex_docmd.c b/src/ex_docmd.c
-index 295e539..61e709d 100644
+index d0df1fd9f..8a4d3701e 100644
 --- a/src/ex_docmd.c
 +++ b/src/ex_docmd.c
 @@ -282,6 +282,7 @@ static void	ex_popup(exarg_T *eap);
@@ -63,10 +64,10 @@ index 295e539..61e709d 100644
  #ifndef FEAT_PYTHON3
  # define ex_py3			ex_script_ni
 diff --git a/src/globals.h b/src/globals.h
-index 0b6abb0..d804d78 100644
+index 1d67b0d7a..7005bd567 100644
 --- a/src/globals.h
 +++ b/src/globals.h
-@@ -1653,6 +1653,17 @@ EXTERN int  disable_char_avail_for_testing INIT(= 0);
+@@ -1655,6 +1655,17 @@ EXTERN int  disable_redraw_for_testing INIT(= 0);
  EXTERN int  in_free_unref_items INIT(= FALSE);
  #endif
  
@@ -85,7 +86,7 @@ index 0b6abb0..d804d78 100644
  EXTERN int  did_add_timer INIT(= FALSE);
  #endif
 diff --git a/src/if_python.c b/src/if_python.c
-index 622634d..ba6fe67 100644
+index 6b2ce56ef..850bcc00b 100644
 --- a/src/if_python.c
 +++ b/src/if_python.c
 @@ -828,6 +828,54 @@ typedef PySliceObject PySliceObject_T;
@@ -163,10 +164,10 @@ index 622634d..ba6fe67 100644
  
      Python_Release_Vim();	    /* leave vim */
 diff --git a/src/main.c b/src/main.c
-index f3c471a..a3a92e6 100644
+index 883c9cc23..07cb66cef 100644
 --- a/src/main.c
 +++ b/src/main.c
-@@ -1078,6 +1078,15 @@ main_loop(
+@@ -1095,6 +1095,15 @@ main_loop(
  		 * after insert mode finishes! */
  		need_fileinfo = FALSE;
  	    }
@@ -183,10 +184,10 @@ index f3c471a..a3a92e6 100644
  
  	/* Reset "got_int" now that we got back to the main loop.  Except when
 diff --git a/src/option.c b/src/option.c
-index 6f9610d..67e075c 100644
+index f9d273479..fc9bbbde3 100644
 --- a/src/option.c
 +++ b/src/option.c
-@@ -2131,6 +2131,11 @@ static struct vimoption options[] =
+@@ -2245,6 +2245,11 @@ static struct vimoption options[] =
  			    (char_u *)NULL, PV_NONE,
  #endif
  			    {(char_u *)0L, (char_u *)0L} SCRIPTID_INIT},
@@ -195,11 +196,11 @@ index 6f9610d..67e075c 100644
 +			    (char_u *)&p_py2warn, PV_NONE,
 +			    {(char_u *)TRUE, (char_u *)0L} SCRIPTID_INIT},
 +#endif
- #if defined(DYNAMIC_PYTHON3)
      {"pythonthreedll",  NULL,   P_STRING|P_EXPAND|P_VI_DEF|P_SECURE,
+ #if defined(DYNAMIC_PYTHON3)
  			    (char_u *)&p_py3dll, PV_NONE,
 diff --git a/src/option.h b/src/option.h
-index 0ad2fef..91c0905 100644
+index 2c6aeef03..b8be86d27 100644
 --- a/src/option.h
 +++ b/src/option.h
 @@ -524,6 +524,9 @@ EXTERN char_u	*p_popt;	/* 'printoptions' */
@@ -213,7 +214,7 @@ index 0ad2fef..91c0905 100644
  EXTERN char_u	*p_guifont;	/* 'guifont' */
  # ifdef FEAT_XFONTSET
 diff --git a/src/proto/if_python.pro b/src/proto/if_python.pro
-index 51054ca..5db6b87 100644
+index 51054caf2..5db6b87ec 100644
 --- a/src/proto/if_python.pro
 +++ b/src/proto/if_python.pro
 @@ -1,4 +1,5 @@

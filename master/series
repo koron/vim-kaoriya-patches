@@ -1,4 +1,3 @@
-fix-rubydyn.diff
 disable_regexp_logs.diff #-no_kaoriya
 python2-warn.diff #-no_kaoriya
 0001-rich_icon.diff #-no_kaoriya

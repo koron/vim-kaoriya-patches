@@ -3,7 +3,7 @@
 implement 'transparency' for Windows GUI
 
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index be2158d..93fe465 100644
+index 611902557..27c9561c9 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
 @@ -40,6 +40,13 @@ static int s_directx_load_attempted = 0;
@@ -20,7 +20,7 @@ index be2158d..93fe465 100644
  #if defined(FEAT_DIRECTX) || defined(PROTO)
      int
  directx_enabled(void)
-@@ -5373,6 +5380,8 @@ gui_mch_init(void)
+@@ -5379,6 +5386,8 @@ gui_mch_init(void)
      if (s_hwnd == NULL)
  	return FAIL;
  
@@ -29,7 +29,7 @@ index be2158d..93fe465 100644
  #ifdef GLOBAL_IME
      global_ime_init(atom, s_hwnd);
  #endif
-@@ -5727,6 +5736,44 @@ gui_mch_set_sp_color(guicolor_T color)
+@@ -5737,6 +5746,44 @@ gui_mch_set_sp_color(guicolor_T color)
      gui.currSpColor = color;
  }
  
@@ -75,13 +75,13 @@ index be2158d..93fe465 100644
  /*
   * Multi-byte handling, originally by Sung-Hoon Baek.
 diff --git a/src/option.c b/src/option.c
-index ebf443b..c2e83ae 100644
+index fc9bbbde3..d3e7e6a0b 100644
 --- a/src/option.c
 +++ b/src/option.c
-@@ -2717,6 +2717,11 @@ static struct vimoption options[] =
- 			    (char_u *)&p_tbis, PV_NONE,
- 			    {(char_u *)"small", (char_u *)0L} SCRIPTID_INIT},
+@@ -2866,6 +2866,11 @@ static struct vimoption options[] =
+ 			    {(char_u *)0L, (char_u *)0L}
  #endif
+ 			    SCRIPTID_INIT},
 +#ifdef USE_TRANSPARENCY
 +    {"transparency", "tra", P_NUM|P_VI_DEF,
 +			    (char_u *)&p_transparency, PV_NONE,
@@ -90,7 +90,7 @@ index ebf443b..c2e83ae 100644
      {"ttimeout",    NULL,   P_BOOL|P_VI_DEF|P_VIM,
  			    (char_u *)&p_ttimeout, PV_NONE,
  			    {(char_u *)FALSE, (char_u *)0L} SCRIPTID_INIT},
-@@ -8669,6 +8674,15 @@ set_num_option(
+@@ -8880,6 +8885,15 @@ set_num_option(
      }
  #endif
  
@@ -107,10 +107,10 @@ index ebf443b..c2e83ae 100644
      {
  	if (curbuf->b_p_iminsert < 0 || curbuf->b_p_iminsert > B_IMODE_LAST)
 diff --git a/src/option.h b/src/option.h
-index 13acabf..8ba0202 100644
+index b8be86d27..0112f45d8 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -860,6 +860,9 @@ EXTERN char_u	*p_titlestring;	/* 'titlestring' */
+@@ -869,6 +869,9 @@ EXTERN char_u	*p_titlestring;	/* 'titlestring' */
  #ifdef FEAT_INS_EXPAND
  EXTERN char_u	*p_tsr;		/* 'thesaurus' */
  #endif
@@ -121,7 +121,7 @@ index 13acabf..8ba0202 100644
  EXTERN long	p_ttm;		/* 'ttimeoutlen' */
  EXTERN int	p_tbi;		/* 'ttybuiltin' */
 diff --git a/src/os_win32.h b/src/os_win32.h
-index f620d74..583745d 100644
+index 5017f532e..21f35a76b 100644
 --- a/src/os_win32.h
 +++ b/src/os_win32.h
 @@ -81,6 +81,7 @@
@@ -133,7 +133,7 @@ index f620d74..583745d 100644
  
  /* toupper() is not really broken, but it's very slow.	Probably because of
 diff --git a/src/proto/gui_w32.pro b/src/proto/gui_w32.pro
-index 3c99f97..3ff4040 100644
+index 3c99f97e5..3ff40405a 100644
 --- a/src/proto/gui_w32.pro
 +++ b/src/proto/gui_w32.pro
 @@ -71,6 +71,7 @@ void gui_mch_set_font(GuiFont font);

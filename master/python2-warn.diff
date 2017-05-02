@@ -37,6 +37,43 @@ index 927931c07..1b3b33ea3 100644
  						*'pythondll'*
  'pythondll'		string	(default depends on the build)
  			global
+diff --git a/src/ex_cmdidxs.h b/src/ex_cmdidxs.h
+index 3b6120e86..5cf352d91 100644
+--- a/src/ex_cmdidxs.h
++++ b/src/ex_cmdidxs.h
+@@ -21,16 +21,16 @@ static const unsigned short cmdidxs1[26] =
+   /* n */ 277,
+   /* o */ 297,
+   /* p */ 309,
+-  /* q */ 348,
+-  /* r */ 351,
+-  /* s */ 370,
+-  /* t */ 437,
+-  /* u */ 472,
+-  /* v */ 483,
+-  /* w */ 501,
+-  /* x */ 516,
+-  /* y */ 525,
+-  /* z */ 526
++  /* q */ 349,
++  /* r */ 352,
++  /* s */ 371,
++  /* t */ 438,
++  /* u */ 473,
++  /* v */ 484,
++  /* w */ 502,
++  /* x */ 517,
++  /* y */ 526,
++  /* z */ 527
+ };
+ 
+ /*
+@@ -69,4 +69,4 @@ static const unsigned char cmdidxs2[26][26] =
+   /* z */ {  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 }
+ };
+ 
+-static const int command_count = 539;
++static const int command_count = 540;
 diff --git a/src/ex_cmds.h b/src/ex_cmds.h
 index 531bd0e16..d9f7e0023 100644
 --- a/src/ex_cmds.h
@@ -164,7 +201,7 @@ index 6b2ce56ef..850bcc00b 100644
  
      Python_Release_Vim();	    /* leave vim */
 diff --git a/src/main.c b/src/main.c
-index 883c9cc23..07cb66cef 100644
+index 883c9cc23..3b079145e 100644
 --- a/src/main.c
 +++ b/src/main.c
 @@ -1095,6 +1095,15 @@ main_loop(
@@ -176,7 +213,7 @@ index 883c9cc23..07cb66cef 100644
 +	    {
 +		if (p_py2warn)
 +		    MSG_ATTR("Python 2 is used, check :py2usingfrom for details.",
-+			    hl_attr(HLF_W));
++			    HL_ATTR(HLF_W));
 +		py2_used = 2;
 +	    }
 +#endif

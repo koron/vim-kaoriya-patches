@@ -75,22 +75,26 @@ index 611902557..27c9561c9 100644
  /*
   * Multi-byte handling, originally by Sung-Hoon Baek.
 diff --git a/src/option.c b/src/option.c
-index fc9bbbde3..d3e7e6a0b 100644
+index f9d273479..a81f5bfed 100644
 --- a/src/option.c
 +++ b/src/option.c
-@@ -2866,6 +2866,11 @@ static struct vimoption options[] =
+@@ -2861,6 +2861,15 @@ static struct vimoption options[] =
  			    {(char_u *)0L, (char_u *)0L}
  #endif
  			    SCRIPTID_INIT},
-+#ifdef USE_TRANSPARENCY
 +    {"transparency", "tra", P_NUM|P_VI_DEF,
++#ifdef USE_TRANSPARENCY
 +			    (char_u *)&p_transparency, PV_NONE,
-+			    {(char_u *)255L, (char_u *)0L}},
++			    {(char_u *)255L, (char_u *)0L}
++#else
++			    (char_u *)NULL, PV_NONE,
++			    {(char_u *)0L, (char_u *)0L}
 +#endif
++			    SCRIPTID_INIT},
      {"ttimeout",    NULL,   P_BOOL|P_VI_DEF|P_VIM,
  			    (char_u *)&p_ttimeout, PV_NONE,
  			    {(char_u *)FALSE, (char_u *)0L} SCRIPTID_INIT},
-@@ -8880,6 +8885,15 @@ set_num_option(
+@@ -8875,6 +8884,15 @@ set_num_option(
      }
  #endif
  
@@ -107,10 +111,10 @@ index fc9bbbde3..d3e7e6a0b 100644
      {
  	if (curbuf->b_p_iminsert < 0 || curbuf->b_p_iminsert > B_IMODE_LAST)
 diff --git a/src/option.h b/src/option.h
-index b8be86d27..0112f45d8 100644
+index 2c6aeef03..69ebc5629 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -869,6 +869,9 @@ EXTERN char_u	*p_titlestring;	/* 'titlestring' */
+@@ -866,6 +866,9 @@ EXTERN char_u	*p_titlestring;	/* 'titlestring' */
  #ifdef FEAT_INS_EXPAND
  EXTERN char_u	*p_tsr;		/* 'thesaurus' */
  #endif
@@ -144,3 +148,15 @@ index 3c99f97e5..3ff40405a 100644
  void im_set_font(LOGFONT *lf);
  void im_set_position(int row, int col);
  void im_set_active(int active);
+diff --git a/src/testdir/gen_opt_test.vim b/src/testdir/gen_opt_test.vim
+index 019c757df..f4497b169 100644
+--- a/src/testdir/gen_opt_test.vim
++++ b/src/testdir/gen_opt_test.vim
+@@ -126,6 +126,7 @@ let test_values = {
+       \ 'term': [[], []],
+       \ 'toolbar': [['', 'icons', 'text'], ['xxx']],
+       \ 'toolbariconsize': [['', 'tiny', 'huge'], ['xxx']],
++      \ 'transparency': [['0', '128', '255'], ['xxx']],
+       \ 'ttymouse': [['', 'xterm'], ['xxx']],
+       \ 'ttytype': [[], []],
+       \ 'viewoptions': [['', 'cursor', 'unix,slash'], ['xxx']],

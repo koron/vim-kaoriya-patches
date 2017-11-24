@@ -3,10 +3,10 @@
 add 'auto' for 'ambiwidth'
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index 06b1940..0efbc8d 100644
+index e01e3e377..10b143531 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
-@@ -693,6 +693,9 @@ A jump table for the options with a short description can be found at |Q_op|.
+@@ -711,6 +711,9 @@ A jump table for the options with a short description can be found at |Q_op|.
  	"single":	Use the same width as characters in US-ASCII.  This is
  			expected by most users.
  	"double":	Use twice the width of ASCII characters.
@@ -16,9 +16,9 @@ index 06b1940..0efbc8d 100644
  							*E834* *E835*
  	The value "double" cannot be used if 'listchars' or 'fillchars'
  	contains a character that would be double width.
-@@ -716,6 +719,10 @@ A jump table for the options with a short description can be found at |Q_op|.
- 	compiled with the |+termresponse| feature and if |t_u7| is set to the
- 	escape sequence to request cursor position report.
+@@ -735,6 +738,10 @@ A jump table for the options with a short description can be found at |Q_op|.
+ 	escape sequence to request cursor position report.  The response can
+ 	be found in |v:termu7resp|.
  
 +	On some systems, we can use width for a character which defined by
 +	font design.  If you use such a system try "auto" for this option.
@@ -28,31 +28,33 @@ index 06b1940..0efbc8d 100644
  'antialias' 'anti'	boolean (default: off)
  			global
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index 67228f7..b36cc40 100644
+index 41d252165..3d866b40e 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
-@@ -5174,3 +5174,54 @@ netbeans_init_winsock()
- 	WSInitialized = TRUE;
+@@ -5267,6 +5267,59 @@ ole_error(char *arg)
  }
  #endif
-+
+ 
 +#ifdef USE_AMBIWIDTH_AUTO
-+#define CHARWIDE_CACHESIZE 65536
++#define CHARWIDE_CACHESIZE 0x20000
 +static GuiFont last_font = 0;
 +
 +    int
 +gui_mch_get_charwidth(int c)
 +{
-+    static char cache[CHARWIDE_CACHESIZE];
++    static int cache[CHARWIDE_CACHESIZE];
 +    GuiFont usingfont = gui.wide_font ? gui.wide_font : gui.norm_font;
 +
 +    /* Check validity of charwide cache */
 +    if (last_font != usingfont)
 +    {
 +	/* Update cache. -1 is mark for uninitialized cell */
++	int i;
++
 +	TRACE("Charwide cache will be updated (base=%d)\n", gui.char_width);
 +	last_font = usingfont;
-+	memset(cache, -1, sizeof(cache));
++	for (i = 0; i < CHARWIDE_CACHESIZE; ++i)
++	    cache[i] = -1;
 +    }
 +    if (usingfont && 0 <= c && c < CHARWIDE_CACHESIZE)
 +    {
@@ -75,8 +77,7 @@ index 67228f7..b36cc40 100644
 +		cache[c] = 0;
 +	    }
 +	    else
-+		cache[c] = (char)((len + (gui.char_width >> 1))
-+			/ gui.char_width);
++		cache[c] = ((len + (gui.char_width >> 1)) / gui.char_width);
 +	    SelectFont(s_hdc, hfntOld);
 +
 +	    return cache[c];
@@ -86,12 +87,16 @@ index 67228f7..b36cc40 100644
 +	return 0;
 +}
 +#endif
++
+ /*
+  * Parse the GUI related command-line arguments.  Any arguments used are
+  * deleted from argv, and *argc is decremented accordingly.  This is called
 diff --git a/src/mbyte.c b/src/mbyte.c
-index edca9a7..420682d 100644
+index 3592ddbdd..b1ca0bc57 100644
 --- a/src/mbyte.c
 +++ b/src/mbyte.c
-@@ -1459,6 +1459,19 @@ utf_char2cells(c)
- 	{0x100000, 0x10fffd}
+@@ -1576,6 +1576,19 @@ utf_char2cells(int c)
+ 	{0x1f6f3, 0x1f6f3}
      };
  
 +#ifdef USE_AMBIWIDTH_AUTO
@@ -111,10 +116,10 @@ index edca9a7..420682d 100644
      {
  #ifdef USE_WCHAR_FUNCTIONS
 diff --git a/src/option.c b/src/option.c
-index 33428c8..becbb1a 100644
+index d569f227e..28e654a64 100644
 --- a/src/option.c
 +++ b/src/option.c
-@@ -3052,7 +3052,11 @@ static struct vimoption
+@@ -3214,7 +3214,11 @@ static struct vimoption options[] =
  #define PARAM_COUNT (sizeof(options) / sizeof(struct vimoption))
  
  #ifdef FEAT_MBYTE
@@ -128,10 +133,10 @@ index 33428c8..becbb1a 100644
  static char *(p_bg_values[]) = {"light", "dark", NULL};
  static char *(p_nf_values[]) = {"bin", "octal", "hex", "alpha", NULL};
 diff --git a/src/proto/gui_w32.pro b/src/proto/gui_w32.pro
-index e3cea9f..f6fae0b 100644
+index f419f5eb8..5f7c03c46 100644
 --- a/src/proto/gui_w32.pro
 +++ b/src/proto/gui_w32.pro
-@@ -78,6 +78,7 @@ void im_set_active(int active);
+@@ -79,6 +79,7 @@ void im_set_active(int active);
  int im_get_status(void);
  void gui_mch_draw_string(int row, int col, char_u *text, int len, int flags);
  void gui_mch_flush(void);
@@ -140,13 +145,14 @@ index e3cea9f..f6fae0b 100644
  void gui_mch_add_menu(vimmenu_T *menu, int pos);
  void gui_mch_show_popupmenu(vimmenu_T *menu);
 diff --git a/src/vim.h b/src/vim.h
-index 90a5353..8ae8400 100644
+index 96bab71cf..0f7de5b58 100644
 --- a/src/vim.h
 +++ b/src/vim.h
-@@ -559,6 +559,14 @@ typedef unsigned long u8char_T;	    /* long should be 32 bits or more */
+@@ -542,6 +542,14 @@ typedef unsigned long u8char_T;	    /* long should be 32 bits or more */
+ # define USE_IM_CONTROL
  #endif
  
- /*
++/*
 + * Whether 'ambiwidth' supports "auto".  Currently, only for Win32.
 + */
 +#if defined(FEAT_MBYTE) && defined(FEAT_GUI) && \
@@ -154,7 +160,6 @@ index 90a5353..8ae8400 100644
 +# define USE_AMBIWIDTH_AUTO
 +#endif
 +
-+/*
+ /*
   * For dynamically loaded gettext library.  Currently, only for Win32.
   */
- #ifdef DYNAMIC_GETTEXT

@@ -55,21 +55,11 @@ index 8118ca197..2b65355b8 100644
  	{
  #ifdef FEAT_GUI_GTK
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index 6e69f5fa8..671a8348c 100644
+index 4a942f483..41d252165 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
-@@ -47,6 +47,9 @@ typedef DWORD (WINAPI *FWINLAYER)(HWND hwnd, DWORD crKey, BYTE bAlpha,
- 	DWORD dwFlags);
- static void w32_set_transparency(HWND hwnd, BYTE bAlpha);
- 
-+static int get_caption_height(void);
-+static int get_caption_width_adjustment(void);
-+
- #if defined(FEAT_DIRECTX) || defined(PROTO)
-     int
- directx_enabled(void)
-@@ -1009,6 +1012,57 @@ _OnMouseMoveOrRelease(
-     _OnMouseEvent(button, x, y, FALSE, keyFlags);
+@@ -1051,6 +1051,57 @@ _OnSizeTextArea(
+ #endif
  }
  
 +    static int
@@ -126,7 +116,7 @@ index 6e69f5fa8..671a8348c 100644
  #ifdef FEAT_MENU
  /*
   * Find the vimmenu_T with the given id
-@@ -2999,11 +3053,12 @@ gui_mswin_get_valid_dimensions(
+@@ -3049,11 +3100,12 @@ gui_mswin_get_valid_dimensions(
  
      base_width = gui_get_base_width()
  	+ (GetSystemMetrics(SM_CXFRAME) +
@@ -141,7 +131,7 @@ index 6e69f5fa8..671a8348c 100644
  #ifdef FEAT_MENU
  	+ gui_mswin_get_menu_height(FALSE)
  #endif
-@@ -3405,12 +3460,13 @@ gui_mch_newfont(void)
+@@ -3472,12 +3524,13 @@ gui_mch_newfont(void)
      if (win_socket_id == 0)
      {
  	gui_resize_shell(rect.right - rect.left
@@ -156,7 +146,7 @@ index 6e69f5fa8..671a8348c 100644
  #ifdef FEAT_MENU
  	    - gui_mswin_get_menu_height(FALSE)
  #endif
-@@ -5633,10 +5689,11 @@ gui_mch_set_shellsize(
+@@ -5700,10 +5753,11 @@ gui_mch_set_shellsize(
  
      /* compute the size of the outside of the window */
      win_width = width + (GetSystemMetrics(SM_CXFRAME) +
@@ -170,7 +160,7 @@ index 6e69f5fa8..671a8348c 100644
  #ifdef FEAT_MENU
  			+ gui_mswin_get_menu_height(FALSE)
  #endif
-@@ -6545,7 +6602,8 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
+@@ -6642,7 +6696,8 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
  
      *screen_w = workarea_rect.right - workarea_rect.left
  		- (GetSystemMetrics(SM_CXFRAME) +
@@ -180,7 +170,7 @@ index 6e69f5fa8..671a8348c 100644
  
      /* FIXME: dirty trick: Because the gui_get_base_height() doesn't include
       * the menubar for MSwin, we subtract it from the screen height, so that
-@@ -6553,7 +6611,7 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
+@@ -6650,7 +6705,7 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
      *screen_h = workarea_rect.bottom - workarea_rect.top
  		- (GetSystemMetrics(SM_CYFRAME) +
  		   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
@@ -204,10 +194,10 @@ index 18c99aad8..18337915f 100644
  /* flags for 'comments' option */
  #define COM_NEST	'n'		/* comments strings nest */
 diff --git a/src/proto/gui_w32.pro b/src/proto/gui_w32.pro
-index b3b569fd2..97c45557d 100644
+index 6231a1adb..f419f5eb8 100644
 --- a/src/proto/gui_w32.pro
 +++ b/src/proto/gui_w32.pro
-@@ -63,6 +63,7 @@ void mch_set_mouse_shape(int shape);
+@@ -62,6 +62,7 @@ void mch_set_mouse_shape(int shape);
  char_u *gui_mch_browsedir(char_u *title, char_u *initdir);
  char_u *gui_mch_browse(int saving, char_u *title, char_u *dflt, char_u *ext, char_u *initdir, char_u *filter);
  int get_cmd_args(char *prog, char *cmdline, char ***argvp, char **tofree);

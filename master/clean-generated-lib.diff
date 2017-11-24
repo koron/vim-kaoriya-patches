@@ -1,0 +1,25 @@
+diff --git a/.gitignore b/.gitignore
+index f31e233bb..30a4469c6 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -39,6 +39,8 @@ src/Obj*/pathdef.c
+ gvimext.dll
+ gvimext.lib
+ gvim.lib
++gvimd.lib
++vimd.lib
+ runtime/doc/uganda.nsis.txt
+ 
+ # Borland C++
+diff --git a/src/Make_mvc.mak b/src/Make_mvc.mak
+index 9c885b9e1..c6075bc44 100644
+--- a/src/Make_mvc.mak
++++ b/src/Make_mvc.mak
+@@ -1241,6 +1241,7 @@ clean:
+ 	- if exist $(VIM).pdb del $(VIM).pdb
+ 	- if exist $(VIM).map del $(VIM).map
+ 	- if exist $(VIM).ncb del $(VIM).ncb
++	- if exist $(VIM).lib del $(VIM).lib
+ 	- if exist vimrun.exe del vimrun.exe
+ 	- if exist install.exe del install.exe
+ 	- if exist uninstal.exe del uninstal.exe

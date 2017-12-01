@@ -3,7 +3,7 @@
 implement 'transparency' for Windows GUI
 
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index 8e11848e8..4a942f483 100644
+index 521279ead..b0b1a7269 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
 @@ -42,6 +42,13 @@ static void directx_binddc(void);
@@ -20,7 +20,7 @@ index 8e11848e8..4a942f483 100644
  #if defined(FEAT_RENDER_OPTIONS) || defined(PROTO)
      int
  gui_mch_set_rendering_options(char_u *s)
-@@ -5454,6 +5461,8 @@ gui_mch_init(void)
+@@ -5442,6 +5449,8 @@ gui_mch_init(void)
      if (s_hwnd == NULL)
  	return FAIL;
  
@@ -29,7 +29,7 @@ index 8e11848e8..4a942f483 100644
  #ifdef GLOBAL_IME
      global_ime_init(atom, s_hwnd);
  #endif
-@@ -5810,6 +5819,44 @@ gui_mch_set_sp_color(guicolor_T color)
+@@ -5798,6 +5807,44 @@ gui_mch_set_sp_color(guicolor_T color)
      gui.currSpColor = color;
  }
  
@@ -71,11 +71,11 @@ index 8e11848e8..4a942f483 100644
 +    w32_set_transparency(NULL, (BYTE)alpha);
 +}
 +
- #if defined(FEAT_MBYTE) && defined(FEAT_MBYTE_IME)
+ #ifdef FEAT_MBYTE_IME
  /*
   * Multi-byte handling, originally by Sung-Hoon Baek.
 diff --git a/src/option.c b/src/option.c
-index e09191f44..9b4c1cb68 100644
+index c97056bde..d2cc4a318 100644
 --- a/src/option.c
 +++ b/src/option.c
 @@ -2855,6 +2855,15 @@ static struct vimoption options[] =
@@ -94,7 +94,7 @@ index e09191f44..9b4c1cb68 100644
  #endif
  			    SCRIPTID_INIT},
      {"ttimeout",    NULL,   P_BOOL|P_VI_DEF|P_VIM,
-@@ -8900,6 +8909,15 @@ set_num_option(
+@@ -8905,6 +8914,15 @@ set_num_option(
      }
  #endif
  
@@ -111,10 +111,10 @@ index e09191f44..9b4c1cb68 100644
      {
  	if (curbuf->b_p_iminsert < 0 || curbuf->b_p_iminsert > B_IMODE_LAST)
 diff --git a/src/option.h b/src/option.h
-index d963c1f39..876e0a35d 100644
+index c9fa4d35f..f6a23cfed 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -862,6 +862,9 @@ EXTERN char_u	*p_titlestring;	/* 'titlestring' */
+@@ -864,6 +864,9 @@ EXTERN char_u	*p_titlestring;	/* 'titlestring' */
  #ifdef FEAT_INS_EXPAND
  EXTERN char_u	*p_tsr;		/* 'thesaurus' */
  #endif
@@ -149,11 +149,11 @@ index 969045067..6231a1adb 100644
  void im_set_position(int row, int col);
  void im_set_active(int active);
 diff --git a/src/testdir/gen_opt_test.vim b/src/testdir/gen_opt_test.vim
-index 32283c99b..f9e1f356e 100644
+index 4edf44aaf..e12e18eeb 100644
 --- a/src/testdir/gen_opt_test.vim
 +++ b/src/testdir/gen_opt_test.vim
-@@ -128,6 +128,7 @@ let test_values = {
-       \ 'termsize': [['', '24x80', '0x80', '32x0', '0x0'], ['xxx', '80', '8ax9', '24x80b']],
+@@ -133,6 +133,7 @@ let test_values = {
+       \ 'termencoding': [has('gui_gtk') ? [] : ['', 'utf-8'], ['xxx']],
        \ 'toolbar': [['', 'icons', 'text'], ['xxx']],
        \ 'toolbariconsize': [['', 'tiny', 'huge'], ['xxx']],
 +      \ 'transparency': [['0', '128', '255'], ['xxx']],

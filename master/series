@@ -10,7 +10,7 @@ python2-warn.diff #+experiments
 2005-ambiwidth_auto.diff #-no_kaoriya
 2006-init_winsock.diff #-no_kaoriya
 2008-sentence_until_punctuation.diff #-no_kaoriya
-2010-imaf_imsf_on_cui.diff #-no_kaoriya
+2010-imaf_imsf_on_gui.diff #-no_kaoriya
 2520-migemo_feature.diff #-no_kaoriya
 2530-guess_encode_feature.diff #-no_kaoriya
 4001-ftp_autolink_2html.diff #-no_kaoriya

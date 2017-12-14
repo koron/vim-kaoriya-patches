@@ -1,0 +1,35 @@
+diff --git a/src/mbyte.c b/src/mbyte.c
+index 742c220df..862800f13 100644
+--- a/src/mbyte.c
++++ b/src/mbyte.c
+@@ -4782,10 +4782,7 @@ iconv_end(void)
+ 
+ #endif /* FEAT_MBYTE */
+ 
+-#ifdef FEAT_GUI
+-# define USE_IMACTIVATEFUNC (!gui.in_use && *p_imaf != NUL)
+-# define USE_IMSTATUSFUNC (!gui.in_use && *p_imsf != NUL)
+-#else
++#if defined(FEAT_EVAL) && defined(FEAT_MBYTE)
+ # define USE_IMACTIVATEFUNC (*p_imaf != NUL)
+ # define USE_IMSTATUSFUNC (*p_imsf != NUL)
+ #endif
+diff --git a/src/ui.c b/src/ui.c
+index 7d969fec8..b7d1098bf 100644
+--- a/src/ui.c
++++ b/src/ui.c
+@@ -3322,12 +3322,14 @@ im_save_status(long *psave)
+      * And don't save when the GUI is running but our window doesn't have
+      * input focus (e.g., when a find dialog is open). */
+     if (!p_imdisable && KeyTyped && !KeyStuffed
++#if 0
+ # ifdef FEAT_XIM
+ 	    && xic != NULL
+ # endif
+ # ifdef FEAT_GUI
+ 	    && (!gui.in_use || gui.in_focus)
+ # endif
++#endif
+ 	)
+     {
+ 	/* Do save when IM is on, or IM is off and saved status is on. */

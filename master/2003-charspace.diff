@@ -3,13 +3,13 @@
 implement 'charspace' for Windows GUI
 
 diff --git a/src/option.c b/src/option.c
-index 636e7e0..8906155 100644
+index 5f4f5a3f8..1c25e9a95 100644
 --- a/src/option.c
 +++ b/src/option.c
-@@ -745,6 +745,14 @@ static struct vimoption options[] =
+@@ -771,6 +771,14 @@ static struct vimoption options[] =
  			    {(char_u *)0L, (char_u *)0L}
  #endif
- 			    SCRIPTID_INIT},
+ 			    SCTX_INIT},
 +    {"charspace",   "csp",  P_NUM|P_NODEFAULT|P_VIM|P_RCLR,
 +#ifdef FEAT_GUI
 +			    (char_u *)&p_charspace, PV_NONE,
@@ -17,12 +17,12 @@ index 636e7e0..8906155 100644
 +			    (char_u *)NULL, PV_NONE,
 +#endif
 +			    {(char_u *)0L, (char_u *)0L}
-+			    SCRIPTID_INIT},
++			    SCTX_INIT},
      {"cindent",	    "cin",  P_BOOL|P_VI_DEF|P_VIM,
  #ifdef FEAT_CINDENT
  			    (char_u *)&p_cin, PV_CIN,
-@@ -8542,7 +8550,7 @@ set_num_option(
- #endif
+@@ -9155,7 +9163,7 @@ set_num_option(
+     }
  
  #ifdef FEAT_GUI
 -    else if (pp == &p_linespace)
@@ -31,10 +31,10 @@ index 636e7e0..8906155 100644
  	/* Recompute gui.char_height and resize the Vim window to keep the
  	 * same number of lines. */
 diff --git a/src/option.h b/src/option.h
-index 3afe808..38d4caf 100644
+index d868ed039..9dfa79cb1 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -409,6 +409,9 @@ EXTERN int	p_deco;		/* 'delcombine' */
+@@ -411,6 +411,9 @@ EXTERN int	p_deco;		/* 'delcombine' */
  EXTERN char_u	*p_ccv;		/* 'charconvert' */
  # endif
  #endif

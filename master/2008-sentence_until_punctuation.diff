@@ -1,23 +1,22 @@
 # HG changeset patch
 # Parent bf0b31d6c719c20d5b5e98b66e6d6f77c601a333
-diff -r bf0b31d6c719 -r 451a729f2a68 src/search.c
---- a/src/search.c	Sat Apr 13 22:29:12 2013 +0900
-+++ b/src/search.c	Sat Apr 13 22:34:35 2013 +0900
-@@ -2570,7 +2570,12 @@
- 	/* go back to the previous non-blank char */
+diff --git a/src/search.c b/src/search.c
+index 94b1ef1e6..7cf569b15 100644
+--- a/src/search.c
++++ b/src/search.c
+@@ -2785,7 +2785,10 @@ findsent(int dir, long count)
+ 	// go back to the previous non-white non-punctuation character
  	found_dot = FALSE;
- 	while ((c = gchar_pos(&pos)) == ' ' || c == '\t' ||
--	     (dir == BACKWARD && vim_strchr((char_u *)".!?)]\"'", c) != NULL))
-+	     (dir == BACKWARD && vim_strchr((char_u *)".!?)]\"'", c) != NULL)
+ 	while (c = gchar_pos(&pos), VIM_ISWHITE(c)
+-				|| vim_strchr((char_u *)".!?)]\"'", c) != NULL)
++				|| vim_strchr((char_u *)".!?)]\"'", c) != NULL
 +#ifdef FEAT_MBYTE
-+	     || (dir == BACKWARD && (*mb_char2len)(c) > 1
-+		 && mb_get_class(ml_get_pos(&pos)) == 1)
++				|| ((*mb_char2len)(c) > 1 && mb_get_class(ml_get_pos(&pos)) == 1))
 +#endif
-+	     )
  	{
- 	    if (vim_strchr((char_u *)".!?", c) != NULL)
- 	    {
-@@ -2620,6 +2625,24 @@
+ 	    tpos = pos;
+ 	    if (decl(&tpos) == -1 || (LINEEMPTY(tpos.lnum) && dir == FORWARD))
+@@ -2834,6 +2837,24 @@ findsent(int dir, long count)
  		    break;
  		}
  	    }

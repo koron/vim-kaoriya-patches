@@ -3,10 +3,10 @@
 Add guess encode feature
 
 diff --git a/src/evalfunc.c b/src/evalfunc.c
-index a8a13d8..e6f9312 100644
+index 55ca480d8..d96b299bf 100644
 --- a/src/evalfunc.c
 +++ b/src/evalfunc.c
-@@ -5145,6 +5145,7 @@ f_has(typval_T *argvars, typval_T *rettv)
+@@ -6308,6 +6308,7 @@ f_has(typval_T *argvars, typval_T *rettv)
  #ifdef FEAT_GETTEXT
  	"gettext",
  #endif
@@ -15,10 +15,10 @@ index a8a13d8..e6f9312 100644
  	"gui",
  #endif
 diff --git a/src/fileio.c b/src/fileio.c
-index e9dca0c..05702be 100644
+index dfe1ef962..465299aa6 100644
 --- a/src/fileio.c
 +++ b/src/fileio.c
-@@ -191,6 +191,244 @@ filemess(
+@@ -174,6 +174,244 @@ filemess(
      msg_scrolled_ign = FALSE;
  }
  
@@ -180,7 +180,7 @@ index e9dca0c..05702be 100644
 +     */
 +    while (enc_available > 1 && !feof(fp))
 +    {
-+	readlen = fread(readbuf, 1, sizeof(readbuf), fp);
++	readlen = (int)fread(readbuf, 1, sizeof(readbuf), fp);
 +	if (p_verbose >= 2)
 +	{
 +	    verbose_enter_scroll();
@@ -263,7 +263,7 @@ index e9dca0c..05702be 100644
  /*
   * Read lines from file "fname" into the buffer after line "from".
   *
-@@ -1041,6 +1279,17 @@ retry:
+@@ -1047,6 +1285,17 @@ retry:
  	}
      }
  
@@ -282,10 +282,10 @@ index e9dca0c..05702be 100644
       * Conversion may be required when the encoding of the file is different
       * from 'encoding' or 'encoding' is UTF-16, UCS-2 or UCS-4.
 diff --git a/src/version.c b/src/version.c
-index 7001152..9db9635 100644
+index 336bf3560..753e38b67 100644
 --- a/src/version.c
 +++ b/src/version.c
-@@ -270,6 +270,7 @@ static char *(features[]) =
+@@ -298,6 +298,7 @@ static char *(features[]) =
  #else
  	"-gettext",
  #endif

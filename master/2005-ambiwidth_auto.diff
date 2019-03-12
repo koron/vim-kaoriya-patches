@@ -3,10 +3,10 @@
 add 'auto' for 'ambiwidth'
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index e01e3e377..10b143531 100644
+index 558a1bef4..56f71ed4a 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
-@@ -711,6 +711,9 @@ A jump table for the options with a short description can be found at |Q_op|.
+@@ -704,6 +704,9 @@ A jump table for the options with a short description can be found at |Q_op|.
  	"single":	Use the same width as characters in US-ASCII.  This is
  			expected by most users.
  	"double":	Use twice the width of ASCII characters.
@@ -16,7 +16,7 @@ index e01e3e377..10b143531 100644
  							*E834* *E835*
  	The value "double" cannot be used if 'listchars' or 'fillchars'
  	contains a character that would be double width.
-@@ -735,6 +738,10 @@ A jump table for the options with a short description can be found at |Q_op|.
+@@ -728,6 +731,10 @@ A jump table for the options with a short description can be found at |Q_op|.
  	escape sequence to request cursor position report.  The response can
  	be found in |v:termu7resp|.
  
@@ -28,10 +28,10 @@ index e01e3e377..10b143531 100644
  'antialias' 'anti'	boolean (default: off)
  			global
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index 41d252165..3d866b40e 100644
+index 0929a65f6..fd2d47beb 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
-@@ -5267,6 +5267,59 @@ ole_error(char *arg)
+@@ -5141,6 +5141,59 @@ ole_error(char *arg)
  }
  #endif
  
@@ -92,10 +92,10 @@ index 41d252165..3d866b40e 100644
   * Parse the GUI related command-line arguments.  Any arguments used are
   * deleted from argv, and *argc is decremented accordingly.  This is called
 diff --git a/src/mbyte.c b/src/mbyte.c
-index 3592ddbdd..b1ca0bc57 100644
+index 9ad640460..dc7efa96f 100644
 --- a/src/mbyte.c
 +++ b/src/mbyte.c
-@@ -1576,6 +1576,19 @@ utf_char2cells(int c)
+@@ -1569,6 +1569,19 @@ utf_char2cells(int c)
  	{0x1f6f3, 0x1f6f3}
      };
  
@@ -116,27 +116,27 @@ index 3592ddbdd..b1ca0bc57 100644
      {
  #ifdef USE_WCHAR_FUNCTIONS
 diff --git a/src/option.c b/src/option.c
-index d569f227e..28e654a64 100644
+index bcfea873e..e9822e5bb 100644
 --- a/src/option.c
 +++ b/src/option.c
-@@ -3214,7 +3214,11 @@ static struct vimoption options[] =
+@@ -3186,7 +3186,11 @@ static struct vimoption options[] =
+ 
  #define PARAM_COUNT (sizeof(options) / sizeof(struct vimoption))
  
- #ifdef FEAT_MBYTE
 -static char *(p_ambw_values[]) = {"single", "double", NULL};
 +static char *(p_ambw_values[]) = {"single", "double",
 +# ifdef USE_AMBIWIDTH_AUTO
 +    "auto",
 +# endif
 +    NULL};
- #endif
  static char *(p_bg_values[]) = {"light", "dark", NULL};
  static char *(p_nf_values[]) = {"bin", "octal", "hex", "alpha", NULL};
+ static char *(p_ff_values[]) = {FF_UNIX, FF_DOS, FF_MAC, NULL};
 diff --git a/src/proto/gui_w32.pro b/src/proto/gui_w32.pro
-index f419f5eb8..5f7c03c46 100644
+index 224f0d0c4..db72839e9 100644
 --- a/src/proto/gui_w32.pro
 +++ b/src/proto/gui_w32.pro
-@@ -79,6 +79,7 @@ void im_set_active(int active);
+@@ -78,6 +78,7 @@ void im_set_active(int active);
  int im_get_status(void);
  void gui_mch_draw_string(int row, int col, char_u *text, int len, int flags);
  void gui_mch_flush(void);
@@ -145,18 +145,17 @@ index f419f5eb8..5f7c03c46 100644
  void gui_mch_add_menu(vimmenu_T *menu, int pos);
  void gui_mch_show_popupmenu(vimmenu_T *menu);
 diff --git a/src/vim.h b/src/vim.h
-index 96bab71cf..0f7de5b58 100644
+index fbae72d8d..ae82feb7e 100644
 --- a/src/vim.h
 +++ b/src/vim.h
-@@ -542,6 +542,14 @@ typedef unsigned long u8char_T;	    /* long should be 32 bits or more */
- # define USE_IM_CONTROL
+@@ -523,6 +523,13 @@ typedef unsigned int u8char_T;	// int is 32 bits or more
+ # endif
  #endif
  
 +/*
 + * Whether 'ambiwidth' supports "auto".  Currently, only for Win32.
 + */
-+#if defined(FEAT_MBYTE) && defined(FEAT_GUI) && \
-+    (defined(FEAT_GUI_W32))
++#if defined(FEAT_GUI) && defined(FEAT_GUI_MSWIN)
 +# define USE_AMBIWIDTH_AUTO
 +#endif
 +

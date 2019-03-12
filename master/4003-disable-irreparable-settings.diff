@@ -1,20 +1,17 @@
 diff --git a/runtime/vimrc_example.vim b/runtime/vimrc_example.vim
-index a68ebe53d..7c3b161b4 100644
+index b05793bd1..f1faa9dd3 100644
 --- a/runtime/vimrc_example.vim
 +++ b/runtime/vimrc_example.vim
-@@ -38,8 +38,9 @@ if has("autocmd")
-   augroup vimrcEx
+@@ -36,16 +36,18 @@ endif
+ augroup vimrcEx
    au!
  
 -  " For all text files set 'textwidth' to 78 characters.
 -  autocmd FileType text setlocal textwidth=78
-+  " +kaoriya: disabled, it is hard to repressed.
++  " +kaoriya: disabled, this is hard to repressed.
 +  "" For all text files set 'textwidth' to 78 characters.
 +  "autocmd FileType text setlocal textwidth=78
- 
-   augroup END
- 
-@@ -51,10 +52,11 @@ endif " has("autocmd")
+ augroup END
  
  " Add optional packages.
  "
@@ -25,7 +22,7 @@ index a68ebe53d..7c3b161b4 100644
 -if has('syntax') && has('eval')
 -  packadd! matchit
 -endif
-+" +kaoriya: disabled, it is hard to repressed.
++" +kaoriya: disabled, this is hard to repressed.
 +"" The matchit plugin makes the % command work better, but it is not backwards
 +"" compatible.
 +"" The ! means the package won't be loaded right away but when plugins are

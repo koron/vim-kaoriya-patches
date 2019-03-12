@@ -3,10 +3,10 @@
 implement 'transparency' for Windows GUI
 
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index 4637aa2de..89803c199 100644
+index ead617a79..c97e02d73 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
-@@ -45,6 +45,13 @@ static void directx_binddc(void);
+@@ -42,6 +42,13 @@ static void directx_binddc(void);
  static int gui_mswin_get_menu_height(int fix_window);
  #endif
  
@@ -20,7 +20,7 @@ index 4637aa2de..89803c199 100644
  #if defined(FEAT_RENDER_OPTIONS) || defined(PROTO)
      int
  gui_mch_set_rendering_options(char_u *s)
-@@ -5495,6 +5502,8 @@ gui_mch_init(void)
+@@ -5323,6 +5330,8 @@ gui_mch_init(void)
      if (s_hwnd == NULL)
  	return FAIL;
  
@@ -29,7 +29,7 @@ index 4637aa2de..89803c199 100644
  #ifdef GLOBAL_IME
      global_ime_init(atom, s_hwnd);
  #endif
-@@ -5861,6 +5870,44 @@ gui_mch_set_sp_color(guicolor_T color)
+@@ -5684,6 +5693,44 @@ gui_mch_set_sp_color(guicolor_T color)
      gui.currSpColor = color;
  }
  
@@ -75,10 +75,10 @@ index 4637aa2de..89803c199 100644
  /*
   * Multi-byte handling, originally by Sung-Hoon Baek.
 diff --git a/src/option.c b/src/option.c
-index 8deac536a..45d27d7d2 100644
+index b71093b86..617376afa 100644
 --- a/src/option.c
 +++ b/src/option.c
-@@ -2849,6 +2849,15 @@ static struct vimoption options[] =
+@@ -2785,6 +2785,15 @@ static struct vimoption options[] =
  #else
  			    (char_u *)NULL, PV_NONE,
  			    {(char_u *)0L, (char_u *)0L}
@@ -94,9 +94,9 @@ index 8deac536a..45d27d7d2 100644
  #endif
  			    SCTX_INIT},
      {"titlestring", NULL,   P_STRING|P_VI_DEF,
-@@ -9222,6 +9231,15 @@ set_num_option(
+@@ -9060,6 +9069,15 @@ set_num_option(
+ 	screenclear();	    /* will re-allocate the screen */
      }
- #endif
  
 +#ifdef USE_TRANSPARENCY
 +    else if ((long *)varp == &p_transparency)
@@ -111,10 +111,10 @@ index 8deac536a..45d27d7d2 100644
      {
  	if (curbuf->b_p_iminsert < 0 || curbuf->b_p_iminsert > B_IMODE_LAST)
 diff --git a/src/option.h b/src/option.h
-index 50fe380ed..d868ed039 100644
+index 9050bab70..05f2ed760 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -870,6 +870,9 @@ EXTERN char_u	*p_titlestring;	/* 'titlestring' */
+@@ -840,6 +840,9 @@ EXTERN char_u	*p_titlestring;	/* 'titlestring' */
  #ifdef FEAT_INS_EXPAND
  EXTERN char_u	*p_tsr;		/* 'thesaurus' */
  #endif
@@ -125,19 +125,19 @@ index 50fe380ed..d868ed039 100644
  EXTERN long	p_ttm;		/* 'ttimeoutlen' */
  EXTERN int	p_tbi;		/* 'ttybuiltin' */
 diff --git a/src/os_win32.h b/src/os_win32.h
-index 37f6106f7..cec596c5c 100644
+index 6ebe0373e..4c7e0c5f3 100644
 --- a/src/os_win32.h
 +++ b/src/os_win32.h
 @@ -80,6 +80,7 @@
  
- #ifdef FEAT_GUI_W32
+ #ifdef FEAT_GUI_MSWIN
  # define NO_CONSOLE		/* don't included console-only code */
 +# define USE_TRANSPARENCY
  #endif
  
  /* toupper() is not really broken, but it's very slow.	Probably because of
 diff --git a/src/proto/gui_w32.pro b/src/proto/gui_w32.pro
-index 4695fde96..b91343f17 100644
+index 75edd4be2..a6aaf1bbf 100644
 --- a/src/proto/gui_w32.pro
 +++ b/src/proto/gui_w32.pro
 @@ -70,6 +70,7 @@ void gui_mch_set_font(GuiFont font);
@@ -149,11 +149,11 @@ index 4695fde96..b91343f17 100644
  void im_set_position(int row, int col);
  void im_set_active(int active);
 diff --git a/src/testdir/gen_opt_test.vim b/src/testdir/gen_opt_test.vim
-index c0e89cfb0..4e3855c01 100644
+index bd3f80ce6..c682c20fb 100644
 --- a/src/testdir/gen_opt_test.vim
 +++ b/src/testdir/gen_opt_test.vim
-@@ -134,6 +134,7 @@ let test_values = {
-       \ 'termwinsize': [['', '24x80', '0x80', '32x0', '0x0'], ['xxx', '80', '8ax9', '24x80b']],
+@@ -135,6 +135,7 @@ let test_values = {
+       \ 'termwintype': [['', 'winpty', 'conpty'], ['xxx']],
        \ 'toolbar': [['', 'icons', 'text'], ['xxx']],
        \ 'toolbariconsize': [['', 'tiny', 'huge'], ['xxx']],
 +      \ 'transparency': [['0', '128', '255'], ['xxx']],

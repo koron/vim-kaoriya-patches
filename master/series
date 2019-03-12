@@ -16,13 +16,5 @@ python2-warn.diff #+experiments
 4001-ftp_autolink_2html.diff #-no_kaoriya
 4002-japanese_punctuation_javadoc.diff #-no_kaoriya
 4003-disable-irreparable-settings.diff #-no_kaoriya
-X003-csearch_highlight.diff #+experiments
-X005-eval_marks.diff #+experiments
-X006-enc_considered_setenv.diff #+experiments
-X007-make_compact_func.diff #+experiments
-X008-async_job.diff #+experiments
-X010-autoload_cache.diff #+experiments
 X011-GH592-fix-height-adjustment.diff #-no_kaoriya
-X013-721-investigate.diff #+debug
-X014-ex-reverse.diff #+experiments
 0000-kaoriya_marks.diff #-no_kaoriya

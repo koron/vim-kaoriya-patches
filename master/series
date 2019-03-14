@@ -1,5 +1,6 @@
 clean-generated-lib.diff #-no_kaoriya
 disable_regexp_logs.diff #-no_kaoriya
+PR4109-define_have_stdint_h_for_debug_build.patch #-no_kaoriya
 python2-warn.diff #+experiments
 0001-rich_icon.diff #-no_kaoriya
 0100-embed_manifest.diff #-no_kaoriya

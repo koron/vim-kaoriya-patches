@@ -1,3 +1,18 @@
+diff --git a/src/gui.c b/src/gui.c
+index e4af17a3c..89f2e9918 100644
+--- a/src/gui.c
++++ b/src/gui.c
+@@ -1135,7 +1135,10 @@ gui_update_cursor(
+ 
+ 		if (
+ # if defined(FEAT_GUI_GTK) && defined(FEAT_XIM) && !defined(FEAT_HANGULIN)
++#  if 0
+ 			preedit_get_status()
++#  endif
++			im_get_status()
+ # else
+ 			im_get_status()
+ # endif
 diff --git a/src/mbyte.c b/src/mbyte.c
 index dc7efa96f..2c831b793 100644
 --- a/src/mbyte.c

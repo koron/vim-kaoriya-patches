@@ -1,20 +1,21 @@
-clean-generated-lib.diff #-no_kaoriya
-disable_regexp_logs.diff #-no_kaoriya
+PR4137-fix_valign_with_linespace.patch
+clean-generated-lib.diff
+disable_regexp_logs.diff
 python2-warn.diff #+experiments
-0001-rich_icon.diff #-no_kaoriya
-0100-embed_manifest.diff #-no_kaoriya
-2001-improve_modelines.diff #-no_kaoriya
-2002-windows_transparency.diff #-no_kaoriya
-2003-charspace.diff #-no_kaoriya
-2004-caption_switch.diff #-no_kaoriya
-2005-ambiwidth_auto.diff #-no_kaoriya
-2006-init_winsock.diff #-no_kaoriya
-2008-sentence_until_punctuation.diff #-no_kaoriya
-2010-imaf_imsf_on_gui.diff #-no_kaoriya
-2520-migemo_feature.diff #-no_kaoriya
-2530-guess_encode_feature.diff #-no_kaoriya
-4001-ftp_autolink_2html.diff #-no_kaoriya
-4002-japanese_punctuation_javadoc.diff #-no_kaoriya
-4003-disable-irreparable-settings.diff #-no_kaoriya
-X011-GH592-fix-height-adjustment.diff #-no_kaoriya
-0000-kaoriya_marks.diff #-no_kaoriya
+0001-rich_icon.diff
+0100-embed_manifest.diff
+2001-improve_modelines.diff
+2002-windows_transparency.diff
+2003-charspace.diff
+2004-caption_switch.diff
+2005-ambiwidth_auto.diff
+2006-init_winsock.diff
+2008-sentence_until_punctuation.diff
+2010-imaf_imsf_on_gui.diff
+2520-migemo_feature.diff
+2530-guess_encode_feature.diff
+4001-ftp_autolink_2html.diff
+4002-japanese_punctuation_javadoc.diff
+4003-disable-irreparable-settings.diff
+X011-GH592-fix-height-adjustment.diff
+0000-kaoriya_marks.diff

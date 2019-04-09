@@ -3,7 +3,7 @@
 implement 'transparency' for Windows GUI
 
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index ead617a79..c97e02d73 100644
+index 10af357cc..30b4481a3 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
 @@ -42,6 +42,13 @@ static void directx_binddc(void);
@@ -20,7 +20,7 @@ index ead617a79..c97e02d73 100644
  #if defined(FEAT_RENDER_OPTIONS) || defined(PROTO)
      int
  gui_mch_set_rendering_options(char_u *s)
-@@ -5323,6 +5330,8 @@ gui_mch_init(void)
+@@ -5048,6 +5055,8 @@ gui_mch_init(void)
      if (s_hwnd == NULL)
  	return FAIL;
  
@@ -29,7 +29,7 @@ index ead617a79..c97e02d73 100644
  #ifdef GLOBAL_IME
      global_ime_init(atom, s_hwnd);
  #endif
-@@ -5684,6 +5693,44 @@ gui_mch_set_sp_color(guicolor_T color)
+@@ -5374,6 +5383,44 @@ gui_mch_set_sp_color(guicolor_T color)
      gui.currSpColor = color;
  }
  
@@ -75,7 +75,7 @@ index ead617a79..c97e02d73 100644
  /*
   * Multi-byte handling, originally by Sung-Hoon Baek.
 diff --git a/src/option.c b/src/option.c
-index b71093b86..617376afa 100644
+index 456439581..6c26032d4 100644
 --- a/src/option.c
 +++ b/src/option.c
 @@ -2785,6 +2785,15 @@ static struct vimoption options[] =
@@ -94,7 +94,7 @@ index b71093b86..617376afa 100644
  #endif
  			    SCTX_INIT},
      {"titlestring", NULL,   P_STRING|P_VI_DEF,
-@@ -9060,6 +9069,15 @@ set_num_option(
+@@ -9053,6 +9062,15 @@ set_num_option(
  	screenclear();	    /* will re-allocate the screen */
      }
  
@@ -137,7 +137,7 @@ index 6ebe0373e..4c7e0c5f3 100644
  
  /* toupper() is not really broken, but it's very slow.	Probably because of
 diff --git a/src/proto/gui_w32.pro b/src/proto/gui_w32.pro
-index 75edd4be2..a6aaf1bbf 100644
+index 9f2e5fbce..12a0f77e1 100644
 --- a/src/proto/gui_w32.pro
 +++ b/src/proto/gui_w32.pro
 @@ -70,6 +70,7 @@ void gui_mch_set_font(GuiFont font);
@@ -145,7 +145,7 @@ index 75edd4be2..a6aaf1bbf 100644
  void gui_mch_set_bg_color(guicolor_T color);
  void gui_mch_set_sp_color(guicolor_T color);
 +void gui_mch_set_transparency(int alpha);
- void im_set_font(LOGFONT *lf);
+ void im_set_font(LOGFONTW *lf);
  void im_set_position(int row, int col);
  void im_set_active(int active);
 diff --git a/src/testdir/gen_opt_test.vim b/src/testdir/gen_opt_test.vim

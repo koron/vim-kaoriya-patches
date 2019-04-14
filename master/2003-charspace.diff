@@ -2,11 +2,49 @@
 # Parent 4788b87d17786243e3d3b6fca78c4ff73026644b
 implement 'charspace' for Windows GUI
 
+diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
+index 66a9e17f4..3f1f3e98f 100644
+--- a/runtime/doc/options.txt
++++ b/runtime/doc/options.txt
+@@ -1532,6 +1532,20 @@ A jump table for the options with a short description can be found at |Q_op|.
+ 	This option cannot be set from a |modeline| or in the |sandbox|, for
+ 	security reasons.
+ 
++						*'charspace'* *'csp'*
++'charspace' 'csp'	number (default: 0)
++			global
++			{not in Vi}
++			{only in Windows GUI version and when compiled with
++			the |+kaoriya| feature}
++	Number of horizontal pixels inserted between characters.  Useful if
++	the font uses the full character cell width, making characters touch
++	each other.
++	When non-zero there is room for side of characters.
++	With some fonts there can  be too much room between characters (to
++	have space for left and right).  Then it make sense to set 'charspace'
++	to a negative value.  This may cause display problems though!
++
+ 				   *'cindent'* *'cin'* *'nocindent'* *'nocin'*
+ 'cindent' 'cin'		boolean	(default off)
+ 			local to buffer
+diff --git a/src/gui_w32.c b/src/gui_w32.c
+index 10af357cc..d1520dcfb 100644
+--- a/src/gui_w32.c
++++ b/src/gui_w32.c
+@@ -1459,7 +1459,7 @@ GetFontSize(GuiFont font)
+     TEXTMETRIC tm;
+ 
+     GetTextMetrics(hdc, &tm);
+-    gui.char_width = tm.tmAveCharWidth + tm.tmOverhang;
++    gui.char_width = tm.tmAveCharWidth + tm.tmOverhang + p_charspace;
+ 
+     gui.char_height = tm.tmHeight + p_linespace;
+ 
 diff --git a/src/option.c b/src/option.c
-index 5f4f5a3f8..1c25e9a95 100644
+index ba12fd4e6..707b1843a 100644
 --- a/src/option.c
 +++ b/src/option.c
-@@ -771,6 +771,14 @@ static struct vimoption options[] =
+@@ -748,6 +748,14 @@ static struct vimoption options[] =
  			    {(char_u *)0L, (char_u *)0L}
  #endif
  			    SCTX_INIT},
@@ -21,7 +59,7 @@ index 5f4f5a3f8..1c25e9a95 100644
      {"cindent",	    "cin",  P_BOOL|P_VI_DEF|P_VIM,
  #ifdef FEAT_CINDENT
  			    (char_u *)&p_cin, PV_CIN,
-@@ -9155,7 +9163,7 @@ set_num_option(
+@@ -9021,7 +9029,7 @@ set_num_option(
      }
  
  #ifdef FEAT_GUI
@@ -31,12 +69,12 @@ index 5f4f5a3f8..1c25e9a95 100644
  	/* Recompute gui.char_height and resize the Vim window to keep the
  	 * same number of lines. */
 diff --git a/src/option.h b/src/option.h
-index d868ed039..9dfa79cb1 100644
+index 9050bab70..8a56bfdd1 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -411,6 +411,9 @@ EXTERN int	p_deco;		/* 'delcombine' */
+@@ -396,6 +396,9 @@ EXTERN int	p_deco;		/* 'delcombine' */
+ #ifdef FEAT_EVAL
  EXTERN char_u	*p_ccv;		/* 'charconvert' */
- # endif
  #endif
 +#ifdef FEAT_GUI
 +EXTERN long	p_charspace;	/* 'charspace' */

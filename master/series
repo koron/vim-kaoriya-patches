@@ -1,4 +1,3 @@
-clean-generated-lib.diff
 disable_regexp_logs.diff
 python2-warn.diff #+experiments
 0001-rich_icon.diff

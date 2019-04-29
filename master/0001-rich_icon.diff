@@ -3,20 +3,25 @@
 use Vim's rich icon
 
 diff --git a/src/Make_mvc.mak b/src/Make_mvc.mak
-index c231e1ccf..8a474960f 100644
+index 07ebb7559..492a01293 100644
 --- a/src/Make_mvc.mak
 +++ b/src/Make_mvc.mak
-@@ -1550,7 +1550,7 @@ $(OUTDIR)/xpm_w32.obj: $(OUTDIR) xpm_w32.c
- 	$(CC) $(CFLAGS_OUTDIR) $(XPM_INC) xpm_w32.c
+@@ -1651,11 +1651,13 @@ $(OUTDIR)/vimg.res:	$(OUTDIR) vim.rc gvim.exe.mnf version.h gui_w32_rc.h \
  
- $(OUTDIR)/vim.res:	$(OUTDIR) vim.rc gvim.exe.mnf version.h tools.bmp \
--				tearoff.bmp vim.ico vim_error.ico \
-+				tearoff.bmp vim2.ico vim_error.ico \
+ $(OUTDIR)/vimd.res:	$(OUTDIR) vim.rc version.h gui_w32_rc.h \
+ 				tools.bmp tearoff.bmp vim.ico vim_error.ico \
++				vim2.ico \
  				vim_alert.ico vim_info.ico vim_quest.ico
- 	$(RC) /nologo /l 0x409 /Fo$(OUTDIR)/vim.res $(RCFLAGS) vim.rc
- 
+ 	$(RC) /nologo /l 0x409 /Fo$@ $(RCFLAGS) -DRCDLL -DVIMDLLBASE=\"$(VIMDLLBASE)\" vim.rc
+ !else
+ $(OUTDIR)/vim.res:	$(OUTDIR) vim.rc gvim.exe.mnf version.h gui_w32_rc.h \
+ 				tools.bmp tearoff.bmp vim.ico vim_error.ico \
++				vim2.ico \
+ 				vim_alert.ico vim_info.ico vim_quest.ico
+ 	$(RC) /nologo /l 0x409 /Fo$@ $(RCFLAGS) vim.rc
+ !endif
 diff --git a/src/vim.rc b/src/vim.rc
-index 51c3b7b4e..515efc799 100644
+index 195536c03..bf5585c1f 100644
 --- a/src/vim.rc
 +++ b/src/vim.rc
 @@ -21,7 +21,7 @@
@@ -26,7 +31,7 @@ index 51c3b7b4e..515efc799 100644
 -IDR_VIM		ICON "vim.ico"
 +IDR_VIM		ICON "vim2.ico"
  
- #ifdef FEAT_GUI_MSWIN
+ #if (defined(FEAT_GUI_MSWIN) && !defined(VIMDLL)) || defined(RCDLL)
  IDR_VIM_ERROR	ICON "vim_error.ico"
 diff --git a/src/vim2.ico b/src/vim2.ico
 new file mode 100644

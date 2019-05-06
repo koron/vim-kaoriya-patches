@@ -1,4 +1,3 @@
-fix-vimdll-mbyte-input.patch
 python2-warn.diff #+experiments
 0001-rich_icon.diff
 0100-embed_manifest.diff

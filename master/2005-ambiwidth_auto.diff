@@ -3,10 +3,10 @@
 add 'auto' for 'ambiwidth'
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index ce6e2d447..b9fd65217 100644
+index b91edf927..8480ea5aa 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
-@@ -690,6 +690,9 @@ A jump table for the options with a short description can be found at |Q_op|.
+@@ -693,6 +693,9 @@ A jump table for the options with a short description can be found at |Q_op|.
  	"single":	Use the same width as characters in US-ASCII.  This is
  			expected by most users.
  	"double":	Use twice the width of ASCII characters.
@@ -16,7 +16,7 @@ index ce6e2d447..b9fd65217 100644
  							*E834* *E835*
  	The value "double" cannot be used if 'listchars' or 'fillchars'
  	contains a character that would be double width.
-@@ -714,6 +717,10 @@ A jump table for the options with a short description can be found at |Q_op|.
+@@ -717,6 +720,10 @@ A jump table for the options with a short description can be found at |Q_op|.
  	escape sequence to request cursor position report.  The response can
  	be found in |v:termu7resp|.
  
@@ -28,10 +28,10 @@ index ce6e2d447..b9fd65217 100644
  'antialias' 'anti'	boolean (default: off)
  			global
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index 5097b6187..db9197254 100644
+index 3497ce518..a6f710f0c 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
-@@ -5024,6 +5024,59 @@ error:
+@@ -5030,6 +5030,59 @@ error:
  }
  #endif
  
@@ -92,7 +92,7 @@ index 5097b6187..db9197254 100644
   * Parse the GUI related command-line arguments.  Any arguments used are
   * deleted from argv, and *argc is decremented accordingly.  This is called
 diff --git a/src/mbyte.c b/src/mbyte.c
-index 411c3d907..abe1ef0f4 100644
+index c1a5564b6..44daf4f79 100644
 --- a/src/mbyte.c
 +++ b/src/mbyte.c
 @@ -1575,6 +1575,19 @@ utf_char2cells(int c)
@@ -116,10 +116,10 @@ index 411c3d907..abe1ef0f4 100644
      {
  #ifdef USE_WCHAR_FUNCTIONS
 diff --git a/src/option.c b/src/option.c
-index bd4dd20bd..b29eb96a2 100644
+index c09755552..86ec29980 100644
 --- a/src/option.c
 +++ b/src/option.c
-@@ -3201,7 +3201,11 @@ static struct vimoption options[] =
+@@ -3210,7 +3210,11 @@ static struct vimoption options[] =
  
  #define PARAM_COUNT (sizeof(options) / sizeof(struct vimoption))
  
@@ -145,10 +145,10 @@ index b54487921..a98ad2102 100644
  void gui_mch_add_menu(vimmenu_T *menu, int pos);
  void gui_mch_show_popupmenu(vimmenu_T *menu);
 diff --git a/src/vim.h b/src/vim.h
-index 2c9149b69..568d0b7c9 100644
+index 378fe5f87..fd58b44f4 100644
 --- a/src/vim.h
 +++ b/src/vim.h
-@@ -523,6 +523,13 @@ typedef unsigned int u8char_T;	// int is 32 bits or more
+@@ -505,6 +505,13 @@ typedef unsigned int u8char_T;	// int is 32 bits or more
  # endif
  #endif
  

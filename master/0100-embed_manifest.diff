@@ -3,10 +3,10 @@
 embed manifest file to EXE and DLL when available (for MSVC9)
 
 diff --git a/src/Make_mvc.mak b/src/Make_mvc.mak
-index 79b8eca7c..d83630ead 100644
+index 31b255fb5..76660e224 100644
 --- a/src/Make_mvc.mak
 +++ b/src/Make_mvc.mak
-@@ -1203,28 +1203,34 @@ install.exe: dosinst.c
+@@ -1295,28 +1295,34 @@ install.exe: dosinst.c
  		-link -subsystem:$(SUBSYSTEM_TOOLS)
  	- if exist install.exe del install.exe
  	ren dosinst.exe install.exe
@@ -41,7 +41,7 @@ index 79b8eca7c..d83630ead 100644
  
  
  tags: notags
-@@ -1237,6 +1243,7 @@ clean:
+@@ -1329,6 +1335,7 @@ clean:
  	- if exist $(OUTDIR)/nul $(DEL_TREE) $(OUTDIR)
  	- if exist *.obj del *.obj
  	- if exist $(VIM).exe del $(VIM).exe

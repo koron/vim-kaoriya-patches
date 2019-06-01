@@ -1,8 +1,8 @@
 diff --git a/src/gui.c b/src/gui.c
-index e4af17a3c..89f2e9918 100644
+index 02a5e0696..43c4d5d90 100644
 --- a/src/gui.c
 +++ b/src/gui.c
-@@ -1135,7 +1135,10 @@ gui_update_cursor(
+@@ -1173,7 +1173,10 @@ gui_update_cursor(
  
  		if (
  # if defined(FEAT_GUI_GTK) && defined(FEAT_XIM) && !defined(FEAT_HANGULIN)
@@ -14,10 +14,10 @@ index e4af17a3c..89f2e9918 100644
  			im_get_status()
  # endif
 diff --git a/src/mbyte.c b/src/mbyte.c
-index dc7efa96f..2c831b793 100644
+index 44daf4f79..ff845a091 100644
 --- a/src/mbyte.c
 +++ b/src/mbyte.c
-@@ -4793,10 +4793,7 @@ iconv_end(void)
+@@ -4792,10 +4792,7 @@ iconv_end(void)
  # endif /* USE_ICONV */
  
  
@@ -30,10 +30,10 @@ index dc7efa96f..2c831b793 100644
  # define USE_IMSTATUSFUNC (*p_imsf != NUL)
  #endif
 diff --git a/src/ui.c b/src/ui.c
-index 5c9077c05..0e844dc53 100644
+index ed0e50abe..5c68b71e4 100644
 --- a/src/ui.c
 +++ b/src/ui.c
-@@ -3515,12 +3515,14 @@ im_save_status(long *psave)
+@@ -3543,12 +3543,14 @@ im_save_status(long *psave)
       * And don't save when the GUI is running but our window doesn't have
       * input focus (e.g., when a find dialog is open). */
      if (!p_imdisable && KeyTyped && !KeyStuffed

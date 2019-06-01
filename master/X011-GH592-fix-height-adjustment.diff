@@ -1,9 +1,10 @@
 # HG changeset patch
 # Parent e280391e57f2b6396e91383942f1d92eb2861b5c
-diff -r e280391e57f2 -r dc6c0c32689a src/gui_w32.c
---- a/src/gui_w32.c	Sun Aug 10 16:31:51 2014 +0200
-+++ b/src/gui_w32.c	Tue Aug 12 10:35:15 2014 +0900
-@@ -1814,28 +1814,21 @@
+diff --git a/src/gui_w32.c b/src/gui_w32.c
+index 32321a398..7bb54f589 100644
+--- a/src/gui_w32.c
++++ b/src/gui_w32.c
+@@ -5497,28 +5497,21 @@ gui_mch_set_shellsize(
  	int direction)
  {
      RECT	workarea_rect;
@@ -36,7 +37,7 @@ diff -r e280391e57f2 -r dc6c0c32689a src/gui_w32.c
  
      /* compute the size of the outside of the window */
      win_width = width + (GetSystemMetrics(SM_CXFRAME) +
-@@ -1851,34 +1844,24 @@
+@@ -5535,34 +5528,24 @@ gui_mch_set_shellsize(
      /* The following should take care of keeping Vim on the same monitor, no
       * matter if the secondary monitor is left or right of the primary
       * monitor. */

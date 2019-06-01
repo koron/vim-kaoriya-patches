@@ -3,10 +3,10 @@
 implement 'charspace' for Windows GUI
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index c17842f3c..6dc684e51 100644
+index 949d82f9c..828e89fae 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
-@@ -1487,6 +1487,20 @@ A jump table for the options with a short description can be found at |Q_op|.
+@@ -1491,6 +1491,20 @@ A jump table for the options with a short description can be found at |Q_op|.
  	This option cannot be set from a |modeline| or in the |sandbox|, for
  	security reasons.
  
@@ -28,10 +28,10 @@ index c17842f3c..6dc684e51 100644
  'cindent' 'cin'		boolean	(default off)
  			local to buffer
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index 0d749718c..9d437f80c 100644
+index 7cce265be..66c21e4a5 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
-@@ -1472,6 +1472,8 @@ GetFontSize(GuiFont font)
+@@ -1469,6 +1469,8 @@ GetFontSize(GuiFont font)
  	    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
  	    52, &size);
      gui.char_width = (size.cx / 26 + 1) / 2 + tm.tmOverhang;
@@ -41,10 +41,10 @@ index 0d749718c..9d437f80c 100644
      gui.char_height = tm.tmHeight + p_linespace;
  
 diff --git a/src/option.c b/src/option.c
-index cbf03f1a7..bd4dd20bd 100644
+index ce8f22796..c09755552 100644
 --- a/src/option.c
 +++ b/src/option.c
-@@ -754,6 +754,14 @@ static struct vimoption options[] =
+@@ -756,6 +756,14 @@ static struct vimoption options[] =
  			    {(char_u *)0L, (char_u *)0L}
  #endif
  			    SCTX_INIT},
@@ -59,7 +59,7 @@ index cbf03f1a7..bd4dd20bd 100644
      {"cindent",	    "cin",  P_BOOL|P_VI_DEF|P_VIM,
  #ifdef FEAT_CINDENT
  			    (char_u *)&p_cin, PV_CIN,
-@@ -9057,7 +9065,7 @@ set_num_option(
+@@ -9149,7 +9157,7 @@ set_num_option(
      }
  
  #ifdef FEAT_GUI
@@ -69,7 +69,7 @@ index cbf03f1a7..bd4dd20bd 100644
  	/* Recompute gui.char_height and resize the Vim window to keep the
  	 * same number of lines. */
 diff --git a/src/option.h b/src/option.h
-index d114ebb49..d88a11cbd 100644
+index 48314bf7d..cb27b54bb 100644
 --- a/src/option.h
 +++ b/src/option.h
 @@ -398,6 +398,9 @@ EXTERN int	p_deco;		/* 'delcombine' */

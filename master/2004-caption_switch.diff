@@ -3,10 +3,10 @@
 add 'C' flag to 'guioptions' which control to show the caption of window
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index ecdd3370d..0d1fb8400 100644
+index 828e89fae..b91edf927 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
-@@ -3774,6 +3774,9 @@ A jump table for the options with a short description can be found at |Q_op|.
+@@ -3781,6 +3781,9 @@ A jump table for the options with a short description can be found at |Q_op|.
  		try to keep 'lines' and 'columns' the same when adding and
  		removing GUI components.
  
@@ -17,10 +17,10 @@ index ecdd3370d..0d1fb8400 100644
  'guipty'		boolean	(default on)
  			global
 diff --git a/src/gui.c b/src/gui.c
-index 471202bf4..c13ccda83 100644
+index 8edc86cd7..02a5e0696 100644
 --- a/src/gui.c
 +++ b/src/gui.c
-@@ -3423,6 +3423,8 @@ gui_init_which_components(char_u *oldval UNUSED)
+@@ -3426,6 +3426,8 @@ gui_init_which_components(char_u *oldval UNUSED)
      static int	prev_tearoff = -1;
      int		using_tearoff = FALSE;
  #endif
@@ -29,7 +29,7 @@ index 471202bf4..c13ccda83 100644
  
      char_u	*p;
      int		i;
-@@ -3498,6 +3500,9 @@ gui_init_which_components(char_u *oldval UNUSED)
+@@ -3501,6 +3503,9 @@ gui_init_which_components(char_u *oldval UNUSED)
  		using_tearoff = TRUE;
  #endif
  		break;
@@ -39,7 +39,7 @@ index 471202bf4..c13ccda83 100644
  	    default:
  		/* Ignore options that are not supported */
  		break;
-@@ -3601,6 +3606,14 @@ gui_init_which_components(char_u *oldval UNUSED)
+@@ -3604,6 +3609,14 @@ gui_init_which_components(char_u *oldval UNUSED)
  	    prev_tearoff = using_tearoff;
  	}
  #endif
@@ -55,7 +55,7 @@ index 471202bf4..c13ccda83 100644
  	{
  #ifdef FEAT_GUI_GTK
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index de2e84e54..a9f85ba59 100644
+index 66c21e4a5..3497ce518 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
 @@ -1066,6 +1066,57 @@ _OnSizeTextArea(
@@ -116,7 +116,7 @@ index de2e84e54..a9f85ba59 100644
  #ifdef FEAT_MENU
  /*
   * Find the vimmenu_T with the given id
-@@ -2915,11 +2966,12 @@ gui_mswin_get_valid_dimensions(
+@@ -2920,11 +2971,12 @@ gui_mswin_get_valid_dimensions(
  
      base_width = gui_get_base_width()
  	+ (GetSystemMetrics(SM_CXFRAME) +
@@ -131,7 +131,7 @@ index de2e84e54..a9f85ba59 100644
  #ifdef FEAT_MENU
  	+ gui_mswin_get_menu_height(FALSE)
  #endif
-@@ -3340,12 +3392,13 @@ gui_mch_newfont(void)
+@@ -3345,12 +3397,13 @@ gui_mch_newfont(void)
      if (win_socket_id == 0)
      {
  	gui_resize_shell(rect.right - rect.left
@@ -146,7 +146,7 @@ index de2e84e54..a9f85ba59 100644
  #ifdef FEAT_MENU
  	    - gui_mswin_get_menu_height(FALSE)
  #endif
-@@ -5395,10 +5448,11 @@ gui_mch_set_shellsize(
+@@ -5399,10 +5452,11 @@ gui_mch_set_shellsize(
  
      /* compute the size of the outside of the window */
      win_width = width + (GetSystemMetrics(SM_CXFRAME) +
@@ -160,7 +160,7 @@ index de2e84e54..a9f85ba59 100644
  #ifdef FEAT_MENU
  			+ gui_mswin_get_menu_height(FALSE)
  #endif
-@@ -6342,7 +6396,8 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
+@@ -6337,7 +6391,8 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
  
      *screen_w = workarea_rect.right - workarea_rect.left
  		- (GetSystemMetrics(SM_CXFRAME) +
@@ -170,7 +170,7 @@ index de2e84e54..a9f85ba59 100644
  
      /* FIXME: dirty trick: Because the gui_get_base_height() doesn't include
       * the menubar for MSwin, we subtract it from the screen height, so that
-@@ -6350,7 +6405,7 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
+@@ -6345,7 +6400,7 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
      *screen_h = workarea_rect.bottom - workarea_rect.top
  		- (GetSystemMetrics(SM_CYFRAME) +
  		   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
@@ -180,10 +180,10 @@ index de2e84e54..a9f85ba59 100644
  		- gui_mswin_get_menu_height(FALSE)
  #endif
 diff --git a/src/option.h b/src/option.h
-index cee29ae3e..65ebb35d5 100644
+index cb27b54bb..f95fce99c 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -229,7 +229,8 @@
+@@ -231,7 +231,8 @@
  #define GO_FOOTER	'F'		/* add footer */
  #define GO_VERTICAL	'v'		/* arrange dialog buttons vertically */
  #define GO_KEEPWINSIZE	'k'		/* keep GUI window size */

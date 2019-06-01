@@ -3,7 +3,7 @@
 support ff, enc and bin in modeline
 
 diff --git a/src/buffer.c b/src/buffer.c
-index 158c30a5a..c07ffe143 100644
+index 3bfb6396b..1840973aa 100644
 --- a/src/buffer.c
 +++ b/src/buffer.c
 @@ -326,6 +326,29 @@ open_buffer(

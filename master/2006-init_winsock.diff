@@ -3,10 +3,10 @@
 Some embeded languages require init WinSock by hosting application
 
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index 9c60934..2e4e0db 100644
+index a6f710f0c..32321a398 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
-@@ -5333,6 +5333,23 @@ gui_mch_prepare(int *argc, char **argv)
+@@ -5176,6 +5176,23 @@ gui_mch_prepare(int *argc, char **argv)
  	    }
      }
  #endif

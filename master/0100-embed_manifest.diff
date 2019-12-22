@@ -3,17 +3,17 @@
 embed manifest file to EXE and DLL when available (for MSVC9)
 
 diff --git a/src/Make_mvc.mak b/src/Make_mvc.mak
-index 31b255fb5..76660e224 100644
+index 9da4ab5ff..02457dbfc 100644
 --- a/src/Make_mvc.mak
 +++ b/src/Make_mvc.mak
-@@ -1295,28 +1295,34 @@ install.exe: dosinst.c
+@@ -1345,28 +1345,34 @@ install.exe: dosinst.c dosinst.h version.h
  		-link -subsystem:$(SUBSYSTEM_TOOLS)
  	- if exist install.exe del install.exe
  	ren dosinst.exe install.exe
 +	IF EXIST $@.manifest mt -nologo -manifest $@.manifest -outputresource:$@;1
  
- uninstal.exe: uninstal.c
- 	$(CC) /nologo -DNDEBUG -DWIN32 uninstal.c shell32.lib advapi32.lib \
+ uninstall.exe: uninstall.c dosinst.h version.h
+ 	$(CC) /nologo -DNDEBUG -DWIN32 uninstall.c shell32.lib advapi32.lib \
  		-link -subsystem:$(SUBSYSTEM_TOOLS)
 +	IF EXIST $@.manifest mt -nologo -manifest $@.manifest -outputresource:$@;1
  
@@ -41,7 +41,7 @@ index 31b255fb5..76660e224 100644
  
  
  tags: notags
-@@ -1329,6 +1335,7 @@ clean:
+@@ -1379,6 +1385,7 @@ clean: testclean
  	- if exist $(OUTDIR)/nul $(DEL_TREE) $(OUTDIR)
  	- if exist *.obj del *.obj
  	- if exist $(VIM).exe del $(VIM).exe

@@ -3,10 +3,10 @@
 add 'auto' for 'ambiwidth'
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index b91edf927..8480ea5aa 100644
+index 23923a53f..0ad04bfa0 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
-@@ -693,6 +693,9 @@ A jump table for the options with a short description can be found at |Q_op|.
+@@ -694,6 +694,9 @@ A jump table for the options with a short description can be found at |Q_op|.
  	"single":	Use the same width as characters in US-ASCII.  This is
  			expected by most users.
  	"double":	Use twice the width of ASCII characters.
@@ -16,7 +16,7 @@ index b91edf927..8480ea5aa 100644
  							*E834* *E835*
  	The value "double" cannot be used if 'listchars' or 'fillchars'
  	contains a character that would be double width.
-@@ -717,6 +720,10 @@ A jump table for the options with a short description can be found at |Q_op|.
+@@ -718,6 +721,10 @@ A jump table for the options with a short description can be found at |Q_op|.
  	escape sequence to request cursor position report.  The response can
  	be found in |v:termu7resp|.
  
@@ -28,10 +28,10 @@ index b91edf927..8480ea5aa 100644
  'antialias' 'anti'	boolean (default: off)
  			global
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index 3497ce518..a6f710f0c 100644
+index 43bdc4d65..200a0d59c 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
-@@ -5030,6 +5030,59 @@ error:
+@@ -5061,6 +5061,56 @@ error:
  }
  #endif
  
@@ -45,10 +45,10 @@ index 3497ce518..a6f710f0c 100644
 +    static int cache[CHARWIDE_CACHESIZE];
 +    GuiFont usingfont = gui.wide_font ? gui.wide_font : gui.norm_font;
 +
-+    /* Check validity of charwide cache */
++    // Check validity of charwide cache
 +    if (last_font != usingfont)
 +    {
-+	/* Update cache. -1 is mark for uninitialized cell */
++	// Update cache. -1 is mark for uninitialized cell
 +	int i;
 +
 +	TRACE("Charwide cache will be updated (base=%d)\n", gui.char_width);
@@ -59,13 +59,10 @@ index 3497ce518..a6f710f0c 100644
 +    if (usingfont && 0 <= c && c < CHARWIDE_CACHESIZE)
 +    {
 +	if (cache[c] >= 0)
-+	    return cache[c]; /* Use cached value */
++	    return cache[c]; // Use cached value
 +	else
 +	{
-+	    /* 
-+	     * Get true character width in dot, convert to cells and save
-+	     * it.
-+	     */
++	    // Get true character width in dot, convert to cells and save it.
 +	    int	    len;
 +	    ABC	    fontABC;
 +	    HFONT   hfntOld = SelectFont(s_hdc, usingfont);
@@ -92,10 +89,10 @@ index 3497ce518..a6f710f0c 100644
   * Parse the GUI related command-line arguments.  Any arguments used are
   * deleted from argv, and *argc is decremented accordingly.  This is called
 diff --git a/src/mbyte.c b/src/mbyte.c
-index c1a5564b6..44daf4f79 100644
+index 5dd256268..52591cb8f 100644
 --- a/src/mbyte.c
 +++ b/src/mbyte.c
-@@ -1575,6 +1575,19 @@ utf_char2cells(int c)
+@@ -1574,6 +1574,19 @@ utf_char2cells(int c)
  	{0x1f6f3, 0x1f6f3}
      };
  
@@ -115,13 +112,13 @@ index c1a5564b6..44daf4f79 100644
      if (c >= 0x100)
      {
  #ifdef USE_WCHAR_FUNCTIONS
-diff --git a/src/option.c b/src/option.c
-index c09755552..86ec29980 100644
---- a/src/option.c
-+++ b/src/option.c
-@@ -3210,7 +3210,11 @@ static struct vimoption options[] =
+diff --git a/src/optionstr.c b/src/optionstr.c
+index 98e90a453..ba05402a9 100644
+--- a/src/optionstr.c
++++ b/src/optionstr.c
+@@ -13,7 +13,11 @@
  
- #define PARAM_COUNT (sizeof(options) / sizeof(struct vimoption))
+ #include "vim.h"
  
 -static char *(p_ambw_values[]) = {"single", "double", NULL};
 +static char *(p_ambw_values[]) = {"single", "double",
@@ -130,8 +127,8 @@ index c09755552..86ec29980 100644
 +# endif
 +    NULL};
  static char *(p_bg_values[]) = {"light", "dark", NULL};
- static char *(p_nf_values[]) = {"bin", "octal", "hex", "alpha", NULL};
- static char *(p_ff_values[]) = {FF_UNIX, FF_DOS, FF_MAC, NULL};
+ static char *(p_bkc_values[]) = {"yes", "auto", "no", "breaksymlink", "breakhardlink", NULL};
+ static char *(p_bo_values[]) = {"all", "backspace", "cursor", "complete",
 diff --git a/src/proto/gui_w32.pro b/src/proto/gui_w32.pro
 index b54487921..a98ad2102 100644
 --- a/src/proto/gui_w32.pro
@@ -145,10 +142,10 @@ index b54487921..a98ad2102 100644
  void gui_mch_add_menu(vimmenu_T *menu, int pos);
  void gui_mch_show_popupmenu(vimmenu_T *menu);
 diff --git a/src/vim.h b/src/vim.h
-index 378fe5f87..fd58b44f4 100644
+index a01d4b290..4b47dfc2a 100644
 --- a/src/vim.h
 +++ b/src/vim.h
-@@ -505,6 +505,13 @@ typedef unsigned int u8char_T;	// int is 32 bits or more
+@@ -516,6 +516,13 @@ typedef unsigned int u8char_T;	// int is 32 bits or more
  # endif
  #endif
  

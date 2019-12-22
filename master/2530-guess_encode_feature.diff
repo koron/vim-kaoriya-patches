@@ -3,10 +3,10 @@
 Add guess encode feature
 
 diff --git a/src/evalfunc.c b/src/evalfunc.c
-index 1ded146dd..13712a04d 100644
+index ccc4848e6..08befc731 100644
 --- a/src/evalfunc.c
 +++ b/src/evalfunc.c
-@@ -6576,6 +6576,7 @@ f_has(typval_T *argvars, typval_T *rettv)
+@@ -3378,6 +3378,7 @@ f_has(typval_T *argvars, typval_T *rettv)
  #ifdef FEAT_GETTEXT
  	"gettext",
  #endif
@@ -15,10 +15,10 @@ index 1ded146dd..13712a04d 100644
  	"gui",
  #endif
 diff --git a/src/fileio.c b/src/fileio.c
-index d746298a7..e76878767 100644
+index e35ce8c7b..65774720e 100644
 --- a/src/fileio.c
 +++ b/src/fileio.c
-@@ -150,6 +150,244 @@ filemess(
+@@ -70,6 +70,242 @@ filemess(
      msg_scrolled_ign = FALSE;
  }
  
@@ -91,7 +91,7 @@ index d746298a7..e76878767 100644
 +    static int
 +guess_iso2022jp_check(encode_state* state, char_u d)
 +{
-+    /* TODO: Implement me. */
++    // TODO: Implement me.
 +    return 1;
 +}
 +
@@ -147,7 +147,7 @@ index d746298a7..e76878767 100644
 +	{ "utf-8",	    1, 0, 0, guess_utf8_check },
 +    };
 +    int	    enc_count;
-+    int	    enc_available; /* count of encodings be available. */
++    int	    enc_available; // count of encodings be available.
 +    char_u  readbuf[1024];
 +    int	    readlen;
 +    int	    i, j;
@@ -163,21 +163,19 @@ index d746298a7..e76878767 100644
 +	verbose_leave_scroll();
 +    }
 +
-+    /* open a file. */
++    // open a file.
 +    if (!fname)
-+	return 0; /* not support to read from stdin. */
++	return 0; // not support to read from stdin.
 +    fp = mch_fopen(fname, "r");
 +    if (!fp)
-+	return 0; /* raise an error when failed to open file. */
++	return 0; // raise an error when failed to open file.
 +
-+    /* initiate states of encode. */
++    // initiate states of encode.
 +    enc_count = sizeof(enc_table) / sizeof(enc_table[0]);
 +    enc_available = enc_count;
 +
-+    /*
-+     * read bytes from the file and pass it to guess engines, until the
-+     * encoding is determined.
-+     */
++    // read bytes from the file and pass it to guess engines, until the
++    // encoding is determined.
 +    while (enc_available > 1 && !feof(fp))
 +    {
 +	readlen = (int)fread(readbuf, 1, sizeof(readbuf), fp);
@@ -192,7 +190,7 @@ index d746298a7..e76878767 100644
 +	for (i = 0; enc_available > 1 && i < readlen; ++i)
 +	{
 +	    d = readbuf[i];
-+	    /* pass 'd' to all available encodings. */
++	    // pass 'd' to all available encodings.
 +	    for (j = 0; enc_available > 1 && j < enc_count; ++j)
 +	    {
 +		pstate = &enc_table[j];
@@ -200,13 +198,13 @@ index d746298a7..e76878767 100644
 +		    continue;
 +		switch (pstate->check(pstate, d))
 +		{
-+		    case 0: /* keep "alive" state */
++		    case 0: // keep "alive" state
 +			break;
-+		    case 1: /* disable this encode. */
++		    case 1: // disable this encode.
 +			pstate->enable = 0;
 +			--enc_available;
 +			break;
-+		    case 2: /* make this encode primary one. */
++		    case 2: // make this encode primary one.
 +			enc_available = 1;
 +			newenc = pstate->name;
 +			break;
@@ -215,7 +213,7 @@ index d746298a7..e76878767 100644
 +	}
 +    }
 +
-+    /* determine newenc which have max score. */
++    // determine newenc which have max score.
 +    if (newenc == NULL)
 +    {
 +	int minscore = -1;
@@ -241,7 +239,7 @@ index d746298a7..e76878767 100644
 +	}
 +    }
 +
-+    /* close a file. */
++    // close a file.
 +    fclose(fp);
 +
 +    if (newenc)
@@ -263,7 +261,7 @@ index d746298a7..e76878767 100644
  /*
   * Read lines from file "fname" into the buffer after line "from".
   *
-@@ -1013,6 +1251,17 @@ retry:
+@@ -931,6 +1167,17 @@ retry:
  	}
      }
  
@@ -282,14 +280,14 @@ index d746298a7..e76878767 100644
       * Conversion may be required when the encoding of the file is different
       * from 'encoding' or 'encoding' is UTF-16, UCS-2 or UCS-4.
 diff --git a/src/version.c b/src/version.c
-index b2e08d976..728d297d4 100644
+index 1b9e980ac..cbf9af57b 100644
 --- a/src/version.c
 +++ b/src/version.c
-@@ -294,6 +294,7 @@ static char *(features[]) =
+@@ -282,6 +282,7 @@ static char *(features[]) =
  #else
  	"-gettext",
  #endif
 +	"+guess_encode",
- #ifdef FEAT_HANGULIN
- 	"+hangul_input",
- #else
+ 	"-hangul_input",
+ #if (defined(HAVE_ICONV_H) && defined(USE_ICONV)) || defined(DYNAMIC_ICONV)
+ # ifdef DYNAMIC_ICONV

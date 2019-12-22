@@ -1,24 +1,22 @@
 diff --git a/src/gui.c b/src/gui.c
-index 02a5e0696..43c4d5d90 100644
+index f74a0bd9f..3986b411a 100644
 --- a/src/gui.c
 +++ b/src/gui.c
-@@ -1173,7 +1173,10 @@ gui_update_cursor(
+@@ -1174,7 +1174,7 @@ gui_update_cursor(
+ 		guicolor_T fg, bg;
  
  		if (
- # if defined(FEAT_GUI_GTK) && defined(FEAT_XIM) && !defined(FEAT_HANGULIN)
-+#  if 0
+-# if defined(FEAT_GUI_GTK) && defined(FEAT_XIM)
++# if 0 && defined(FEAT_GUI_GTK) && defined(FEAT_XIM)
  			preedit_get_status()
-+#  endif
-+			im_get_status()
  # else
  			im_get_status()
- # endif
 diff --git a/src/mbyte.c b/src/mbyte.c
-index 44daf4f79..ff845a091 100644
+index 52591cb8f..213b76065 100644
 --- a/src/mbyte.c
 +++ b/src/mbyte.c
 @@ -4792,10 +4792,7 @@ iconv_end(void)
- # endif /* USE_ICONV */
+ # endif // USE_ICONV
  
  
 -#ifdef FEAT_GUI
@@ -30,12 +28,12 @@ index 44daf4f79..ff845a091 100644
  # define USE_IMSTATUSFUNC (*p_imsf != NUL)
  #endif
 diff --git a/src/ui.c b/src/ui.c
-index ed0e50abe..5c68b71e4 100644
+index f4f7bcf83..7c031541f 100644
 --- a/src/ui.c
 +++ b/src/ui.c
-@@ -3543,12 +3543,14 @@ im_save_status(long *psave)
-      * And don't save when the GUI is running but our window doesn't have
-      * input focus (e.g., when a find dialog is open). */
+@@ -3059,12 +3059,14 @@ im_save_status(long *psave)
+     // And don't save when the GUI is running but our window doesn't have
+     // input focus (e.g., when a find dialog is open).
      if (!p_imdisable && KeyTyped && !KeyStuffed
 +#if 0
  # ifdef FEAT_XIM
@@ -47,4 +45,4 @@ index ed0e50abe..5c68b71e4 100644
 +#endif
  	)
      {
- 	/* Do save when IM is on, or IM is off and saved status is on. */
+ 	// Do save when IM is on, or IM is off and saved status is on.

@@ -1,5 +1,5 @@
 diff --git a/runtime/vimrc_example.vim b/runtime/vimrc_example.vim
-index b05793bd1..f1faa9dd3 100644
+index 3017a6cf9..0c439b861 100644
 --- a/runtime/vimrc_example.vim
 +++ b/runtime/vimrc_example.vim
 @@ -36,16 +36,18 @@ endif

@@ -3,10 +3,10 @@
 Make 2html.vim auto link URL which starts 'ftp'
 
 diff --git a/runtime/syntax/2html.vim b/runtime/syntax/2html.vim
-index 4a2d1d395..639077125 100644
+index 1e85bc509..c48ff3e4b 100644
 --- a/runtime/syntax/2html.vim
 +++ b/runtime/syntax/2html.vim
-@@ -1774,7 +1774,7 @@ endif
+@@ -1894,7 +1894,7 @@ endif
  " Add hyperlinks
  " TODO: add option to not do this? Maybe just make the color the same as the
  " text highlight group normally is?

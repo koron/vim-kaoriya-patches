@@ -3,7 +3,7 @@
 implement 'transparency' for Windows GUI
 
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index 5600ac0c2..7cce265be 100644
+index e6b5dad54..d9d835bd7 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
 @@ -42,6 +42,13 @@ static void directx_binddc(void);
@@ -20,7 +20,7 @@ index 5600ac0c2..7cce265be 100644
  #if defined(FEAT_RENDER_OPTIONS) || defined(PROTO)
      int
  gui_mch_set_rendering_options(char_u *s)
-@@ -5183,6 +5190,8 @@ gui_mch_init(void)
+@@ -5215,6 +5222,8 @@ gui_mch_init(void)
      if (s_hwnd == NULL)
  	return FAIL;
  
@@ -29,7 +29,7 @@ index 5600ac0c2..7cce265be 100644
  #ifdef GLOBAL_IME
      global_ime_init(atom, s_hwnd);
  #endif
-@@ -5507,6 +5516,44 @@ gui_mch_set_sp_color(guicolor_T color)
+@@ -5539,6 +5548,44 @@ gui_mch_set_sp_color(guicolor_T color)
      gui.currSpColor = color;
  }
  
@@ -42,7 +42,7 @@ index 5600ac0c2..7cce265be 100644
 +    if (!hwnd)
 +	hwnd = s_hwnd;
 +
-+    /* Turn off transpareny */
++    // Turn off transpareny
 +    if (bAlpha == 255)
 +    {
 +	SetWindowLong(hwnd, GWL_EXSTYLE, ~WS_EX_LAYERED &
@@ -50,7 +50,7 @@ index 5600ac0c2..7cce265be 100644
 +	return;
 +    }
 +
-+    /* Obtain pointer to function set transparecy rate */
++    // Obtain pointer to function set transparecy rate
 +    if (!(hDll = LoadLibrary("user32.dll")))
 +	return;
 +    pfLayer = (FWINLAYER)GetProcAddress(hDll, "SetLayeredWindowAttributes");
@@ -75,35 +75,22 @@ index 5600ac0c2..7cce265be 100644
  /*
   * Multi-byte handling, originally by Sung-Hoon Baek.
 diff --git a/src/option.c b/src/option.c
-index 2146be7ef..ce8f22796 100644
+index 5c99c6966..c581e47a1 100644
 --- a/src/option.c
 +++ b/src/option.c
-@@ -2805,6 +2805,15 @@ static struct vimoption options[] =
- #else
- 			    (char_u *)NULL, PV_NONE,
- 			    {(char_u *)0L, (char_u *)0L}
-+#endif
-+			    SCTX_INIT},
-+    {"transparency", "tra", P_NUM|P_VI_DEF,
-+#ifdef USE_TRANSPARENCY
-+			    (char_u *)&p_transparency, PV_NONE,
-+			    {(char_u *)255L, (char_u *)0L}
-+#else
-+			    (char_u *)NULL, PV_NONE,
-+			    {(char_u *)0L, (char_u *)0L}
- #endif
- 			    SCTX_INIT},
-     {"titlestring", NULL,   P_STRING|P_VI_DEF|P_MLE,
-@@ -9214,6 +9223,15 @@ set_num_option(
- 	screenclear();	    /* will re-allocate the screen */
+@@ -3330,6 +3330,18 @@ set_num_option(
+ 	screenclear();	    // will re-allocate the screen
      }
  
-+#ifdef USE_TRANSPARENCY
++#if defined(FEAT_GUI_MSWIN) || defined(VIMDLL)
 +    else if ((long *)varp == &p_transparency)
 +    {
 +	if (p_transparency < 1 || p_transparency > 255)
 +	    p_transparency = 255;
-+	gui_mch_set_transparency(p_transparency);
++# ifdef VIMDLL
++	if (gui.in_use)
++# endif
++	    gui_mch_set_transparency(p_transparency);
 +    }
 +#endif
 +
@@ -111,31 +98,32 @@ index 2146be7ef..ce8f22796 100644
      {
  	if (curbuf->b_p_iminsert < 0 || curbuf->b_p_iminsert > B_IMODE_LAST)
 diff --git a/src/option.h b/src/option.h
-index 7e657ddc3..48314bf7d 100644
+index 4ccf22a87..27aae4099 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -843,6 +843,9 @@ EXTERN char_u	*p_titlestring;	/* 'titlestring' */
- #ifdef FEAT_INS_EXPAND
- EXTERN char_u	*p_tsr;		/* 'thesaurus' */
+@@ -962,6 +962,7 @@ EXTERN char_u	*p_titleold;	// 'titleold'
+ EXTERN char_u	*p_titlestring;	// 'titlestring'
  #endif
-+#ifdef USE_TRANSPARENCY
-+EXTERN long	p_transparency;	/* 'transparency'*/
-+#endif
- EXTERN int	p_ttimeout;	/* 'ttimeout' */
- EXTERN long	p_ttm;		/* 'ttimeoutlen' */
- EXTERN int	p_tbi;		/* 'ttybuiltin' */
-diff --git a/src/os_win32.h b/src/os_win32.h
-index 2169bd311..0671fe280 100644
---- a/src/os_win32.h
-+++ b/src/os_win32.h
-@@ -78,6 +78,7 @@
- 
- #if defined(FEAT_GUI_MSWIN) && !defined(VIMDLL)
- # define NO_CONSOLE		/* don't included console-only code */
-+# define USE_TRANSPARENCY
+ EXTERN char_u	*p_tsr;		// 'thesaurus'
++EXTERN long	p_transparency;	// 'transparency'
+ EXTERN int	p_ttimeout;	// 'ttimeout'
+ EXTERN long	p_ttm;		// 'ttimeoutlen'
+ EXTERN int	p_tbi;		// 'ttybuiltin'
+diff --git a/src/optiondefs.h b/src/optiondefs.h
+index 8fda8bff8..6e9701ab3 100644
+--- a/src/optiondefs.h
++++ b/src/optiondefs.h
+@@ -2653,6 +2653,10 @@ static struct vimoption options[] =
+ 			    {(char_u *)0L, (char_u *)0L}
  #endif
- 
- /* toupper() is not really broken, but it's very slow.	Probably because of
+ 			    SCTX_INIT},
++    {"transparency", "tra", P_NUM|P_VI_DEF,
++			    (char_u *)&p_transparency, PV_NONE,
++			    {(char_u *)255L, (char_u *)0L}
++			    SCTX_INIT},
+     {"ttimeout",    NULL,   P_BOOL|P_VI_DEF|P_VIM,
+ 			    (char_u *)&p_ttimeout, PV_NONE,
+ 			    {(char_u *)FALSE, (char_u *)0L} SCTX_INIT},
 diff --git a/src/proto/gui_w32.pro b/src/proto/gui_w32.pro
 index 4ead92e74..28e03b25a 100644
 --- a/src/proto/gui_w32.pro
@@ -149,10 +137,10 @@ index 4ead92e74..28e03b25a 100644
  void im_set_position(int row, int col);
  void im_set_active(int active);
 diff --git a/src/testdir/gen_opt_test.vim b/src/testdir/gen_opt_test.vim
-index 74c725fb8..b30768564 100644
+index f70623b0a..ca59c21b4 100644
 --- a/src/testdir/gen_opt_test.vim
 +++ b/src/testdir/gen_opt_test.vim
-@@ -136,6 +136,7 @@ let test_values = {
+@@ -140,6 +140,7 @@ let test_values = {
        \ 'termwintype': [['', 'winpty', 'conpty'], ['xxx']],
        \ 'toolbar': [['', 'icons', 'text'], ['xxx']],
        \ 'toolbariconsize': [['', 'tiny', 'huge'], ['xxx']],

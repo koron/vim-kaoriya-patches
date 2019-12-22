@@ -3,21 +3,21 @@
 support ff, enc and bin in modeline
 
 diff --git a/src/buffer.c b/src/buffer.c
-index 3bfb6396b..1840973aa 100644
+index da10579cc..1521d053e 100644
 --- a/src/buffer.c
 +++ b/src/buffer.c
-@@ -326,6 +326,29 @@ open_buffer(
- 	    /* Go to the buffer that was opened. */
+@@ -361,6 +361,29 @@ open_buffer(
+ 	    // Go to the buffer that was opened.
  	    aucmd_prepbuf(&aco, old_curbuf.br_buf);
  	    do_modelines(0);
 +
-+	    /* specified ff and enc, bin in modelines */
++	    // specified ff and enc, bin in modelines
 +	    if (file_ff_differs(curbuf, TRUE))
 +	    {
-+		/* reload buffer */
++		// reload buffer
 +		if (eap)
 +		{
-+		    /* restore ++ff and ++enc, ++bin if specified */
++		    // restore ++ff and ++enc, ++bin if specified
 +		    if (eap->force_enc)
 +		    {
 +			char_u *fenc = enc_canonize(eap->cmd + eap->force_enc);

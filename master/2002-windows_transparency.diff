@@ -3,7 +3,7 @@
 implement 'transparency' for Windows GUI
 
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index e6b5dad54..d9d835bd7 100644
+index e6b5dad54..9b7aefe31 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
 @@ -42,6 +42,13 @@ static void directx_binddc(void);
@@ -24,7 +24,7 @@ index e6b5dad54..d9d835bd7 100644
      if (s_hwnd == NULL)
  	return FAIL;
  
-+    w32_set_transparency(s_hwnd, 255);
++    w32_set_transparency(s_hwnd, p_transparency);
 +
  #ifdef GLOBAL_IME
      global_ime_init(atom, s_hwnd);

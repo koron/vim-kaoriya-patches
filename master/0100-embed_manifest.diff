@@ -3,17 +3,17 @@
 embed manifest file to EXE and DLL when available (for MSVC9)
 
 diff --git a/src/Make_mvc.mak b/src/Make_mvc.mak
-index 9da4ab5ff..02457dbfc 100644
+index 811ab9eed..62bc43722 100644
 --- a/src/Make_mvc.mak
 +++ b/src/Make_mvc.mak
-@@ -1345,28 +1345,34 @@ install.exe: dosinst.c dosinst.h version.h
+@@ -1390,13 +1390,16 @@ install.exe: dosinst.c dosinst.h version.h
  		-link -subsystem:$(SUBSYSTEM_TOOLS)
  	- if exist install.exe del install.exe
  	ren dosinst.exe install.exe
 +	IF EXIST $@.manifest mt -nologo -manifest $@.manifest -outputresource:$@;1
  
  uninstall.exe: uninstall.c dosinst.h version.h
- 	$(CC) /nologo -DNDEBUG -DWIN32 uninstall.c shell32.lib advapi32.lib \
+ 	$(CC) $(CFLAGS_INST) uninstall.c shell32.lib advapi32.lib \
  		-link -subsystem:$(SUBSYSTEM_TOOLS)
 +	IF EXIST $@.manifest mt -nologo -manifest $@.manifest -outputresource:$@;1
  
@@ -23,25 +23,7 @@ index 9da4ab5ff..02457dbfc 100644
  
  xxd/xxd.exe: xxd/xxd.c
  	cd xxd
- 	$(MAKE) /NOLOGO -f Make_mvc.mak $(MAKEFLAGS_TOOLS)
- 	cd ..
-+	IF EXIST $@.manifest mt -nologo -manifest $@.manifest -outputresource:$@;1
- 
- tee/tee.exe: tee/tee.c
- 	cd tee
- 	$(MAKE) /NOLOGO -f Make_mvc.mak $(MAKEFLAGS_TOOLS)
- 	cd ..
-+	IF EXIST $@.manifest mt -nologo -manifest $@.manifest -outputresource:$@;1
- 
- GvimExt/gvimext.dll: GvimExt/gvimext.cpp GvimExt/gvimext.rc GvimExt/gvimext.h
- 	cd GvimExt
- 	$(MAKE) /NOLOGO -f Makefile $(MAKEFLAGS_GVIMEXT)
- 	cd ..
-+	IF EXIST $@.manifest mt -nologo -manifest $@.manifest -outputresource:$@;2
- 
- 
- tags: notags
-@@ -1379,6 +1385,7 @@ clean: testclean
+@@ -1424,6 +1427,7 @@ clean: testclean
  	- if exist $(OUTDIR)/nul $(DEL_TREE) $(OUTDIR)
  	- if exist *.obj del *.obj
  	- if exist $(VIM).exe del $(VIM).exe
@@ -49,6 +31,18 @@ index 9da4ab5ff..02457dbfc 100644
  	- if exist $(VIM).ilk del $(VIM).ilk
  	- if exist $(VIM).pdb del $(VIM).pdb
  	- if exist $(VIM).map del $(VIM).map
+diff --git a/src/tee/Make_mvc.mak b/src/tee/Make_mvc.mak
+index 950100d3c..179965600 100644
+--- a/src/tee/Make_mvc.mak
++++ b/src/tee/Make_mvc.mak
+@@ -10,6 +10,7 @@ CFLAGS=/O2 /nologo
+ 
+ tee.exe: tee.obj
+ 	$(CC) $(CFLAGS) /Fo$@ $** /link /subsystem:$(SUBSYSTEM)
++	IF EXIST $@.manifest mt -nologo -manifest $@.manifest -outputresource:$@;1
+ 
+ tee.obj: tee.c
+ 	$(CC) $(CFLAGS) /c $**
 diff --git a/src/xxd/Make_mvc.mak b/src/xxd/Make_mvc.mak
 index 0133d7311..dd71468af 100644
 --- a/src/xxd/Make_mvc.mak

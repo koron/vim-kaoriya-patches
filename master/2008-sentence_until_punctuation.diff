@@ -1,10 +1,10 @@
 # HG changeset patch
 # Parent bf0b31d6c719c20d5b5e98b66e6d6f77c601a333
-diff --git a/src/search.c b/src/search.c
-index 1a5dc1a42..7a97b2ee9 100644
---- a/src/search.c
-+++ b/src/search.c
-@@ -2892,7 +2892,8 @@ findsent(int dir, long count)
+diff --git a/src/textobject.c b/src/textobject.c
+index 23bdc9666..2212d53b3 100644
+--- a/src/textobject.c
++++ b/src/textobject.c
+@@ -74,7 +74,8 @@ findsent(int dir, long count)
  	// go back to the previous non-white non-punctuation character
  	found_dot = FALSE;
  	while (c = gchar_pos(&pos), VIM_ISWHITE(c)
@@ -14,7 +14,7 @@ index 1a5dc1a42..7a97b2ee9 100644
  	{
  	    tpos = pos;
  	    if (decl(&tpos) == -1 || (LINEEMPTY(tpos.lnum) && dir == FORWARD))
-@@ -2941,6 +2942,22 @@ findsent(int dir, long count)
+@@ -123,6 +124,22 @@ findsent(int dir, long count)
  		    break;
  		}
  	    }

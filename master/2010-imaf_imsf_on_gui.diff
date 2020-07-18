@@ -1,8 +1,8 @@
 diff --git a/src/gui.c b/src/gui.c
-index f74a0bd9f..3986b411a 100644
+index 2b657c3b3..96bc179fd 100644
 --- a/src/gui.c
 +++ b/src/gui.c
-@@ -1174,7 +1174,7 @@ gui_update_cursor(
+@@ -1186,7 +1186,7 @@ gui_update_cursor(
  		guicolor_T fg, bg;
  
  		if (
@@ -11,27 +11,24 @@ index f74a0bd9f..3986b411a 100644
  			preedit_get_status()
  # else
  			im_get_status()
-diff --git a/src/mbyte.c b/src/mbyte.c
-index 52591cb8f..213b76065 100644
---- a/src/mbyte.c
-+++ b/src/mbyte.c
-@@ -4792,10 +4792,7 @@ iconv_end(void)
- # endif // USE_ICONV
- 
- 
--#ifdef FEAT_GUI
--# define USE_IMACTIVATEFUNC (!gui.in_use && *p_imaf != NUL)
--# define USE_IMSTATUSFUNC (!gui.in_use && *p_imsf != NUL)
--#else
-+#ifdef FEAT_EVAL
- # define USE_IMACTIVATEFUNC (*p_imaf != NUL)
- # define USE_IMSTATUSFUNC (*p_imsf != NUL)
+diff --git a/src/gui_xim.c b/src/gui_xim.c
+index ee9230133..76b50e76a 100644
+--- a/src/gui_xim.c
++++ b/src/gui_xim.c
+@@ -57,7 +57,7 @@ xim_log(char *s, ...)
+ }
  #endif
+ 
+-#if defined(FEAT_GUI_MSWIN)
++#if defined(FEAT_GUI)
+ # define USE_IMACTIVATEFUNC (!gui.in_use && *p_imaf != NUL)
+ # define USE_IMSTATUSFUNC (!gui.in_use && *p_imsf != NUL)
+ #else
 diff --git a/src/ui.c b/src/ui.c
-index f4f7bcf83..7c031541f 100644
+index e473f8525..7fa455dc6 100644
 --- a/src/ui.c
 +++ b/src/ui.c
-@@ -3059,12 +3059,14 @@ im_save_status(long *psave)
+@@ -1173,12 +1173,14 @@ im_save_status(long *psave)
      // And don't save when the GUI is running but our window doesn't have
      // input focus (e.g., when a find dialog is open).
      if (!p_imdisable && KeyTyped && !KeyStuffed

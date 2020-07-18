@@ -3,22 +3,22 @@
 add +kaoriya marks
 
 diff --git a/src/evalfunc.c b/src/evalfunc.c
-index 08befc731..3ce778eee 100644
+index 9533db92b..2db3e6534 100644
 --- a/src/evalfunc.c
 +++ b/src/evalfunc.c
-@@ -3422,6 +3422,7 @@ f_has(typval_T *argvars, typval_T *rettv)
- #ifdef FEAT_JUMPLIST
- 	"jumplist",
+@@ -3962,6 +3962,7 @@ f_has(typval_T *argvars, typval_T *rettv)
+ 		0
  #endif
-+	"kaoriya",
+ 		},
++	{"kaoriya", 1},
+ 	{"keymap",
  #ifdef FEAT_KEYMAP
- 	"keymap",
- #endif
+ 		1
 diff --git a/src/version.c b/src/version.c
-index cbf9af57b..38a5123d1 100644
+index ae856c6f7..519934a3b 100644
 --- a/src/version.c
 +++ b/src/version.c
-@@ -304,6 +304,7 @@ static char *(features[]) =
+@@ -320,6 +320,7 @@ static char *(features[]) =
  #else
  	"-jumplist",
  #endif

@@ -1,4 +1,4 @@
-python2-warn.diff #+experiments
+iflua-compile-failure.diff
 0001-rich_icon.diff
 0100-embed_manifest.diff
 2001-improve_modelines.diff
@@ -13,5 +13,4 @@ python2-warn.diff #+experiments
 4001-ftp_autolink_2html.diff
 4002-japanese_punctuation_javadoc.diff
 4003-disable-irreparable-settings.diff
-X011-GH592-fix-height-adjustment.diff #+disabled
 0000-kaoriya_marks.diff

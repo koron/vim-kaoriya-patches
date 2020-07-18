@@ -3,6 +3,31 @@
 # Parent  ce73d82e98a71a688494690978f4e8fe3cc010f6
 Add C/Migemo feature
 
+diff --git a/runtime/doc/eval.txt b/runtime/doc/eval.txt
+index 38b2783da..2dbbd0d03 100644
+--- a/runtime/doc/eval.txt
++++ b/runtime/doc/eval.txt
+@@ -2630,6 +2630,7 @@ matchstrpos({expr}, {pat} [, {start} [, {count}]])
+ 				List	{count}'th match of {pat} in {expr}
+ max({expr})			Number	maximum value of items in {expr}
+ menu_info({name} [, {mode}])	Dict	get menu item information
++migemo({string})		String	convert string with C/Migemo
+ min({expr})			Number	minimum value of items in {expr}
+ mkdir({name} [, {path} [, {prot}]])
+ 				Number	create directory {name}
+@@ -7372,8 +7373,11 @@ menu_info({name} [, {mode}])				*menu_info()*
+ 		Can also be used as a |method|: >
+ 			GetMenuName()->menu_info('v')
+ 
++<
++migemo({string})					*migemo()*
++		Return a string which convert {string} with C/Migemo.
+ 
+-<							*min()*
++							*min()*
+ min({expr})	Return the minimum value of all items in {expr}.
+ 		{expr} can be a |List| or a |Dictionary|.  For a Dictionary,
+ 		it returns the minimum of all values in the Dictionary.
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
 index acb760aeb..d49d4e957 100644
 --- a/runtime/doc/options.txt
@@ -40,6 +65,19 @@ index acb760aeb..d49d4e957 100644
  						*'mkspellmem'* *'msm'*
  'mkspellmem' 'msm'	string	(default "460000,2000,500")
  			global
+diff --git a/runtime/doc/usr_41.txt b/runtime/doc/usr_41.txt
+index bde1dd1dd..d6da344eb 100644
+--- a/runtime/doc/usr_41.txt
++++ b/runtime/doc/usr_41.txt
+@@ -1178,6 +1178,8 @@ Various:					*various-functions*
+ 	pyxeval()		evaluate |python_x| expression
+ 	rubyeval()		evaluate |Ruby| expression
+ 
++	migemo()		convert a string with Migemo
++
+ 	debugbreak()		interrupt a program being debugged
+ 
+ ==============================================================================
 diff --git a/src/Make_mvc.mak b/src/Make_mvc.mak
 index 62bc43722..4d8f32104 100644
 --- a/src/Make_mvc.mak

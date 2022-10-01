@@ -1,27 +1,25 @@
-# HG changeset patch
-# Parent a079ef0ce00173db42e2f60beee84b5cec71a505
 add +kaoriya marks
 
 diff --git a/src/evalfunc.c b/src/evalfunc.c
-index 9533db92b..2db3e6534 100644
+index 3af865375..9a8b25120 100644
 --- a/src/evalfunc.c
 +++ b/src/evalfunc.c
-@@ -3962,6 +3962,7 @@ f_has(typval_T *argvars, typval_T *rettv)
- 		0
+@@ -5836,6 +5836,7 @@ f_has(typval_T *argvars, typval_T *rettv)
  #endif
  		},
+ 	{"jumplist", 1},
 +	{"kaoriya", 1},
  	{"keymap",
  #ifdef FEAT_KEYMAP
  		1
 diff --git a/src/version.c b/src/version.c
-index ae856c6f7..519934a3b 100644
+index 691a4880f..e629494ab 100644
 --- a/src/version.c
 +++ b/src/version.c
-@@ -320,6 +320,7 @@ static char *(features[]) =
- #else
- 	"-jumplist",
+@@ -287,6 +287,7 @@ static char *(features[]) =
+ 	"-job",
  #endif
+ 	"+jumplist",
 +	"+kaoriya",
  #ifdef FEAT_KEYMAP
  	"+keymap",

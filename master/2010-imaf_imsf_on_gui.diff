@@ -1,8 +1,10 @@
+support 'imaf' and 'imsf' on GTK
+
 diff --git a/src/gui.c b/src/gui.c
-index 2b657c3b3..96bc179fd 100644
+index e94f0ed47..3039b56da 100644
 --- a/src/gui.c
 +++ b/src/gui.c
-@@ -1186,7 +1186,7 @@ gui_update_cursor(
+@@ -1243,7 +1243,7 @@ gui_update_cursor(
  		guicolor_T fg, bg;
  
  		if (
@@ -12,10 +14,10 @@ index 2b657c3b3..96bc179fd 100644
  # else
  			im_get_status()
 diff --git a/src/gui_xim.c b/src/gui_xim.c
-index ee9230133..76b50e76a 100644
+index d384cbc05..aeecd9b94 100644
 --- a/src/gui_xim.c
 +++ b/src/gui_xim.c
-@@ -57,7 +57,7 @@ xim_log(char *s, ...)
+@@ -59,7 +59,7 @@ xim_log(char *s, ...)
  }
  #endif
  
@@ -25,10 +27,10 @@ index ee9230133..76b50e76a 100644
  # define USE_IMSTATUSFUNC (!gui.in_use && *p_imsf != NUL)
  #else
 diff --git a/src/ui.c b/src/ui.c
-index e473f8525..7fa455dc6 100644
+index 8368c3054..0bfddd5b9 100644
 --- a/src/ui.c
 +++ b/src/ui.c
-@@ -1173,12 +1173,14 @@ im_save_status(long *psave)
+@@ -1184,12 +1184,14 @@ im_save_status(long *psave)
      // And don't save when the GUI is running but our window doesn't have
      // input focus (e.g., when a find dialog is open).
      if (!p_imdisable && KeyTyped && !KeyStuffed

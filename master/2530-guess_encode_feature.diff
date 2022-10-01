@@ -1,12 +1,10 @@
-# HG changeset patch
-# Parent 1d03b0abe77114c204201b3dfebe8e7af48270d7
-Add guess encode feature
+add guess encode feature
 
 diff --git a/src/evalfunc.c b/src/evalfunc.c
-index 0a044b471..9533db92b 100644
+index 1742450f5..3af865375 100644
 --- a/src/evalfunc.c
 +++ b/src/evalfunc.c
-@@ -3848,6 +3848,7 @@ f_has(typval_T *argvars, typval_T *rettv)
+@@ -5746,6 +5746,7 @@ f_has(typval_T *argvars, typval_T *rettv)
  		0
  #endif
  		},
@@ -15,10 +13,10 @@ index 0a044b471..9533db92b 100644
  #ifdef FEAT_GUI
  		1
 diff --git a/src/fileio.c b/src/fileio.c
-index 189d4f41a..bb20191d1 100644
+index 701521a41..4e5ba6a1f 100644
 --- a/src/fileio.c
 +++ b/src/fileio.c
-@@ -82,6 +82,242 @@ filemess(
+@@ -89,6 +89,242 @@ filemess(
      msg_scrolled_ign = FALSE;
  }
  
@@ -261,7 +259,7 @@ index 189d4f41a..bb20191d1 100644
  /*
   * Read lines from file "fname" into the buffer after line "from".
   *
-@@ -954,6 +1190,17 @@ retry:
+@@ -978,6 +1214,17 @@ retry:
  	}
      }
  
@@ -280,10 +278,10 @@ index 189d4f41a..bb20191d1 100644
       * Conversion may be required when the encoding of the file is different
       * from 'encoding' or 'encoding' is UTF-16, UCS-2 or UCS-4.
 diff --git a/src/version.c b/src/version.c
-index 2fc94bf37..ae856c6f7 100644
+index b633317b3..691a4880f 100644
 --- a/src/version.c
 +++ b/src/version.c
-@@ -293,6 +293,7 @@ static char *(features[]) =
+@@ -264,6 +264,7 @@ static char *(features[]) =
  #else
  	"-gettext",
  #endif

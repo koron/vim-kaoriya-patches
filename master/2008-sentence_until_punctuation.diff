@@ -1,7 +1,7 @@
-# HG changeset patch
-# Parent bf0b31d6c719c20d5b5e98b66e6d6f77c601a333
+sentence recognizes Japanese punctuations
+
 diff --git a/src/textobject.c b/src/textobject.c
-index 23bdc9666..2212d53b3 100644
+index d77ec961a..ab6efb8db 100644
 --- a/src/textobject.c
 +++ b/src/textobject.c
 @@ -74,7 +74,8 @@ findsent(int dir, long count)

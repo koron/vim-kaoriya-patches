@@ -5,6 +5,7 @@
 2003-charspace.diff
 2004-caption_switch.diff
 2005-ambiwidth_auto.diff
+2006-directwrite-ambiwidth-auto.diff
 2008-sentence_until_punctuation.diff
 2010-imaf_imsf_on_gui.diff
 2520-migemo_feature.diff

@@ -1,38 +1,22 @@
-# HG changeset patch
-# Parent 3e9f602e3362e01b850845651357f0a6886d7875
-# Parent  ce73d82e98a71a688494690978f4e8fe3cc010f6
-Add C/Migemo feature
+C/Migemo feature
 
-diff --git a/runtime/doc/eval.txt b/runtime/doc/eval.txt
-index 38b2783da..2dbbd0d03 100644
---- a/runtime/doc/eval.txt
-+++ b/runtime/doc/eval.txt
-@@ -2630,6 +2630,7 @@ matchstrpos({expr}, {pat} [, {start} [, {count}]])
+diff --git a/runtime/doc/builtin.txt b/runtime/doc/builtin.txt
+index e5740a587..103a0296a 100644
+--- a/runtime/doc/builtin.txt
++++ b/runtime/doc/builtin.txt
+@@ -377,6 +377,7 @@ matchstrpos({expr}, {pat} [, {start} [, {count}]])
  				List	{count}'th match of {pat} in {expr}
  max({expr})			Number	maximum value of items in {expr}
  menu_info({name} [, {mode}])	Dict	get menu item information
-+migemo({string})		String	convert string with C/Migemo
++migemo({string})		String  expand {string} with C/Migemo
  min({expr})			Number	minimum value of items in {expr}
  mkdir({name} [, {path} [, {prot}]])
  				Number	create directory {name}
-@@ -7372,8 +7373,11 @@ menu_info({name} [, {mode}])				*menu_info()*
- 		Can also be used as a |method|: >
- 			GetMenuName()->menu_info('v')
- 
-+<
-+migemo({string})					*migemo()*
-+		Return a string which convert {string} with C/Migemo.
- 
--<							*min()*
-+							*min()*
- min({expr})	Return the minimum value of all items in {expr}.
- 		{expr} can be a |List| or a |Dictionary|.  For a Dictionary,
- 		it returns the minimum of all values in the Dictionary.
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index acb760aeb..d49d4e957 100644
+index a617670dc..60b742021 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
-@@ -5128,6 +5128,32 @@ A jump table for the options with a short description can be found at |Q_op|.
+@@ -5395,6 +5395,32 @@ A jump table for the options with a short description can be found at |Q_op|.
  	generated from a list of items, e.g., the Buffers menu.  Changing this
  	option has no direct effect, the menu must be refreshed first.
  
@@ -66,10 +50,10 @@ index acb760aeb..d49d4e957 100644
  'mkspellmem' 'msm'	string	(default "460000,2000,500")
  			global
 diff --git a/runtime/doc/usr_41.txt b/runtime/doc/usr_41.txt
-index bde1dd1dd..d6da344eb 100644
+index e2d5cfe68..6994c17ba 100644
 --- a/runtime/doc/usr_41.txt
 +++ b/runtime/doc/usr_41.txt
-@@ -1178,6 +1178,8 @@ Various:					*various-functions*
+@@ -1376,6 +1376,8 @@ Various:					*various-functions*
  	pyxeval()		evaluate |python_x| expression
  	rubyeval()		evaluate |Ruby| expression
  
@@ -79,10 +63,10 @@ index bde1dd1dd..d6da344eb 100644
  
  ==============================================================================
 diff --git a/src/Make_mvc.mak b/src/Make_mvc.mak
-index 62bc43722..4d8f32104 100644
+index f3fd51b48..57aaa22f5 100644
 --- a/src/Make_mvc.mak
 +++ b/src/Make_mvc.mak
-@@ -945,6 +945,14 @@ GETTEXT = yes
+@@ -852,6 +852,14 @@ GETTEXT = yes
  CFLAGS = $(CFLAGS) -DDYNAMIC_GETTEXT
  !endif
  
@@ -98,10 +82,10 @@ index 62bc43722..4d8f32104 100644
  !ifdef TCL
  ! ifndef TCL_VER
 diff --git a/src/config.h.in b/src/config.h.in
-index b11448021..f7dbc1921 100644
+index 875d9afd5..0a9afaa9a 100644
 --- a/src/config.h.in
 +++ b/src/config.h.in
-@@ -175,6 +175,7 @@
+@@ -174,6 +174,7 @@
  #undef HAVE_LOCALTIME_R
  #undef HAVE_LSTAT
  #undef HAVE_MEMSET
@@ -109,7 +93,7 @@ index b11448021..f7dbc1921 100644
  #undef HAVE_MKDTEMP
  #undef HAVE_NANOSLEEP
  #undef HAVE_NL_LANGINFO_CODESET
-@@ -244,6 +245,7 @@
+@@ -246,6 +247,7 @@
  #undef HAVE_LIBGEN_H
  #undef HAVE_LIBINTL_H
  #undef HAVE_LOCALE_H
@@ -118,10 +102,10 @@ index b11448021..f7dbc1921 100644
  #undef HAVE_NDIR_H
  #undef HAVE_POLL_H
 diff --git a/src/configure.ac b/src/configure.ac
-index 19ce4c7a5..1510568b7 100644
+index f9d6e42c1..2218e688c 100644
 --- a/src/configure.ac
 +++ b/src/configure.ac
-@@ -3317,7 +3317,7 @@ fi
+@@ -3265,7 +3265,7 @@ fi
  AC_CHECK_HEADERS(stdint.h stdlib.h string.h \
  	sys/select.h sys/utsname.h termcap.h fcntl.h \
  	sgtty.h sys/ioctl.h sys/time.h sys/types.h \
@@ -130,7 +114,7 @@ index 19ce4c7a5..1510568b7 100644
  	unistd.h stropts.h errno.h sys/resource.h \
  	sys/systeminfo.h locale.h sys/stream.h termios.h \
  	libc.h sys/statfs.h poll.h sys/poll.h pwd.h \
-@@ -4371,6 +4371,19 @@ else
+@@ -4469,6 +4469,19 @@ else
    AC_MSG_RESULT(yes)
  fi
  
@@ -151,10 +135,10 @@ index 19ce4c7a5..1510568b7 100644
  AC_CHECK_HEADER(dlfcn.h, DLL=dlfcn.h, [AC_CHECK_HEADER(dl.h, DLL=dl.h)])
  if test x${DLL} = xdlfcn.h; then
 diff --git a/src/evalfunc.c b/src/evalfunc.c
-index 3f38fa7f5..0a044b471 100644
+index 5c6591c42..1742450f5 100644
 --- a/src/evalfunc.c
 +++ b/src/evalfunc.c
-@@ -138,6 +138,7 @@ static void f_matchlist(typval_T *argvars, typval_T *rettv);
+@@ -104,6 +104,7 @@ static void f_matchlist(typval_T *argvars, typval_T *rettv);
  static void f_matchstr(typval_T *argvars, typval_T *rettv);
  static void f_matchstrpos(typval_T *argvars, typval_T *rettv);
  static void f_max(typval_T *argvars, typval_T *rettv);
@@ -162,15 +146,16 @@ index 3f38fa7f5..0a044b471 100644
  static void f_min(typval_T *argvars, typval_T *rettv);
  #ifdef FEAT_MZSCHEME
  static void f_mzeval(typval_T *argvars, typval_T *rettv);
-@@ -740,6 +741,7 @@ static funcentry_T global_functions[] =
+@@ -2227,6 +2228,8 @@ static funcentry_T global_functions[] =
  	    NULL
  #endif
  			},
-+    {"migemo",		1, 1, FEARG_1,	  ret_string,	f_migemo},
-     {"min",		1, 1, FEARG_1,	  ret_any,	f_min},
-     {"mkdir",		1, 3, FEARG_1,	  ret_number,	f_mkdir},
-     {"mode",		0, 1, FEARG_1,	  ret_string,	f_mode},
-@@ -4009,6 +4011,13 @@ f_has(typval_T *argvars, typval_T *rettv)
++    {"migemo",		1, 1, FEARG_1,	    arg1_string,
++			ret_string,	    f_migemo},
+     {"min",		1, 1, FEARG_1,	    arg1_list_or_dict,
+ 			ret_number,	    f_min},
+     {"mkdir",		1, 3, FEARG_1,	    arg3_string_string_number,
+@@ -5876,6 +5879,13 @@ f_has(typval_T *argvars, typval_T *rettv)
  		1
  #else
  		0
@@ -184,9 +169,9 @@ index 3f38fa7f5..0a044b471 100644
  #endif
  		},
  	{"mksession",
-@@ -4623,6 +4632,10 @@ f_has(typval_T *argvars, typval_T *rettv)
- 	else if (STRICMP(name, "tcl") == 0)
- 	    n = tcl_enabled(FALSE);
+@@ -6468,6 +6478,10 @@ f_has(typval_T *argvars, typval_T *rettv)
+ 	else if (STRICMP(name, "sodium") == 0)
+ 	    n = sodium_enabled(FALSE);
  #endif
 +#ifdef USE_MIGEMO
 +	else if (STRICMP(name, "migemo") == 0)
@@ -195,7 +180,7 @@ index 3f38fa7f5..0a044b471 100644
  #if defined(FEAT_TERMINAL) && defined(MSWIN)
  	else if (STRICMP(name, "terminal") == 0)
  	    n = terminal_enabled();
-@@ -5770,6 +5783,24 @@ f_max(typval_T *argvars, typval_T *rettv)
+@@ -7818,6 +7832,24 @@ f_max(typval_T *argvars, typval_T *rettv)
      max_min(argvars, rettv, TRUE);
  }
  
@@ -221,10 +206,10 @@ index 3f38fa7f5..0a044b471 100644
   * "min()" function
   */
 diff --git a/src/ex_getln.c b/src/ex_getln.c
-index 702b63db5..141a4a17b 100644
+index 02205814d..a8142b7c0 100644
 --- a/src/ex_getln.c
 +++ b/src/ex_getln.c
-@@ -392,6 +392,17 @@ may_do_incsearch_highlighting(
+@@ -422,6 +422,17 @@ may_do_incsearch_highlighting(
      int		use_last_pat;
      int		did_do_incsearch = is_state->did_incsearch;
      int		search_delim;
@@ -242,7 +227,7 @@ index 702b63db5..141a4a17b 100644
  
      // Parsing range may already set the last search pattern.
      // NOTE: must call restore_last_search_pattern() before returning!
-@@ -459,6 +470,10 @@ may_do_incsearch_highlighting(
+@@ -486,6 +497,10 @@ may_do_incsearch_highlighting(
  	    search_flags += SEARCH_KEEP;
  	if (search_first_line != 0)
  	    search_flags += SEARCH_START;
@@ -253,7 +238,7 @@ index 702b63db5..141a4a17b 100644
  	ccline.cmdbuff[skiplen + patlen] = NUL;
  #ifdef FEAT_RELTIME
  	CLEAR_FIELD(sia);
-@@ -573,6 +588,17 @@ may_adjust_incsearch_highlighting(
+@@ -602,6 +617,17 @@ may_adjust_incsearch_highlighting(
      int	    i;
      int	    save;
      int	    search_delim;
@@ -271,7 +256,7 @@ index 702b63db5..141a4a17b 100644
  
      // Parsing range may already set the last search pattern.
      // NOTE: must call restore_last_search_pattern() before returning!
-@@ -613,6 +639,10 @@ may_adjust_incsearch_highlighting(
+@@ -648,6 +674,10 @@ may_adjust_incsearch_highlighting(
  	t = is_state->match_start;
      if (!p_hls)
  	search_flags += SEARCH_KEEP;
@@ -283,10 +268,10 @@ index 702b63db5..141a4a17b 100644
      save = pat[patlen];
      pat[patlen] = NUL;
 diff --git a/src/feature.h b/src/feature.h
-index 49175272f..0a28872f6 100644
+index 5eacd5e95..07f833d75 100644
 --- a/src/feature.h
 +++ b/src/feature.h
-@@ -1261,6 +1261,16 @@
+@@ -1155,6 +1155,16 @@
  # define FEAT_FILTERPIPE
  #endif
  
@@ -304,10 +289,10 @@ index 49175272f..0a28872f6 100644
   * +vtp: Win32 virtual console.
   */
 diff --git a/src/main.c b/src/main.c
-index 39e67e998..4026f3a30 100644
+index c0059c193..d2a641c12 100644
 --- a/src/main.c
 +++ b/src/main.c
-@@ -1696,6 +1696,9 @@ getout(int exitval)
+@@ -1723,6 +1723,9 @@ getout(int exitval)
  #ifdef FEAT_PERL
      perl_end();
  #endif
@@ -318,23 +303,23 @@ index 39e67e998..4026f3a30 100644
      iconv_end();
  #endif
 diff --git a/src/normal.c b/src/normal.c
-index ae2c1f5e3..4ebd40b4a 100644
+index 05397380c..b1bc20161 100644
 --- a/src/normal.c
 +++ b/src/normal.c
-@@ -4244,7 +4244,12 @@ nv_search(cmdarg_T *cap)
+@@ -4155,7 +4155,12 @@ nv_search(cmdarg_T *cap)
  
      // When using 'incsearch' the cursor may be moved to set a different search
      // start position.
 +#ifdef USE_MIGEMO
 +    cap->searchbuf = getcmdline(cap->cmdchar,
-+	    (cap->nchar == 'g' ? -cap->count1 - 1 : cap->count1), 0, TRUE);
++	    (cap->nchar == 'g' ? -cap->count1 - 1 : cap->count1), 0, 0);
 +#else
-     cap->searchbuf = getcmdline(cap->cmdchar, cap->count1, 0, TRUE);
+     cap->searchbuf = getcmdline(cap->cmdchar, cap->count1, 0, 0);
 +#endif
  
      if (cap->searchbuf == NULL)
      {
-@@ -4253,8 +4258,11 @@ nv_search(cmdarg_T *cap)
+@@ -4164,8 +4169,11 @@ nv_search(cmdarg_T *cap)
      }
  
      (void)normal_search(cap, cap->cmdchar, cap->searchbuf,
@@ -347,8 +332,8 @@ index ae2c1f5e3..4ebd40b4a 100644
 +						      ? 0 : SEARCH_MARK), NULL);
  }
  
- /*
-@@ -6215,7 +6223,9 @@ nv_g_cmd(cmdarg_T *cap)
+ 
+@@ -6152,7 +6160,9 @@ nv_g_cmd(cmdarg_T *cap)
      case '~':
      case 'u':
      case 'U':
@@ -358,7 +343,7 @@ index ae2c1f5e3..4ebd40b4a 100644
      case '@':
  	nv_operator(cap);
  	break;
-@@ -6311,6 +6321,25 @@ nv_g_cmd(cmdarg_T *cap)
+@@ -6238,6 +6248,25 @@ nv_g_cmd(cmdarg_T *cap)
  							 FALSE, FALSE, FALSE);
  	break;
  
@@ -385,10 +370,10 @@ index ae2c1f5e3..4ebd40b4a 100644
  	clearopbeep(oap);
  	break;
 diff --git a/src/option.c b/src/option.c
-index 74f5a88de..3cdf3528c 100644
+index 363d07d7f..52fb17c7a 100644
 --- a/src/option.c
 +++ b/src/option.c
-@@ -5317,6 +5317,9 @@ get_varp(struct vimoption *p)
+@@ -5525,6 +5525,9 @@ get_varp(struct vimoption *p)
  	case PV_ML:	return (char_u *)&(curbuf->b_p_ml);
  	case PV_MPS:	return (char_u *)&(curbuf->b_p_mps);
  	case PV_MA:	return (char_u *)&(curbuf->b_p_ma);
@@ -398,7 +383,7 @@ index 74f5a88de..3cdf3528c 100644
  	case PV_MOD:	return (char_u *)&(curbuf->b_changed);
  	case PV_NF:	return (char_u *)&(curbuf->b_p_nf);
  	case PV_PI:	return (char_u *)&(curbuf->b_p_pi);
-@@ -5889,6 +5892,12 @@ buf_copy_options(buf_T *buf, int flags)
+@@ -6110,6 +6113,12 @@ buf_copy_options(buf_T *buf, int flags)
  	    buf->b_p_imsearch = p_imsearch;
  	    COPY_OPT_SCTX(buf, BV_IMS);
  
@@ -411,23 +396,11 @@ index 74f5a88de..3cdf3528c 100644
  	    // options that are normally global but also have a local value
  	    // are not copied, start using the global value
  	    buf->b_p_ar = -1;
-@@ -6490,6 +6499,11 @@ option_value2string(
- 	else
- 	    vim_strncpy(NameBuff, varp, MAXPATHL - 1);
-     }
-+
-+#ifdef USE_MIGEMO
-+    if (varp == &p_migdict)
-+	reset_migemo(FALSE);
-+#endif
- }
- 
- /*
 diff --git a/src/option.h b/src/option.h
-index eb5a2d71a..7cdff5bfb 100644
+index 4e56f81d5..7e75f8ffc 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -734,6 +734,10 @@ EXTERN long	p_mmt;		// 'maxmemtot'
+@@ -743,6 +743,10 @@ EXTERN long	p_mmt;		// 'maxmemtot'
  #ifdef FEAT_MENU
  EXTERN long	p_mis;		// 'menuitems'
  #endif
@@ -438,8 +411,8 @@ index eb5a2d71a..7cdff5bfb 100644
  #ifdef FEAT_SPELL
  EXTERN char_u	*p_msm;		// 'mkspellmem'
  #endif
-@@ -1166,6 +1170,9 @@ enum
- #endif
+@@ -1168,6 +1172,9 @@ enum
+     , BV_LW
      , BV_MENC
      , BV_MA
 +#ifdef USE_MIGEMO
@@ -449,11 +422,11 @@ index eb5a2d71a..7cdff5bfb 100644
      , BV_MOD
      , BV_MPS
 diff --git a/src/optiondefs.h b/src/optiondefs.h
-index 144d4265a..63eccfa04 100644
+index 93bc177cb..932995991 100644
 --- a/src/optiondefs.h
 +++ b/src/optiondefs.h
-@@ -104,6 +104,9 @@
- #endif
+@@ -99,6 +99,9 @@
+ #define PV_LW		OPT_BOTH(OPT_BUF(BV_LW))
  #define PV_MENC		OPT_BOTH(OPT_BUF(BV_MENC))
  #define PV_MA		OPT_BUF(BV_MA)
 +#ifdef USE_MIGEMO
@@ -462,23 +435,45 @@ index 144d4265a..63eccfa04 100644
  #define PV_ML		OPT_BUF(BV_ML)
  #define PV_MOD		OPT_BUF(BV_MOD)
  #define PV_MPS		OPT_BUF(BV_MPS)
-@@ -1704,6 +1707,14 @@ static struct vimoption options[] =
+@@ -1632,6 +1635,20 @@ static struct vimoption options[] =
      {"mesg",	    NULL,   P_BOOL|P_VI_DEF,
  			    (char_u *)NULL, PV_NONE,
  			    {(char_u *)FALSE, (char_u *)0L} SCTX_INIT},
-+#ifdef USE_MIGEMO
 +    {"migemo",	    "mgm",  P_BOOL|P_VI_DEF|P_VIM,
++#ifdef USE_MIGEMO
 +			    (char_u *)&p_migemo, PV_MIG,
++#else
++			    (char_u *)NULL, PV_NONE,
++#endif
 +			    {(char_u *)FALSE, (char_u *)0L} SCTX_INIT},
 +    {"migemodict",  "mgd",  P_STRING|P_EXPAND|P_VI_DEF|P_VIM,
++#ifdef USE_MIGEMO
 +			    (char_u *)&p_migdict, PV_NONE,
++#else
++			    (char_u *)NULL, PV_NONE,
++#endif
 +			    {(char_u *)"", (char_u *)0L} SCTX_INIT},
-+#endif // USE_MIGEMO
      {"mkspellmem",  "msm",  P_STRING|P_VI_DEF|P_EXPAND|P_SECURE,
  #ifdef FEAT_SPELL
  			    (char_u *)&p_msm, PV_NONE,
+diff --git a/src/optionstr.c b/src/optionstr.c
+index 8a1774df8..f97ea5698 100644
+--- a/src/optionstr.c
++++ b/src/optionstr.c
+@@ -2584,6 +2584,11 @@ did_set_string_option(
+ 	redraw_all_later(UPD_NOT_VALID);
+ #endif
+ 
++#if defined(USE_MIGEMO)
++    if (varp == &p_migdict)
++	reset_migemo(FALSE);
++#endif
++
+     if (curwin->w_curswant != MAXCOL
+ 		   && (get_option_flags(opt_idx) & (P_CURSWANT | P_RALL)) != 0)
+ 	curwin->w_set_curswant = TRUE;
 diff --git a/src/proto/search.pro b/src/proto/search.pro
-index ccad0fb8e..18eb4f62c 100644
+index 8fa01da9b..7ba44a8a3 100644
 --- a/src/proto/search.pro
 +++ b/src/proto/search.pro
 @@ -24,6 +24,9 @@ void set_last_search_pat(char_u *s, int idx, int magic, int setlast);
@@ -492,10 +487,10 @@ index ccad0fb8e..18eb4f62c 100644
  int search_for_exact_line(buf_T *buf, pos_T *pos, int dir, char_u *pat);
  int searchc(cmdarg_T *cap, int t_cmd);
 diff --git a/src/search.c b/src/search.c
-index 91a26dd36..47928a84a 100644
+index 8045bd735..008f8058d 100644
 --- a/src/search.c
 +++ b/src/search.c
-@@ -609,8 +609,8 @@ last_pat_prog(regmmatch_T *regmatch)
+@@ -622,8 +622,8 @@ last_pat_prog(regmmatch_T *regmatch)
   * When FEAT_EVAL is defined, returns the index of the first matching
   * subpattern plus one; one if there was none.
   */
@@ -506,7 +501,7 @@ index 91a26dd36..47928a84a 100644
      win_T	*win,		// window to search in; can be NULL for a
  				// buffer without a window!
      buf_T	*buf,
-@@ -1178,6 +1178,339 @@ first_submatch(regmmatch_T *rp)
+@@ -1175,6 +1175,339 @@ first_submatch(regmmatch_T *rp)
  }
  #endif
  
@@ -846,7 +841,7 @@ index 91a26dd36..47928a84a 100644
  /*
   * Highest level string search function.
   * Search for the 'count'th occurrence of pattern 'pat' in direction 'dirc'
-@@ -1538,6 +1871,9 @@ do_search(
+@@ -1540,6 +1873,9 @@ do_search(
  		searchstr, count, spats[0].off.end + (options &
  		       (SEARCH_KEEP + SEARCH_PEEK + SEARCH_HIS
  			+ SEARCH_MSG + SEARCH_START
@@ -857,11 +852,11 @@ index 91a26dd36..47928a84a 100644
  		RE_LAST, sia);
  
 diff --git a/src/structs.h b/src/structs.h
-index 68a9ba958..bfda9af18 100644
+index 4caff2db7..2db0dd74a 100644
 --- a/src/structs.h
 +++ b/src/structs.h
-@@ -2750,6 +2750,9 @@ struct file_buffer
- #endif
+@@ -3034,6 +3034,9 @@ struct file_buffer
+     int		b_p_lisp;	// 'lisp'
      char_u	*b_p_menc;	// 'makeencoding'
      char_u	*b_p_mps;	// 'matchpairs'
 +#ifdef USE_MIGEMO
@@ -871,10 +866,10 @@ index 68a9ba958..bfda9af18 100644
      int		b_p_ml_nobin;	// b_p_ml saved for binary mode
      int		b_p_ma;		// 'modifiable'
 diff --git a/src/version.c b/src/version.c
-index d2cb29852..2fc94bf37 100644
+index 354a570fc..b633317b3 100644
 --- a/src/version.c
 +++ b/src/version.c
-@@ -365,6 +365,15 @@ static char *(features[]) =
+@@ -328,6 +328,15 @@ static char *(features[]) =
  #else
  	"-menu",
  #endif
@@ -891,10 +886,10 @@ index d2cb29852..2fc94bf37 100644
  	"+mksession",
  #else
 diff --git a/src/vim.h b/src/vim.h
-index c9fa0b907..5026b33b1 100644
+index e44c091f9..3ec2b63ea 100644
 --- a/src/vim.h
 +++ b/src/vim.h
-@@ -903,6 +903,9 @@ extern int (*dyn_libintl_wputenv)(const wchar_t *envstring);
+@@ -933,6 +933,9 @@ extern int (*dyn_libintl_wputenv)(const wchar_t *envstring);
  #define SEARCH_KEEP  0x400  // keep previous search pattern
  #define SEARCH_PEEK  0x800  // peek for typed char, cancel search
  #define SEARCH_COL  0x1000  // start at specified column instead of zero

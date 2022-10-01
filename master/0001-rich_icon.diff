@@ -1,27 +1,37 @@
-# HG changeset patch
-# Parent 60ba7a38b0c0a05e084ebcce66cfddfbdc15cb90
 use Vim's rich icon
 
 diff --git a/src/Make_mvc.mak b/src/Make_mvc.mak
-index 2718a05b7..9da4ab5ff 100644
+index 9529d0aac..043d66d7e 100644
 --- a/src/Make_mvc.mak
 +++ b/src/Make_mvc.mak
-@@ -1740,11 +1740,13 @@ $(OUTDIR)/vimg.res:	$(OUTDIR) vim.rc gvim.exe.mnf version.h gui_w32_rc.h \
+@@ -1724,21 +1724,21 @@ $(OUTDIR)/xpm_w32.obj: $(OUTDIR) xpm_w32.c
+ 
+ !if "$(VIMDLL)" == "yes"
+ $(OUTDIR)/vimc.res:	$(OUTDIR) vim.rc vim.manifest version.h gui_w32_rc.h \
+-				vim.ico
++				vim.ico vim2.ico
+ 	$(RC) /nologo /l 0x409 /Fo$@ $(RCFLAGS:-DFEAT_GUI_MSWIN=) vim.rc
+ 
+ $(OUTDIR)/vimg.res:	$(OUTDIR) vim.rc vim.manifest version.h gui_w32_rc.h \
+-				vim.ico
++				vim.ico vim2.ico
+ 	$(RC) /nologo /l 0x409 /Fo$@ $(RCFLAGS) vim.rc
  
  $(OUTDIR)/vimd.res:	$(OUTDIR) vim.rc version.h gui_w32_rc.h \
  				tools.bmp tearoff.bmp vim.ico vim_error.ico \
-+				vim2.ico \
- 				vim_alert.ico vim_info.ico vim_quest.ico
+-				vim_alert.ico vim_info.ico vim_quest.ico
++				vim_alert.ico vim_info.ico vim_quest.ico vim2.ico
  	$(RC) /nologo /l 0x409 /Fo$@ $(RCFLAGS) -DRCDLL -DVIMDLLBASE=\"$(VIMDLLBASE)\" vim.rc
  !else
- $(OUTDIR)/vim.res:	$(OUTDIR) vim.rc gvim.exe.mnf version.h gui_w32_rc.h \
+ $(OUTDIR)/vim.res:	$(OUTDIR) vim.rc vim.manifest version.h gui_w32_rc.h \
  				tools.bmp tearoff.bmp vim.ico vim_error.ico \
-+				vim2.ico \
- 				vim_alert.ico vim_info.ico vim_quest.ico
+-				vim_alert.ico vim_info.ico vim_quest.ico
++				vim_alert.ico vim_info.ico vim_quest.ico vim2.ico
  	$(RC) /nologo /l 0x409 /Fo$@ $(RCFLAGS) vim.rc
  !endif
+ 
 diff --git a/src/vim.rc b/src/vim.rc
-index 35beb97c5..12925686f 100644
+index abb944b35..c694472be 100644
 --- a/src/vim.rc
 +++ b/src/vim.rc
 @@ -20,7 +20,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US

@@ -1,8 +1,10 @@
+disable irreparable example settings
+
 diff --git a/runtime/vimrc_example.vim b/runtime/vimrc_example.vim
-index 3017a6cf9..0c439b861 100644
+index e11e4cff5..d5ecadde9 100644
 --- a/runtime/vimrc_example.vim
 +++ b/runtime/vimrc_example.vim
-@@ -36,16 +36,18 @@ endif
+@@ -37,16 +37,18 @@ endif
  augroup vimrcEx
    au!
  

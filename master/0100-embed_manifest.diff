@@ -1,12 +1,10 @@
-# HG changeset patch
-# Parent ae0837c7cccd3790f2ea18bd8e3e1e16495275e4
 embed manifest file to EXE and DLL when available (for MSVC9)
 
 diff --git a/src/Make_mvc.mak b/src/Make_mvc.mak
-index 811ab9eed..62bc43722 100644
+index 043d66d7e..f3fd51b48 100644
 --- a/src/Make_mvc.mak
 +++ b/src/Make_mvc.mak
-@@ -1390,13 +1390,16 @@ install.exe: dosinst.c dosinst.h version.h
+@@ -1268,13 +1268,16 @@ install.exe: dosinst.c dosinst.h version.h
  		-link -subsystem:$(SUBSYSTEM_TOOLS)
  	- if exist install.exe del install.exe
  	ren dosinst.exe install.exe
@@ -23,7 +21,7 @@ index 811ab9eed..62bc43722 100644
  
  xxd/xxd.exe: xxd/xxd.c
  	cd xxd
-@@ -1424,6 +1427,7 @@ clean: testclean
+@@ -1302,6 +1305,7 @@ clean: testclean
  	- if exist $(OUTDIR)/nul $(DEL_TREE) $(OUTDIR)
  	- if exist *.obj del *.obj
  	- if exist $(VIM).exe del $(VIM).exe

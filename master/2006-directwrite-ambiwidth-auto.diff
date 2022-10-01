@@ -1,0 +1,201 @@
+ambiwidth=auto supports DirectWrite
+
+diff --git a/src/gui_dwrite.cpp b/src/gui_dwrite.cpp
+index 4f2439077..55119bd60 100644
+--- a/src/gui_dwrite.cpp
++++ b/src/gui_dwrite.cpp
+@@ -349,6 +349,8 @@ struct DWriteContext {
+ 
+     void Flush();
+ 
++    int GetCharWidth(int c);
++
+     void SetRenderingParams(
+ 	    const DWriteRenderingParams *params);
+ 
+@@ -392,9 +394,11 @@ public:
+ 
+     static FLOAT adjustToCell(FLOAT value, FLOAT cellWidth)
+     {
+-	int cellCount = int(floor(value / cellWidth + 0.5f));
++	int cellCount = int(floor(value / cellWidth + 0.6f));
+ 	if (cellCount < 1)
+ 	    cellCount = 1;
++	if (cellCount > 2)
++	    cellCount = 2;
+ 	return cellCount * cellWidth;
+     }
+ };
+@@ -1161,6 +1165,60 @@ DWriteContext::Flush()
+     SetDrawingMode(DM_GDI);
+ }
+ 
++    int
++DWriteContext::GetCharWidth(int c)
++{
++    HRESULT hr;
++    IDWriteTextLayout *textLayout = NULL;
++    WCHAR text[3];
++    int len, w = 0;
++
++    //SetDrawingMode(DM_DIRECTX);
++
++    if (c < 0x10000)
++    {
++	text[0] = (WCHAR)c;
++	len = 1;
++    }
++    else
++    {
++	text[0] = (WCHAR)(((c - 0x10000) >> 10) + 0xD800);
++	text[1] = (WCHAR)(((c - 0x10000) & 0x3ff) + 0xDC00);
++	len = 2;
++    }
++    text[len] = L'\0';
++
++    hr = mDWriteFactory->CreateTextLayout(text, len, mTextFormat,
++	    10.0f, 10.0f, &textLayout);
++
++    if (SUCCEEDED(hr))
++    {
++	DWRITE_TEXT_RANGE textRange = { 0, UINT32(len) };
++	textLayout->SetFontWeight(mFontWeight, textRange);
++	textLayout->SetFontStyle(mFontStyle, textRange);
++
++	UINT32 count;
++	if (textLayout->GetClusterMetrics(NULL, 0, &count) == E_NOT_SUFFICIENT_BUFFER)
++	{
++	    DWRITE_CLUSTER_METRICS *metrics = new DWRITE_CLUSTER_METRICS[count];
++	    textLayout->GetClusterMetrics(metrics, count, &count);
++#ifdef DEBUG
++	    //_RPT2(_CRT_WARN, "len %d, count %d", len, count);
++	    for (UINT32 i = 0; i < count; i++)
++	    {
++		//_RPT2(_CRT_WARN, "%x (%C), [%d]: width %f", c, c, i, metrics[i].width);
++	    }
++#endif
++	    if (count >= 1)
++		w = (int)metrics[0].width;
++	    delete [] metrics;
++	}
++    }
++
++    SafeRelease(&textLayout);
++    return w;
++}
++
+     void
+ DWriteContext::SetRenderingParams(
+ 	const DWriteRenderingParams *params)
+@@ -1328,6 +1386,14 @@ DWriteContext_Flush(DWriteContext *ctx)
+ 	ctx->Flush();
+ }
+ 
++    int
++DWriteContext_GetCharWidth(DWriteContext *ctx, int c)
++{
++    if (ctx != NULL)
++	return ctx->GetCharWidth(c);
++    return 0;
++}
++
+     void
+ DWriteContext_Close(DWriteContext *ctx)
+ {
+diff --git a/src/gui_dwrite.h b/src/gui_dwrite.h
+index 5de06f92b..336d8f3c7 100644
+--- a/src/gui_dwrite.h
++++ b/src/gui_dwrite.h
+@@ -76,6 +76,7 @@ void DWriteContext_DrawLine(DWriteContext *ctx, int x1, int y1, int x2, int y2,
+ void DWriteContext_SetPixel(DWriteContext *ctx, int x, int y, COLORREF color);
+ void DWriteContext_Scroll(DWriteContext *ctx, int x, int y, const RECT *rc);
+ void DWriteContext_Flush(DWriteContext *ctx);
++int DWriteContext_GetCharWidth(DWriteContext *ctx, int c);
+ void DWriteContext_Close(DWriteContext *ctx);
+ 
+ void DWriteContext_SetRenderingParams(
+diff --git a/src/gui_w32.c b/src/gui_w32.c
+index f32164eca..ef7b42fc2 100644
+--- a/src/gui_w32.c
++++ b/src/gui_w32.c
+@@ -5144,13 +5144,13 @@ error:
+ #endif
+ 
+ #ifdef USE_AMBIWIDTH_AUTO
+-#define CHARWIDE_CACHESIZE 0x20000
+-static GuiFont last_font = NOFONT;
++# define CHARWIDE_CACHESIZE 0x40000
+ 
+     int
+ gui_mch_get_charwidth(int c)
+ {
+-    static int cache[CHARWIDE_CACHESIZE];
++    static char cache[CHARWIDE_CACHESIZE];
++    static GuiFont last_font = NOFONT;
+     GuiFont usingfont = gui.wide_font ? gui.wide_font : gui.norm_font;
+ 
+     // Check validity of charwide cache
+@@ -5159,34 +5159,53 @@ gui_mch_get_charwidth(int c)
+ 	// Update cache. -1 is mark for uninitialized cell
+ 	int i;
+ 
+-	TRACE("Charwide cache will be updated (base=%d)\n", gui.char_width);
++	TRACE("Charwidth cache will be updated (base=%d)\n", gui.char_width);
+ 	last_font = usingfont;
+-	for (i = 0; i < CHARWIDE_CACHESIZE; ++i)
+-	    cache[i] = -1;
++	for (i = 0; i < 0x80; ++i)
++	    cache[i] = (char)1;
++	for ( ; i < CHARWIDE_CACHESIZE; ++i)
++	    cache[i] = (char)-1;
+     }
+     if (usingfont && 0 <= c && c < CHARWIDE_CACHESIZE)
+     {
++	int len;
++
+ 	if (cache[c] >= 0)
+ 	    return cache[c]; // Use cached value
++# if defined(FEAT_DIRECTX)
++	else if (IS_ENABLE_DIRECTX())
++	{
++	    DWriteContext_SetFont(s_dwc, (HFONT)usingfont);
++	    len = DWriteContext_GetCharWidth(s_dwc, c);
++	}
++# endif
+ 	else
+ 	{
+ 	    // Get true character width in dot, convert to cells and save it.
+-	    int	    len;
+ 	    ABC	    fontABC;
+ 	    HFONT   hfntOld = SelectFont(s_hdc, usingfont);
+ 
+-	    if (!GetCharABCWidthsW(s_hdc, c, c, &fontABC) ||
+-		    (len = fontABC.abcA + fontABC.abcB + fontABC.abcC) <= 0)
++	    if (!GetCharABCWidthsW(s_hdc, c, c, &fontABC))
+ 	    {
+ 		TRACE("GetCharABCWidthsW() failed for %08X\n", c);
+-		cache[c] = 0;
++		len = -1;
+ 	    }
+ 	    else
+-		cache[c] = ((len + (gui.char_width >> 1)) / gui.char_width);
+-	    SelectFont(s_hdc, hfntOld);
++		len = fontABC.abcA + fontABC.abcB + fontABC.abcC;
+ 
+-	    return cache[c];
++	    SelectFont(s_hdc, hfntOld);
++	}
++	if (len < 0)
++	    cache[c] = 0;
++	else
++	{
++	    cache[c] = (char)((len + (gui.char_width * 3 / 5)) / gui.char_width);
++	    if (cache[c] < 1)
++		cache[c] = (char)1;
++	    if (cache[c] > 2)
++		cache[c] = (char)2;
+ 	}
++	return cache[c];
+     }
+     else
+ 	return 0;

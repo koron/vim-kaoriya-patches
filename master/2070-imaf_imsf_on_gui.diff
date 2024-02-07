@@ -1,7 +1,7 @@
 support 'imaf' and 'imsf' on GTK
 
 diff --git a/src/gui.c b/src/gui.c
-index e94f0ed47..3039b56da 100644
+index 29f16effd..552557a96 100644
 --- a/src/gui.c
 +++ b/src/gui.c
 @@ -1243,7 +1243,7 @@ gui_update_cursor(
@@ -13,21 +13,8 @@ index e94f0ed47..3039b56da 100644
  			preedit_get_status()
  # else
  			im_get_status()
-diff --git a/src/gui_xim.c b/src/gui_xim.c
-index d384cbc05..aeecd9b94 100644
---- a/src/gui_xim.c
-+++ b/src/gui_xim.c
-@@ -59,7 +59,7 @@ xim_log(char *s, ...)
- }
- #endif
- 
--#if defined(FEAT_GUI_MSWIN)
-+#if defined(FEAT_GUI)
- # define USE_IMACTIVATEFUNC (!gui.in_use && *p_imaf != NUL)
- # define USE_IMSTATUSFUNC (!gui.in_use && *p_imsf != NUL)
- #else
 diff --git a/src/ui.c b/src/ui.c
-index 8368c3054..0bfddd5b9 100644
+index b56e39525..518c0a562 100644
 --- a/src/ui.c
 +++ b/src/ui.c
 @@ -1184,12 +1184,14 @@ im_save_status(long *psave)

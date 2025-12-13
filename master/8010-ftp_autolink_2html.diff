@@ -1,15 +1,14 @@
 make 2html.vim auto link URL which starts 'ftp'
 
 diff --git a/runtime/syntax/2html.vim b/runtime/syntax/2html.vim
-index ea9db154b..086323344 100644
+index 69780cffe..f28705f3d 100644
 --- a/runtime/syntax/2html.vim
 +++ b/runtime/syntax/2html.vim
-@@ -1894,7 +1894,7 @@ endif
+@@ -1901,6 +1901,7 @@ endif
  " Add hyperlinks
- " TODO: add option to not do this? Maybe just make the color the same as the
- " text highlight group normally is?
--%s+\(https\=://\S\{-}\)\(\([.,;:}]\=\(\s\|$\)\)\|[\\"'<>]\|&gt;\|&lt;\|&quot;\)+<a href="\1">\1</a>\2+ge
-+%s+\(\%(https\=\|ftp\)://\S\{-}\)\(\([.,;:}]\=\(\s\|$\)\)\|[\\"'<>]\|&gt;\|&lt;\|&quot;\)+<a href="\1">\1</a>\2+ge
+ if !s:settings.no_links
+   %s+\(https\=://\S\{-}\)\(\([.,;:}]\=\(\s\|$\)\)\|[\\"'<>]\|&gt;\|&lt;\|&quot;\)+<a href="\1">\1</a>\2+ge
++  %s+\(\%(https\=\|ftp\)://\S\{-}\)\(\([.,;:}]\=\(\s\|$\)\)\|[\\"'<>]\|&gt;\|&lt;\|&quot;\)+<a href="\1">\1</a>\2+ge
+ endif
  
  " The DTD
- if s:settings.use_xhtml

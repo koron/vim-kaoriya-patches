@@ -1,10 +1,10 @@
 add 'C' flag to 'guioptions' which control to show the caption of window
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index 86e0e024b..caae19117 100644
+index cfa58fe06..f9794abba 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
-@@ -4077,6 +4077,9 @@ A jump table for the options with a short description can be found at |Q_op|.
+@@ -4102,6 +4102,9 @@ A jump table for the options with a short description can be found at |Q_op|.
  		try to keep 'lines' and 'columns' the same when adding and
  		removing GUI components.
  
@@ -15,10 +15,10 @@ index 86e0e024b..caae19117 100644
  'guipty'		boolean	(default on)
  			global
 diff --git a/src/gui.c b/src/gui.c
-index b9217b459..e94f0ed47 100644
+index b8910054b..be749aa8c 100644
 --- a/src/gui.c
 +++ b/src/gui.c
-@@ -3476,6 +3476,8 @@ gui_init_which_components(char_u *oldval UNUSED)
+@@ -3480,6 +3480,8 @@ gui_init_which_components(char_u *oldval UNUSED)
      static int	prev_tearoff = -1;
      int		using_tearoff = FALSE;
  #endif
@@ -27,7 +27,7 @@ index b9217b459..e94f0ed47 100644
  
      char_u	*p;
      int		i;
-@@ -3551,6 +3553,9 @@ gui_init_which_components(char_u *oldval UNUSED)
+@@ -3555,6 +3557,9 @@ gui_init_which_components(char_u *oldval UNUSED)
  		using_tearoff = TRUE;
  #endif
  		break;
@@ -37,26 +37,26 @@ index b9217b459..e94f0ed47 100644
  	    default:
  		// Ignore options that are not supported
  		break;
-@@ -3652,6 +3657,14 @@ gui_init_which_components(char_u *oldval UNUSED)
- 	    prev_tearoff = using_tearoff;
- 	}
+@@ -3657,6 +3662,14 @@ gui_init_which_components(char_u *oldval UNUSED)
+ 	prev_tearoff = using_tearoff;
+     }
  #endif
-+	if (using_caption != prev_nocaption)
-+	{
++    if (using_caption != prev_nocaption)
++    {
 +#if defined(MSWIN)
-+	    gui_mch_show_caption(using_caption);
++	gui_mch_show_caption(using_caption);
 +#endif
-+	    prev_nocaption = using_caption;
-+	    need_set_size = TRUE;
-+	}
- 	if (need_set_size != 0)
- 	{
++	prev_nocaption = using_caption;
++	need_set_size = TRUE;
++    }
+     if (need_set_size != 0)
+     {
  #ifdef FEAT_GUI_GTK
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index cc136cdf4..43630217a 100644
+index 99fbdf785..f54c443c7 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
-@@ -1148,6 +1148,55 @@ _OnSizeTextArea(
+@@ -1162,6 +1162,55 @@ _OnSizeTextArea(
  #endif
  }
  
@@ -112,7 +112,7 @@ index cc136cdf4..43630217a 100644
  #ifdef FEAT_MENU
  /*
   * Find the vimmenu_T with the given id
-@@ -3112,11 +3161,12 @@ gui_mswin_get_valid_dimensions(
+@@ -3131,11 +3180,12 @@ gui_mswin_get_valid_dimensions(
  
      base_width = gui_get_base_width()
  	+ (pGetSystemMetricsForDpi(SM_CXFRAME, s_dpi) +
@@ -127,7 +127,7 @@ index cc136cdf4..43630217a 100644
  	+ gui_mswin_get_menu_height(FALSE);
      *cols = (w - base_width) / gui.char_width;
      *rows = (h - base_height) / gui.char_height;
-@@ -3591,12 +3641,13 @@ gui_mch_newfont(void)
+@@ -3610,12 +3660,13 @@ gui_mch_newfont(void)
      if (win_socket_id == 0)
      {
  	gui_resize_shell(rect.right - rect.left
@@ -142,7 +142,7 @@ index cc136cdf4..43630217a 100644
  	    - gui_mswin_get_menu_height(FALSE));
      }
      else
-@@ -5546,10 +5597,11 @@ gui_mch_set_shellsize(
+@@ -5565,10 +5616,11 @@ gui_mch_set_shellsize(
  
      // compute the size of the outside of the window
      win_width = width + (pGetSystemMetricsForDpi(SM_CXFRAME, s_dpi) +
@@ -156,7 +156,7 @@ index cc136cdf4..43630217a 100644
  			+ gui_mswin_get_menu_height(FALSE);
  
      // The following should take care of keeping Vim on the same monitor, no
-@@ -6419,7 +6471,8 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
+@@ -6435,7 +6487,8 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
  
      *screen_w = workarea_rect.right - workarea_rect.left
  		- (pGetSystemMetricsForDpi(SM_CXFRAME, s_dpi) +
@@ -166,7 +166,7 @@ index cc136cdf4..43630217a 100644
  
      // FIXME: dirty trick: Because the gui_get_base_height() doesn't include
      // the menubar for MSwin, we subtract it from the screen height, so that
-@@ -6427,7 +6480,7 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
+@@ -6443,7 +6496,7 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
      *screen_h = workarea_rect.bottom - workarea_rect.top
  		- (pGetSystemMetricsForDpi(SM_CYFRAME, s_dpi) +
  		   pGetSystemMetricsForDpi(SM_CXPADDEDBORDER, s_dpi)) * 2
@@ -176,10 +176,10 @@ index cc136cdf4..43630217a 100644
  }
  
 diff --git a/src/option.h b/src/option.h
-index 898ae7c1b..4e56f81d5 100644
+index c4552b7aa..49f96c4ab 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -296,7 +296,8 @@ typedef enum {
+@@ -299,7 +299,8 @@ typedef enum {
  #define GO_FOOTER	'F'		// add footer
  #define GO_VERTICAL	'v'		// arrange dialog buttons vertically
  #define GO_KEEPWINSIZE	'k'		// keep GUI window size
@@ -190,7 +190,7 @@ index 898ae7c1b..4e56f81d5 100644
  // flags for 'comments' option
  #define COM_NEST	'n'		// comments strings nest
 diff --git a/src/proto/gui_w32.pro b/src/proto/gui_w32.pro
-index 7c555666d..0a505e7d5 100644
+index 699752011..280145f6f 100644
 --- a/src/proto/gui_w32.pro
 +++ b/src/proto/gui_w32.pro
 @@ -61,6 +61,7 @@ void gui_mch_settitle(char_u *title, char_u *icon);

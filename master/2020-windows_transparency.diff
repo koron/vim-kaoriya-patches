@@ -1,7 +1,7 @@
 implement 'transparency' for Windows GUI
 
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index 3ade63113..5f606d483 100644
+index 206645a4f..6779d66e3 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
 @@ -50,6 +50,13 @@ static int gui_mswin_get_menu_height(int fix_window);
@@ -18,7 +18,7 @@ index 3ade63113..5f606d483 100644
  #if defined(FEAT_RENDER_OPTIONS) || defined(PROTO)
      int
  gui_mch_set_rendering_options(char_u *s)
-@@ -5471,6 +5478,8 @@ gui_mch_init(void)
+@@ -5490,6 +5497,8 @@ gui_mch_init(void)
  	(void)gui_mch_set_rendering_options(p_rop);
  #endif
  
@@ -27,7 +27,7 @@ index 3ade63113..5f606d483 100644
  theend:
      // Display any pending error messages
      display_errors();
-@@ -5639,6 +5648,44 @@ gui_mch_set_sp_color(guicolor_T color)
+@@ -5658,6 +5667,44 @@ gui_mch_set_sp_color(guicolor_T color)
      gui.currSpColor = color;
  }
  
@@ -73,33 +73,44 @@ index 3ade63113..5f606d483 100644
  /*
   * Multi-byte handling, originally by Sung-Hoon Baek.
 diff --git a/src/option.c b/src/option.c
-index 6052b38b9..08330c361 100644
+index 6d8605115..96a1c233e 100644
 --- a/src/option.c
 +++ b/src/option.c
-@@ -3502,6 +3502,18 @@ set_num_option(
- 	screenclear();	    // will re-allocate the screen
-     }
+@@ -3691,6 +3691,20 @@ did_set_maxcombine(void)
+     screenclear();	    // will re-allocate the screen
+ }
  
-+#if defined(FEAT_GUI_MSWIN) || defined(VIMDLL)
-+    else if ((long *)varp == &p_transparency)
-+    {
-+	if (p_transparency < 1 || p_transparency > 255)
-+	    p_transparency = 255;
++/*
++ * Process the new 'transparency' option value.
++ */
++    static void
++did_set_transparency(void)
++{
++    if (p_transparency < 1 || p_transparency > 255)
++	p_transparency = 255;
 +# ifdef VIMDLL
-+	if (gui.in_use)
++    if (gui.in_use)
 +# endif
-+	    gui_mch_set_transparency(p_transparency);
-+    }
-+#endif
++	gui_mch_set_transparency(p_transparency);
++}
 +
-     else if (pp == &curbuf->b_p_iminsert)
-     {
- 	if (curbuf->b_p_iminsert < 0 || curbuf->b_p_iminsert > B_IMODE_LAST)
+ /*
+  * Process the new 'iminsert' option value.
+  */
+@@ -3968,6 +3982,8 @@ did_set_num_option(long *pp, long value, long old_value, char *errmsg)
+ 	did_set_shiftwidth_tabstop(pp);
+     else if (pp == &p_mco)			// 'maxcombine'
+ 	did_set_maxcombine();
++    else if (pp == &p_transparency)
++	did_set_transparency();
+     else if (pp == &curbuf->b_p_iminsert)	// 'iminsert'
+ 	errmsg = did_set_iminsert(errmsg);
+ #if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
 diff --git a/src/option.h b/src/option.h
-index 97b7a6c51..4198320f2 100644
+index aa55bfbac..13d3a2258 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -981,6 +981,7 @@ EXTERN long	p_titlelen;	// 'titlelen'
+@@ -983,6 +983,7 @@ EXTERN long	p_titlelen;	// 'titlelen'
  EXTERN char_u	*p_titleold;	// 'titleold'
  EXTERN char_u	*p_titlestring;	// 'titlestring'
  EXTERN char_u	*p_tsr;		// 'thesaurus'
@@ -108,10 +119,10 @@ index 97b7a6c51..4198320f2 100644
  EXTERN long	p_ttm;		// 'ttimeoutlen'
  EXTERN int	p_tbi;		// 'ttybuiltin'
 diff --git a/src/optiondefs.h b/src/optiondefs.h
-index 8ec012f0d..110e11f68 100644
+index 7ec4847d0..91fb0109c 100644
 --- a/src/optiondefs.h
 +++ b/src/optiondefs.h
-@@ -2588,6 +2588,10 @@ static struct vimoption options[] =
+@@ -2591,6 +2591,10 @@ static struct vimoption options[] =
  			    {(char_u *)0L, (char_u *)0L}
  #endif
  			    SCTX_INIT},
@@ -123,7 +134,7 @@ index 8ec012f0d..110e11f68 100644
  			    (char_u *)&p_ttimeout, PV_NONE,
  			    {(char_u *)FALSE, (char_u *)0L} SCTX_INIT},
 diff --git a/src/proto/gui_w32.pro b/src/proto/gui_w32.pro
-index cab334324..7c555666d 100644
+index c5c6585db..699752011 100644
 --- a/src/proto/gui_w32.pro
 +++ b/src/proto/gui_w32.pro
 @@ -71,6 +71,7 @@ void gui_mch_set_font(GuiFont font);
@@ -135,10 +146,10 @@ index cab334324..7c555666d 100644
  void im_set_position(int row, int col);
  void im_set_active(int active);
 diff --git a/src/testdir/gen_opt_test.vim b/src/testdir/gen_opt_test.vim
-index 83f43f7b5..b3d175588 100644
+index a18aa66df..4646684bb 100644
 --- a/src/testdir/gen_opt_test.vim
 +++ b/src/testdir/gen_opt_test.vim
-@@ -143,6 +143,7 @@ let test_values = {
+@@ -148,6 +148,7 @@ let test_values = {
        \ 'termwintype': [['', 'winpty', 'conpty'], ['xxx']],
        \ 'toolbar': [['', 'icons', 'text'], ['xxx']],
        \ 'toolbariconsize': [['', 'tiny', 'huge'], ['xxx']],

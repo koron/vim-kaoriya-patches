@@ -1,10 +1,10 @@
 implement 'charspace' for Windows GUI
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index 4ea75ba2d..86e0e024b 100644
+index eece6008e..cfa58fe06 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
-@@ -1640,6 +1640,20 @@ A jump table for the options with a short description can be found at |Q_op|.
+@@ -1645,6 +1645,20 @@ A jump table for the options with a short description can be found at |Q_op|.
  	This option cannot be set from a |modeline| or in the |sandbox|, for
  	security reasons.
  
@@ -26,10 +26,10 @@ index 4ea75ba2d..86e0e024b 100644
  'cindent' 'cin'		boolean	(default off)
  			local to buffer
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index 5f606d483..cc136cdf4 100644
+index 6779d66e3..99fbdf785 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
-@@ -1588,6 +1588,8 @@ GetFontSize(GuiFont font)
+@@ -1602,6 +1602,8 @@ GetFontSize(GuiFont font)
      GetAverageFontSize(hdc, &size);
  
      gui.char_width = size.cx + tm.tmOverhang;
@@ -39,23 +39,23 @@ index 5f606d483..cc136cdf4 100644
  
      SelectFont(hdc, hfntOld);
 diff --git a/src/option.c b/src/option.c
-index 08330c361..363d07d7f 100644
+index 96a1c233e..4adb6b8f2 100644
 --- a/src/option.c
 +++ b/src/option.c
-@@ -3432,7 +3432,7 @@ set_num_option(
-     }
- 
+@@ -3966,6 +3966,8 @@ did_set_num_option(long *pp, long value, long old_value, char *errmsg)
  #ifdef FEAT_GUI
--    else if (pp == &p_linespace)
-+    else if (pp == &p_linespace || pp == &p_charspace)
-     {
- 	// Recompute gui.char_height and resize the Vim window to keep the
- 	// same number of lines.
+     else if (pp == &p_linespace)		// 'linespace'
+ 	did_set_linespace();
++    else if (pp == &p_charspace)		// 'charspace'
++	did_set_linespace();
+ #endif
+ #ifdef FEAT_FOLDING
+     else if (pp == &curwin->w_p_fdl)		// 'foldlevel'
 diff --git a/src/option.h b/src/option.h
-index 4198320f2..898ae7c1b 100644
+index 13d3a2258..c4552b7aa 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -485,6 +485,9 @@ EXTERN int	p_deco;		// 'delcombine'
+@@ -489,6 +489,9 @@ EXTERN int	p_deco;		// 'delcombine'
  EXTERN char_u	*p_ccv;		// 'charconvert'
  #endif
  EXTERN int	p_cdh;		// 'cdhome'
@@ -63,13 +63,13 @@ index 4198320f2..898ae7c1b 100644
 +EXTERN long	p_charspace;	// 'charspace'
 +#endif
  EXTERN char_u	*p_cino;	// 'cinoptions'
- #ifdef FEAT_CMDWIN
  EXTERN char_u	*p_cedit;	// 'cedit'
+ EXTERN long	p_cwh;		// 'cmdwinheight'
 diff --git a/src/optiondefs.h b/src/optiondefs.h
-index 110e11f68..93bc177cb 100644
+index 91fb0109c..cb0614e2e 100644
 --- a/src/optiondefs.h
 +++ b/src/optiondefs.h
-@@ -560,6 +560,14 @@ static struct vimoption options[] =
+@@ -558,6 +558,14 @@ static struct vimoption options[] =
  			    {(char_u *)0L, (char_u *)0L}
  #endif
  			    SCTX_INIT},

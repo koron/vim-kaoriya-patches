@@ -1,10 +1,10 @@
 implement 'charspace' for Windows GUI
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index 3d1f2ff8d..c63b593c3 100644
+index 34059e0ea..a46c33dc4 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
-@@ -1645,6 +1645,20 @@ A jump table for the options with a short description can be found at |Q_op|.
+@@ -1698,6 +1698,20 @@ A jump table for the options with a short description can be found at |Q_op|.
  	This option cannot be set from a |modeline| or in the |sandbox|, for
  	security reasons.
  
@@ -26,23 +26,26 @@ index 3d1f2ff8d..c63b593c3 100644
  'cindent' 'cin'		boolean	(default off)
  			local to buffer
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index 6779d66e3..99fbdf785 100644
+index 529c2e5fc..86cd71b8c 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
-@@ -1602,6 +1602,8 @@ GetFontSize(GuiFont font)
+@@ -1607,7 +1607,11 @@ GetFontSize(GuiFont font, int *char_width, int *char_height)
      GetAverageFontSize(hdc, &size);
  
-     gui.char_width = size.cx + tm.tmOverhang;
-+    // add extra pixels for 'charspace' option.
-+    gui.char_width += p_charspace;
-     gui.char_height = tm.tmHeight + p_linespace;
+     if (char_width)
++    {
+ 	*char_width = size.cx + tm.tmOverhang;
++	// add extra pixels for 'charspace' option.
++	*char_width += p_charspace;
++    }
+     if (char_height)
+ 	*char_height = tm.tmHeight + p_linespace;
  
-     SelectFont(hdc, hfntOld);
 diff --git a/src/option.h b/src/option.h
-index 8975036fe..c303330a3 100644
+index c04eb6dc6..4fe1db4ee 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -490,6 +490,9 @@ EXTERN int	p_deco;		// 'delcombine'
+@@ -497,6 +497,9 @@ EXTERN int	p_deco;		// 'delcombine'
  EXTERN char_u	*p_ccv;		// 'charconvert'
  #endif
  EXTERN int	p_cdh;		// 'cdhome'
@@ -53,10 +56,10 @@ index 8975036fe..c303330a3 100644
  EXTERN char_u	*p_cedit;	// 'cedit'
  EXTERN long	p_cwh;		// 'cmdwinheight'
 diff --git a/src/optiondefs.h b/src/optiondefs.h
-index f791004c6..7aa416e44 100644
+index d30abe6c3..86951ecf2 100644
 --- a/src/optiondefs.h
 +++ b/src/optiondefs.h
-@@ -566,6 +566,14 @@ static struct vimoption options[] =
+@@ -571,6 +571,14 @@ static struct vimoption options[] =
  			    {(char_u *)0L, (char_u *)0L}
  #endif
  			    SCTX_INIT},
@@ -66,8 +69,8 @@ index f791004c6..7aa416e44 100644
 +#else
 +			    (char_u *)NULL, PV_NONE, NULL,
 +#endif
-+			    {(char_u *)0L, (char_u *)0L}
++			    NULL, {(char_u *)0L, (char_u *)0L}
 +			    SCTX_INIT},
      {"cindent",	    "cin",  P_BOOL|P_VI_DEF|P_VIM,
- 			    (char_u *)&p_cin, PV_CIN, NULL,
+ 			    (char_u *)&p_cin, PV_CIN, NULL, NULL,
  			    {(char_u *)FALSE, (char_u *)0L} SCTX_INIT},

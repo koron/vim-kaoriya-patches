@@ -1,7 +1,7 @@
 implement 'charspace' for Windows GUI
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index eece6008e..cfa58fe06 100644
+index 3d1f2ff8d..c63b593c3 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
 @@ -1645,6 +1645,20 @@ A jump table for the options with a short description can be found at |Q_op|.
@@ -38,24 +38,11 @@ index 6779d66e3..99fbdf785 100644
      gui.char_height = tm.tmHeight + p_linespace;
  
      SelectFont(hdc, hfntOld);
-diff --git a/src/option.c b/src/option.c
-index 96a1c233e..4adb6b8f2 100644
---- a/src/option.c
-+++ b/src/option.c
-@@ -3966,6 +3966,8 @@ did_set_num_option(long *pp, long value, long old_value, char *errmsg)
- #ifdef FEAT_GUI
-     else if (pp == &p_linespace)		// 'linespace'
- 	did_set_linespace();
-+    else if (pp == &p_charspace)		// 'charspace'
-+	did_set_linespace();
- #endif
- #ifdef FEAT_FOLDING
-     else if (pp == &curwin->w_p_fdl)		// 'foldlevel'
 diff --git a/src/option.h b/src/option.h
-index 13d3a2258..c4552b7aa 100644
+index 8975036fe..c303330a3 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -489,6 +489,9 @@ EXTERN int	p_deco;		// 'delcombine'
+@@ -490,6 +490,9 @@ EXTERN int	p_deco;		// 'delcombine'
  EXTERN char_u	*p_ccv;		// 'charconvert'
  #endif
  EXTERN int	p_cdh;		// 'cdhome'
@@ -66,21 +53,21 @@ index 13d3a2258..c4552b7aa 100644
  EXTERN char_u	*p_cedit;	// 'cedit'
  EXTERN long	p_cwh;		// 'cmdwinheight'
 diff --git a/src/optiondefs.h b/src/optiondefs.h
-index 91fb0109c..cb0614e2e 100644
+index f791004c6..7aa416e44 100644
 --- a/src/optiondefs.h
 +++ b/src/optiondefs.h
-@@ -558,6 +558,14 @@ static struct vimoption options[] =
+@@ -566,6 +566,14 @@ static struct vimoption options[] =
  			    {(char_u *)0L, (char_u *)0L}
  #endif
  			    SCTX_INIT},
 +    {"charspace",   "csp",  P_NUM|P_NODEFAULT|P_VIM|P_RCLR,
 +#ifdef FEAT_GUI
-+			    (char_u *)&p_charspace, PV_NONE,
++			    (char_u *)&p_charspace, PV_NONE, did_set_linespace,
 +#else
-+			    (char_u *)NULL, PV_NONE,
++			    (char_u *)NULL, PV_NONE, NULL,
 +#endif
 +			    {(char_u *)0L, (char_u *)0L}
 +			    SCTX_INIT},
      {"cindent",	    "cin",  P_BOOL|P_VI_DEF|P_VIM,
- 			    (char_u *)&p_cin, PV_CIN,
+ 			    (char_u *)&p_cin, PV_CIN, NULL,
  			    {(char_u *)FALSE, (char_u *)0L} SCTX_INIT},

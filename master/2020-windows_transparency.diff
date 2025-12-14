@@ -73,18 +73,18 @@ index 206645a4f..6779d66e3 100644
  /*
   * Multi-byte handling, originally by Sung-Hoon Baek.
 diff --git a/src/option.c b/src/option.c
-index 6d8605115..96a1c233e 100644
+index d93d3859f..f20f6d444 100644
 --- a/src/option.c
 +++ b/src/option.c
-@@ -3691,6 +3691,20 @@ did_set_maxcombine(void)
-     screenclear();	    // will re-allocate the screen
+@@ -4174,6 +4174,21 @@ did_set_maxcombine(optset_T *args UNUSED)
+     return NULL;
  }
  
 +/*
 + * Process the new 'transparency' option value.
 + */
-+    static void
-+did_set_transparency(void)
++    char *
++did_set_transparency(optset_T *args UNUSED)
 +{
 +    if (p_transparency < 1 || p_transparency > 255)
 +	p_transparency = 255;
@@ -92,25 +92,17 @@ index 6d8605115..96a1c233e 100644
 +    if (gui.in_use)
 +# endif
 +	gui_mch_set_transparency(p_transparency);
++    return NULL;
 +}
 +
  /*
   * Process the new 'iminsert' option value.
   */
-@@ -3968,6 +3982,8 @@ did_set_num_option(long *pp, long value, long old_value, char *errmsg)
- 	did_set_shiftwidth_tabstop(pp);
-     else if (pp == &p_mco)			// 'maxcombine'
- 	did_set_maxcombine();
-+    else if (pp == &p_transparency)
-+	did_set_transparency();
-     else if (pp == &curbuf->b_p_iminsert)	// 'iminsert'
- 	errmsg = did_set_iminsert(errmsg);
- #if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
 diff --git a/src/option.h b/src/option.h
-index aa55bfbac..13d3a2258 100644
+index 9cc540a24..8975036fe 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -983,6 +983,7 @@ EXTERN long	p_titlelen;	// 'titlelen'
+@@ -984,6 +984,7 @@ EXTERN long	p_titlelen;	// 'titlelen'
  EXTERN char_u	*p_titleold;	// 'titleold'
  EXTERN char_u	*p_titlestring;	// 'titlestring'
  EXTERN char_u	*p_tsr;		// 'thesaurus'
@@ -119,19 +111,20 @@ index aa55bfbac..13d3a2258 100644
  EXTERN long	p_ttm;		// 'ttimeoutlen'
  EXTERN int	p_tbi;		// 'ttybuiltin'
 diff --git a/src/optiondefs.h b/src/optiondefs.h
-index 7ec4847d0..91fb0109c 100644
+index c76cede2d..f791004c6 100644
 --- a/src/optiondefs.h
 +++ b/src/optiondefs.h
-@@ -2591,6 +2591,10 @@ static struct vimoption options[] =
+@@ -2635,6 +2635,11 @@ static struct vimoption options[] =
  			    {(char_u *)0L, (char_u *)0L}
  #endif
  			    SCTX_INIT},
 +    {"transparency", "tra", P_NUM|P_VI_DEF,
 +			    (char_u *)&p_transparency, PV_NONE,
++			    did_set_transparency,
 +			    {(char_u *)255L, (char_u *)0L}
 +			    SCTX_INIT},
      {"ttimeout",    NULL,   P_BOOL|P_VI_DEF|P_VIM,
- 			    (char_u *)&p_ttimeout, PV_NONE,
+ 			    (char_u *)&p_ttimeout, PV_NONE, NULL,
  			    {(char_u *)FALSE, (char_u *)0L} SCTX_INIT},
 diff --git a/src/proto/gui_w32.pro b/src/proto/gui_w32.pro
 index c5c6585db..699752011 100644
@@ -145,6 +138,18 @@ index c5c6585db..699752011 100644
  void im_set_font(LOGFONTW *lf);
  void im_set_position(int row, int col);
  void im_set_active(int active);
+diff --git a/src/proto/option.pro b/src/proto/option.pro
+index a4a2b9f81..ba7217e45 100644
+--- a/src/proto/option.pro
++++ b/src/proto/option.pro
+@@ -74,6 +74,7 @@ char *did_set_foldnestmax(optset_T *args);
+ char *did_set_foldcolumn(optset_T *args);
+ char *did_set_shiftwidth_tabstop(optset_T *args);
+ char *did_set_maxcombine(optset_T *args);
++char *did_set_transparency(optset_T *args);
+ char *did_set_iminsert(optset_T *args);
+ char *did_set_imstyle(optset_T *args);
+ char *did_set_window(optset_T *args);
 diff --git a/src/testdir/gen_opt_test.vim b/src/testdir/gen_opt_test.vim
 index a18aa66df..4646684bb 100644
 --- a/src/testdir/gen_opt_test.vim

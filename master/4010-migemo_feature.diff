@@ -1,7 +1,7 @@
 C/Migemo feature
 
 diff --git a/runtime/doc/builtin.txt b/runtime/doc/builtin.txt
-index 5b143cda8..c2139f87a 100644
+index 563cb8791..e19976753 100644
 --- a/runtime/doc/builtin.txt
 +++ b/runtime/doc/builtin.txt
 @@ -414,6 +414,7 @@ matchstrpos({expr}, {pat} [, {start} [, {count}]])
@@ -13,7 +13,7 @@ index 5b143cda8..c2139f87a 100644
  mkdir({name} [, {flags} [, {prot}]])
  				Number	create directory {name}
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index 8c113185b..e00e8bcec 100644
+index 32a342566..cb4754c1c 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
 @@ -6086,6 +6086,32 @@ A jump table for the options with a short description can be found at |Q_op|.
@@ -50,7 +50,7 @@ index 8c113185b..e00e8bcec 100644
  'mkspellmem' 'msm'	string	(default "460000,2000,500")
  			global
 diff --git a/runtime/doc/usr_41.txt b/runtime/doc/usr_41.txt
-index 5fe5e575c..602f49e79 100644
+index 869e30ee9..453bde5bf 100644
 --- a/runtime/doc/usr_41.txt
 +++ b/runtime/doc/usr_41.txt
 @@ -1471,6 +1471,8 @@ Various:					*various-functions*
@@ -61,7 +61,7 @@ index 5fe5e575c..602f49e79 100644
 +
  	debugbreak()		interrupt a program being debugged
  
- ==============================================================================
+ 	redraw_listener_add()   add callbacks to listen for redraws
 diff --git a/src/Make_mvc.mak b/src/Make_mvc.mak
 index a59b083e7..0eedeb333 100644
 --- a/src/Make_mvc.mak
@@ -135,7 +135,7 @@ index fa6757d69..d20d0a8fd 100644
  AC_CHECK_HEADER(dlfcn.h, DLL=dlfcn.h, [AC_CHECK_HEADER(dl.h, DLL=dl.h)])
  if test x${DLL} = xdlfcn.h; then
 diff --git a/src/evalfunc.c b/src/evalfunc.c
-index 49b7c72b2..82dc7f363 100644
+index be654a587..e8a701084 100644
 --- a/src/evalfunc.c
 +++ b/src/evalfunc.c
 @@ -115,6 +115,7 @@ static void f_matchstr(typval_T *argvars, typval_T *rettv);
@@ -155,7 +155,7 @@ index 49b7c72b2..82dc7f363 100644
      {"min",		1, 1, FEARG_1,	    arg1_list_or_tuple_or_dict,
  			ret_max_min,	    f_min},
      {"mkdir",		1, 3, FEARG_1,	    arg3_string_string_number,
-@@ -7172,6 +7175,13 @@ f_has(typval_T *argvars, typval_T *rettv)
+@@ -7176,6 +7179,13 @@ f_has(typval_T *argvars, typval_T *rettv)
  		1
  #else
  		0
@@ -169,7 +169,7 @@ index 49b7c72b2..82dc7f363 100644
  #endif
  		},
  	{"mksession",
-@@ -7802,6 +7812,10 @@ f_has(typval_T *argvars, typval_T *rettv)
+@@ -7806,6 +7816,10 @@ f_has(typval_T *argvars, typval_T *rettv)
  	else if (STRICMP(name, "sodium") == 0)
  	    n = sodium_enabled(FALSE);
  #endif
@@ -180,7 +180,7 @@ index 49b7c72b2..82dc7f363 100644
  #if defined(FEAT_TERMINAL) && defined(MSWIN)
  	else if (STRICMP(name, "terminal") == 0)
  	    n = terminal_enabled();
-@@ -9690,6 +9704,24 @@ f_max(typval_T *argvars, typval_T *rettv)
+@@ -9694,6 +9708,24 @@ f_max(typval_T *argvars, typval_T *rettv)
      max_min(argvars, rettv, TRUE);
  }
  
@@ -268,7 +268,7 @@ index 4ebfbfc5e..c93ec80a3 100644
      save = pat[patlen];
      pat[patlen] = NUL;
 diff --git a/src/feature.h b/src/feature.h
-index cbb1875fd..f7eefdb46 100644
+index cbb1875fd..a7d6e4c37 100644
 --- a/src/feature.h
 +++ b/src/feature.h
 @@ -1192,6 +1192,16 @@
@@ -277,8 +277,8 @@ index cbb1875fd..f7eefdb46 100644
  
 +/*
 + * +migemo		Regexp pattern expansion.  See:
-+ * 				http://migemo.namazu.org/
-+ * 				http://www.kaoriya.net/
++ *				http://migemo.namazu.org/
++ *				http://www.kaoriya.net/
 + */
 +// Use migemo_open() when it's available
 +#if (defined(HAVE_MIGEMO_H) && defined(HAVE_MIGEMO)) || defined(DYNAMIC_MIGEMO)
@@ -856,10 +856,10 @@ index 0855891b0..1a8300e04 100644
  		RE_LAST, sia);
  
 diff --git a/src/structs.h b/src/structs.h
-index 37c8ac6c0..8ac76cc87 100644
+index 43981b99e..739e529ca 100644
 --- a/src/structs.h
 +++ b/src/structs.h
-@@ -3372,6 +3372,9 @@ struct file_buffer
+@@ -3385,6 +3385,9 @@ struct file_buffer
      char_u	*b_p_lop;	// 'lispoptions'
      char_u	*b_p_menc;	// 'makeencoding'
      char_u	*b_p_mps;	// 'matchpairs'
@@ -870,7 +870,7 @@ index 37c8ac6c0..8ac76cc87 100644
      int		b_p_ml_nobin;	// b_p_ml saved for binary mode
      int		b_p_ma;		// 'modifiable'
 diff --git a/src/version.c b/src/version.c
-index 467629519..3626b228e 100644
+index 1b406f892..d14b6a4a4 100644
 --- a/src/version.c
 +++ b/src/version.c
 @@ -329,6 +329,15 @@ static char *(features[]) =

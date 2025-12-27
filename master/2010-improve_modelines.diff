@@ -1,12 +1,12 @@
 support ff, enc and bin in modeline
 
 diff --git a/src/buffer.c b/src/buffer.c
-index be7f1fa8d..851fd03c4 100644
+index 0ed61a703..5d424f5f9 100644
 --- a/src/buffer.c
 +++ b/src/buffer.c
-@@ -363,6 +363,30 @@ open_buffer(
- 	    // Go to the buffer that was opened.
- 	    aucmd_prepbuf(&aco, old_curbuf.br_buf);
+@@ -411,6 +411,30 @@ open_buffer(
+ 	if (curbuf == old_curbuf.br_buf)
+ 	{
  	    do_modelines(0);
 +
 +	    // specified ff and enc, bin in modelines

@@ -115,10 +115,10 @@ index 5de06f92b..336d8f3c7 100644
  
  void DWriteContext_SetRenderingParams(
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index f32164eca..ef7b42fc2 100644
+index c1d7ce92a..86c78d6e5 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
-@@ -5144,13 +5144,13 @@ error:
+@@ -5671,13 +5671,13 @@ error:
  #endif
  
  #ifdef USE_AMBIWIDTH_AUTO
@@ -135,7 +135,7 @@ index f32164eca..ef7b42fc2 100644
      GuiFont usingfont = gui.wide_font ? gui.wide_font : gui.norm_font;
  
      // Check validity of charwide cache
-@@ -5159,34 +5159,53 @@ gui_mch_get_charwidth(int c)
+@@ -5686,34 +5686,53 @@ gui_mch_get_charwidth(int c)
  	// Update cache. -1 is mark for uninitialized cell
  	int i;
  

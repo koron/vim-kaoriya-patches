@@ -1,7 +1,7 @@
 implement 'transparency' for Windows GUI
 
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index 290223c44..dbe5211c7 100644
+index 6e12b9458..695791ee4 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
 @@ -50,6 +50,14 @@ static int gui_mswin_get_menu_height(int fix_window);
@@ -19,7 +19,7 @@ index 290223c44..dbe5211c7 100644
  typedef struct keycode_trans_strategy {
      void (*ptr_on_char) (HWND /*hwnd UNUSED*/, UINT /*cch*/, int /*cRepeat UNUSED*/);
      void (*ptr_on_sys_char) (HWND /*hwnd UNUSED*/, UINT /*cch*/, int /*cRepeat UNUSED*/);
-@@ -5932,6 +5940,8 @@ gui_mch_init(void)
+@@ -6004,6 +6012,8 @@ gui_mch_init(void)
  	(void)gui_mch_set_rendering_options(p_rop);
  #endif
  
@@ -28,7 +28,7 @@ index 290223c44..dbe5211c7 100644
  theend:
      // Display any pending error messages
      display_errors();
-@@ -6120,6 +6130,44 @@ gui_mch_set_sp_color(guicolor_T color)
+@@ -6192,6 +6202,44 @@ gui_mch_set_sp_color(guicolor_T color)
      gui.currSpColor = color;
  }
  
@@ -100,10 +100,10 @@ index b5594dd6e..3a7d777e0 100644
  /*
   * Process the updated 'undofile' option value.
 diff --git a/src/option.h b/src/option.h
-index 87096fa60..7592d7fcc 100644
+index f5c36ad89..ff727a4ee 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -1052,6 +1052,7 @@ EXTERN long	p_titlelen;	// 'titlelen'
+@@ -1051,6 +1051,7 @@ EXTERN long	p_titlelen;	// 'titlelen'
  EXTERN char_u	*p_titleold;	// 'titleold'
  EXTERN char_u	*p_titlestring;	// 'titlestring'
  EXTERN char_u	*p_tsr;		// 'thesaurus'
@@ -112,7 +112,7 @@ index 87096fa60..7592d7fcc 100644
  EXTERN long	p_ttm;		// 'ttimeoutlen'
  EXTERN int	p_tbi;		// 'ttybuiltin'
 diff --git a/src/optiondefs.h b/src/optiondefs.h
-index 81d9ff76e..a15ed71fd 100644
+index d888615f5..7d2ece2d1 100644
 --- a/src/optiondefs.h
 +++ b/src/optiondefs.h
 @@ -2760,6 +2760,11 @@ static struct vimoption options[] =
@@ -128,10 +128,10 @@ index 81d9ff76e..a15ed71fd 100644
  			    (char_u *)&p_ttimeout, PV_NONE, NULL, NULL,
  			    {(char_u *)FALSE, (char_u *)0L} SCTX_INIT},
 diff --git a/src/proto/gui_w32.pro b/src/proto/gui_w32.pro
-index 83cb7721f..503582216 100644
+index a93df3672..acb87f1c5 100644
 --- a/src/proto/gui_w32.pro
 +++ b/src/proto/gui_w32.pro
-@@ -73,6 +73,7 @@ void gui_mch_set_font(GuiFont font);
+@@ -74,6 +74,7 @@ void gui_mch_set_font(GuiFont font);
  void gui_mch_set_fg_color(guicolor_T color);
  void gui_mch_set_bg_color(guicolor_T color);
  void gui_mch_set_sp_color(guicolor_T color);

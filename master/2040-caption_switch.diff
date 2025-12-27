@@ -1,7 +1,7 @@
 add 'C' flag to 'guioptions' which control to show the caption of window
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index e034da262..b9c2214b8 100644
+index e3039e70b..b00dacf4b 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
 @@ -4633,6 +4633,9 @@ A jump table for the options with a short description can be found at |Q_op|.

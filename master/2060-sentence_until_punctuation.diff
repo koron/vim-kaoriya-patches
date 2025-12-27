@@ -1,7 +1,7 @@
 sentence recognizes Japanese punctuations
 
 diff --git a/src/textobject.c b/src/textobject.c
-index d77ec961a..ab6efb8db 100644
+index 1052c0644..3bf178d2e 100644
 --- a/src/textobject.c
 +++ b/src/textobject.c
 @@ -74,7 +74,8 @@ findsent(int dir, long count)

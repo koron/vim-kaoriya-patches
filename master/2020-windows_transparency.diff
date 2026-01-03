@@ -74,10 +74,10 @@ index 6e12b9458..695791ee4 100644
  /*
   * Multi-byte handling, originally by Sung-Hoon Baek.
 diff --git a/src/option.c b/src/option.c
-index 1ec7efbf8..7f66cbd1a 100644
+index 1ec7efbf8..d2e7bf785 100644
 --- a/src/option.c
 +++ b/src/option.c
-@@ -4542,6 +4542,21 @@ did_set_titlelen(optset_T *args)
+@@ -4542,6 +4542,23 @@ did_set_titlelen(optset_T *args)
      return errmsg;
  }
  
@@ -87,12 +87,14 @@ index 1ec7efbf8..7f66cbd1a 100644
 +    char *
 +did_set_transparency(optset_T *args UNUSED)
 +{
++#if defined(MSWIN)
 +    if (p_transparency < 1 || p_transparency > 255)
 +	p_transparency = 255;
 +# ifdef VIMDLL
 +    if (gui.in_use)
 +# endif
 +	gui_mch_set_transparency(p_transparency);
++#endif
 +    return NULL;
 +}
 +

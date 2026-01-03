@@ -13,10 +13,10 @@ index d149f0a19..1cc16d38c 100644
  mkdir({name} [, {flags} [, {prot}]])
  				Number	create directory {name}
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index d5c79fd04..e2f53bf4e 100644
+index d781558ed..0d7c207eb 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
-@@ -6098,6 +6098,32 @@ A jump table for the options with a short description can be found at |Q_op|.
+@@ -6100,6 +6100,32 @@ A jump table for the options with a short description can be found at |Q_op|.
  			Setting it to zero clears the message history.
  			This item must always be present.
  
@@ -370,10 +370,10 @@ index 2f2a56017..8b4ca50d0 100644
  	clearopbeep(oap);
  	break;
 diff --git a/src/option.c b/src/option.c
-index 3a7d777e0..7c0e7bed2 100644
+index 7f66cbd1a..80a58ff20 100644
 --- a/src/option.c
 +++ b/src/option.c
-@@ -6920,6 +6920,9 @@ get_varp(struct vimoption *p)
+@@ -6939,6 +6939,9 @@ get_varp(struct vimoption *p)
  	case PV_ML:	return (char_u *)&(curbuf->b_p_ml);
  	case PV_MPS:	return (char_u *)&(curbuf->b_p_mps);
  	case PV_MA:	return (char_u *)&(curbuf->b_p_ma);
@@ -383,7 +383,7 @@ index 3a7d777e0..7c0e7bed2 100644
  	case PV_MOD:	return (char_u *)&(curbuf->b_changed);
  	case PV_NF:	return (char_u *)&(curbuf->b_p_nf);
  	case PV_PI:	return (char_u *)&(curbuf->b_p_pi);
-@@ -7551,6 +7554,12 @@ buf_copy_options(buf_T *buf, int flags)
+@@ -7570,6 +7573,12 @@ buf_copy_options(buf_T *buf, int flags)
  	    buf->b_p_imsearch = p_imsearch;
  	    COPY_OPT_SCTX(buf, BV_IMS);
  
@@ -397,7 +397,7 @@ index 3a7d777e0..7c0e7bed2 100644
  	    // are not copied, start using the global value
  	    buf->b_p_ac = -1;
 diff --git a/src/option.h b/src/option.h
-index bb6ec2b00..a86460042 100644
+index a298e1932..d5bf59982 100644
 --- a/src/option.h
 +++ b/src/option.h
 @@ -978,6 +978,10 @@ EXTERN char_u	*p_tal;		// 'tabline'
@@ -411,7 +411,7 @@ index bb6ec2b00..a86460042 100644
  #ifdef FEAT_SPELL
  EXTERN char_u	*p_spc;		// 'spellcapcheck'
  EXTERN char_u	*p_spf;		// 'spellfile'
-@@ -1253,6 +1257,9 @@ enum
+@@ -1256,6 +1260,9 @@ enum
      , BV_LW
      , BV_MENC
      , BV_MA
@@ -422,10 +422,10 @@ index bb6ec2b00..a86460042 100644
      , BV_MOD
      , BV_MPS
 diff --git a/src/optiondefs.h b/src/optiondefs.h
-index f19382384..0b0641e71 100644
+index 6d8c3b5b4..210a4cba4 100644
 --- a/src/optiondefs.h
 +++ b/src/optiondefs.h
-@@ -106,6 +106,9 @@
+@@ -109,6 +109,9 @@
  #define PV_LW		OPT_BOTH(OPT_BUF(BV_LW))
  #define PV_MENC		OPT_BOTH(OPT_BUF(BV_MENC))
  #define PV_MA		OPT_BUF(BV_MA)
@@ -435,7 +435,7 @@ index f19382384..0b0641e71 100644
  #define PV_ML		OPT_BUF(BV_ML)
  #define PV_MOD		OPT_BUF(BV_MOD)
  #define PV_MPS		OPT_BUF(BV_MPS)
-@@ -1770,6 +1773,22 @@ static struct vimoption options[] =
+@@ -1773,6 +1776,22 @@ static struct vimoption options[] =
      {"messagesopt","mopt",  P_STRING|P_ALLOCED|P_VI_DEF|P_ONECOMMA|P_COLON|P_NODUP,
  			    (char_u *)&p_mopt, PV_NONE, did_set_messagesopt, expand_set_messagesopt,
  			    {(char_u *)"hit-enter,history:500", (char_u *)NULL} SCTX_INIT},
@@ -856,10 +856,10 @@ index 0855891b0..1a8300e04 100644
  		RE_LAST, sia);
  
 diff --git a/src/structs.h b/src/structs.h
-index 9b095c328..1f91c3eae 100644
+index 6513f2b89..ae7c0fd5c 100644
 --- a/src/structs.h
 +++ b/src/structs.h
-@@ -3388,6 +3388,9 @@ struct file_buffer
+@@ -3397,6 +3397,9 @@ struct file_buffer
      char_u	*b_p_lop;	// 'lispoptions'
      char_u	*b_p_menc;	// 'makeencoding'
      char_u	*b_p_mps;	// 'matchpairs'
@@ -870,7 +870,7 @@ index 9b095c328..1f91c3eae 100644
      int		b_p_ml_nobin;	// b_p_ml saved for binary mode
      int		b_p_ma;		// 'modifiable'
 diff --git a/src/version.c b/src/version.c
-index c88bff30a..473d19578 100644
+index bca913e99..0aea94b65 100644
 --- a/src/version.c
 +++ b/src/version.c
 @@ -329,6 +329,15 @@ static char *(features[]) =

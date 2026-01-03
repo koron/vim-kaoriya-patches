@@ -278,7 +278,7 @@ index 8156b80e1..c57fe6070 100644
       * Conversion may be required when the encoding of the file is different
       * from 'encoding' or 'encoding' is UTF-16, UCS-2 or UCS-4.
 diff --git a/src/version.c b/src/version.c
-index 473d19578..5f1a9afe2 100644
+index 0aea94b65..9d0fb9342 100644
 --- a/src/version.c
 +++ b/src/version.c
 @@ -265,6 +265,7 @@ static char *(features[]) =

@@ -1,7 +1,7 @@
 add 'auto' for 'ambiwidth'
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index b00dacf4b..d5c79fd04 100644
+index 14ea75e90..d781558ed 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
 @@ -817,6 +817,9 @@ A jump table for the options with a short description can be found at |Q_op|.

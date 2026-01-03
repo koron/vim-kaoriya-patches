@@ -1,10 +1,10 @@
 support ff, enc and bin in modeline
 
 diff --git a/src/buffer.c b/src/buffer.c
-index 0ed61a703..5d424f5f9 100644
+index 7dca75307..23e9e8097 100644
 --- a/src/buffer.c
 +++ b/src/buffer.c
-@@ -411,6 +411,30 @@ open_buffer(
+@@ -412,6 +412,30 @@ open_buffer(
  	if (curbuf == old_curbuf.br_buf)
  	{
  	    do_modelines(0);

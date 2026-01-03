@@ -74,10 +74,10 @@ index 6e12b9458..695791ee4 100644
  /*
   * Multi-byte handling, originally by Sung-Hoon Baek.
 diff --git a/src/option.c b/src/option.c
-index b5594dd6e..3a7d777e0 100644
+index 1ec7efbf8..7f66cbd1a 100644
 --- a/src/option.c
 +++ b/src/option.c
-@@ -4535,6 +4535,21 @@ did_set_titlelen(optset_T *args)
+@@ -4542,6 +4542,21 @@ did_set_titlelen(optset_T *args)
      return errmsg;
  }
  
@@ -100,7 +100,7 @@ index b5594dd6e..3a7d777e0 100644
  /*
   * Process the updated 'undofile' option value.
 diff --git a/src/option.h b/src/option.h
-index f5c36ad89..ff727a4ee 100644
+index 7372ba924..67ebdca81 100644
 --- a/src/option.h
 +++ b/src/option.h
 @@ -1051,6 +1051,7 @@ EXTERN long	p_titlelen;	// 'titlelen'
@@ -112,10 +112,10 @@ index f5c36ad89..ff727a4ee 100644
  EXTERN long	p_ttm;		// 'ttimeoutlen'
  EXTERN int	p_tbi;		// 'ttybuiltin'
 diff --git a/src/optiondefs.h b/src/optiondefs.h
-index d888615f5..7d2ece2d1 100644
+index 9e5612470..29f7a4096 100644
 --- a/src/optiondefs.h
 +++ b/src/optiondefs.h
-@@ -2760,6 +2760,11 @@ static struct vimoption options[] =
+@@ -2763,6 +2763,11 @@ static struct vimoption options[] =
  			    {(char_u *)0L, (char_u *)0L}
  #endif
  			    SCTX_INIT},

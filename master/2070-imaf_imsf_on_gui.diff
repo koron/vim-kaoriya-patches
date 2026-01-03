@@ -1,7 +1,7 @@
 support 'imaf' and 'imsf' on GTK
 
 diff --git a/src/gui.c b/src/gui.c
-index 50b12082e..736d6aa27 100644
+index 4e637a698..ebcc10619 100644
 --- a/src/gui.c
 +++ b/src/gui.c
 @@ -1270,7 +1270,7 @@ gui_update_cursor(

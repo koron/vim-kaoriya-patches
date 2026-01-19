@@ -1,0 +1,80 @@
+Try to process WM_SETFOCUS event soon
+
+From: MURAOKA Taro <koron.kaoriya@gmail.com>
+Date: Mon Jan 12 21:36:32 2026 +0900
+
+Problem: In gvim on Windows, a certain problem can occur when the
+WM_SETFOCUS event sent after an external command is not processed
+immediately.
+
+The problem is that Test_normal11_showcmd may fail when running the
+test_normal.vim test.  Investigation revealed that the trigger was an
+external command executed in the previous test,
+Test_mouse_shape_after_failed_change, when two tests were executed
+consecutively.  In gvim on Windows, a WM_SETFOCUS event will be sent
+when an external command finishes executing.  This WM_SETFOCUS event is
+not processed immediately, but rather by redraw, which is expected to
+update showcmd. Because it is queued in typebuf at this time,
+clear_showcmd(), which expects typebuf to be empty, cannot update
+showcmd.
+
+Solution: After posting WM_SETFOCUS, run the message loop to process it
+as quickly as possible.
+
+Also added a test that simulates the above problem.
+
+Signed-off-by: MURAOKA Taro <koron.kaoriya@gmail.com>
+
+diff --git a/src/os_win32.c b/src/os_win32.c
+index 83f1b1ce3..4f02f0d23 100644
+--- a/src/os_win32.c
++++ b/src/os_win32.c
+@@ -4886,6 +4886,10 @@ mch_system_classic(char *cmd, int options)
+ 
+     // Try to get input focus back.  Doesn't always work though.
+     PostMessage(hwnd, WM_SETFOCUS, 0, 0);
++    // To increase the chances that WM_SETFOCUS will work, run the message loop
++    // here.  In addition, it prevents problems caused by delayed WM_SETFOCUS
++    // processing.
++    gui_mch_update();
+ 
+     return ret;
+ }
+diff --git a/src/testdir/test_normal.vim b/src/testdir/test_normal.vim
+index 58c1b9783..f41ae0552 100644
+--- a/src/testdir/test_normal.vim
++++ b/src/testdir/test_normal.vim
+@@ -4411,4 +4411,33 @@ func Test_pos_percentage_in_turkish_locale()
+   endtry
+ endfunc
+ 
++" This test simulates the problem with gvim on Windows, observed when
++" Test_normal11_showcmd in test_normal.vim is executed consecutively after
++" Test_mouse_shape_after_failed_change.
++"
++" The problem occurred because WM_SETFOCUS was processed slowly, and typebuf
++" was not empty when it should have been.
++func Test_win32_gui_setfocus_prevent_showcmd()
++  if !has('win32') || !has('gui_running')
++    throw 'Skipped: Windows GUI regression test'
++  endif
++
++  " WM_SETFOCUS event occurs when finish to execute filter command in gvim
++  exe 'silent !echo foo'
++
++  set showcmd
++  10new
++  call setline(1, ['aaaaa', 'bbbbb', 'ccccc'])
++  call feedkeys("ggl\<C-V>lljj", 'xt')
++
++  " showcmd could not be updated because events originating from WM_SETFOCUS
++  " were stored in typebuf at here.  clear_showcmd() executed from redraw,
++  " will not draw the selection information unless you are in visual mode and
++  " typebuf is empty.
++  redraw!
++
++  call assert_match('3x3$', Screenline(&lines))
++  call feedkeys("\<C-V>", 'xt')
++endfunc
++
+ " vim: shiftwidth=2 sts=2 expandtab nofoldenable

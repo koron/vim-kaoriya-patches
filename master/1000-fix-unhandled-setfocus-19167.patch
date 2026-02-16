@@ -26,10 +26,10 @@ Also added a test that simulates the above problem.
 Signed-off-by: MURAOKA Taro <koron.kaoriya@gmail.com>
 
 diff --git a/src/os_win32.c b/src/os_win32.c
-index 83f1b1ce3..4f02f0d23 100644
+index a3d66c4b9..8138a7493 100644
 --- a/src/os_win32.c
 +++ b/src/os_win32.c
-@@ -4886,6 +4886,10 @@ mch_system_classic(char *cmd, int options)
+@@ -4881,6 +4881,10 @@ mch_system_classic(char *cmd, int options)
  
      // Try to get input focus back.  Doesn't always work though.
      PostMessage(hwnd, WM_SETFOCUS, 0, 0);

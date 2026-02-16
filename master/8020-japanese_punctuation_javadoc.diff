@@ -1,7 +1,7 @@
 add Japanese punctuation character as terminator for javadoc comment title.
 
 diff --git a/runtime/syntax/java.vim b/runtime/syntax/java.vim
-index 149f5fd5a..c554db888 100644
+index bc874904f..f823dda50 100644
 --- a/runtime/syntax/java.vim
 +++ b/runtime/syntax/java.vim
 @@ -1,3 +1,4 @@
@@ -9,7 +9,7 @@ index 149f5fd5a..c554db888 100644
  " Vim syntax file
  " Language:		Java
  " Maintainer:		Aliaksei Budavei <0x000c70 AT gmail DOT com>
-@@ -577,7 +578,7 @@ if !exists("g:java_ignore_javadoc") && (s:with_html || s:with_markdown) && g:mai
+@@ -586,7 +587,7 @@ if !exists("g:java_ignore_javadoc") && (s:with_html || s:with_markdown) && g:mai
  
    if s:with_html
      exec 'syn region javaDocComment start="/\*\*" end="\*/" keepend contains=javaCommentTitle,@javaHtml,@javaDocTags,javaTodo,javaCommentError,javaSpaceError,@Spell ' . s:ff.QueryFoldArgForSyntaxItems('d')

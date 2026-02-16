@@ -1,7 +1,7 @@
 C/Migemo feature
 
 diff --git a/runtime/doc/builtin.txt b/runtime/doc/builtin.txt
-index d149f0a19..1cc16d38c 100644
+index d95f459a9..aa1d75a02 100644
 --- a/runtime/doc/builtin.txt
 +++ b/runtime/doc/builtin.txt
 @@ -433,6 +433,7 @@ matchstrpos({expr}, {pat} [, {start} [, {count}]])
@@ -13,10 +13,10 @@ index d149f0a19..1cc16d38c 100644
  mkdir({name} [, {flags} [, {prot}]])
  				Number	create directory {name}
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index d781558ed..0d7c207eb 100644
+index faf004d1f..a461bbc13 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
-@@ -6100,6 +6100,32 @@ A jump table for the options with a short description can be found at |Q_op|.
+@@ -6108,6 +6108,32 @@ A jump table for the options with a short description can be found at |Q_op|.
  			Setting it to zero clears the message history.
  			This item must always be present.
  
@@ -50,7 +50,7 @@ index d781558ed..0d7c207eb 100644
  'mkspellmem' 'msm'	string	(default "460000,2000,500")
  			global
 diff --git a/runtime/doc/usr_41.txt b/runtime/doc/usr_41.txt
-index 869e30ee9..453bde5bf 100644
+index 098a4a0b7..e12f6bd1e 100644
 --- a/runtime/doc/usr_41.txt
 +++ b/runtime/doc/usr_41.txt
 @@ -1471,6 +1471,8 @@ Various:					*various-functions*
@@ -82,7 +82,7 @@ index a59b083e7..0eedeb333 100644
  !IFDEF TCL
  ! IFNDEF TCL_VER
 diff --git a/src/config.h.in b/src/config.h.in
-index 983f186b8..f22e4eedf 100644
+index 22c4a155d..c47d2d9da 100644
 --- a/src/config.h.in
 +++ b/src/config.h.in
 @@ -180,6 +180,7 @@
@@ -102,10 +102,10 @@ index 983f186b8..f22e4eedf 100644
  #undef HAVE_NDIR_H
  #undef HAVE_POLL_H
 diff --git a/src/configure.ac b/src/configure.ac
-index fa6757d69..d20d0a8fd 100644
+index 70ffb8eb2..a999da354 100644
 --- a/src/configure.ac
 +++ b/src/configure.ac
-@@ -3437,7 +3437,7 @@ fi
+@@ -3435,7 +3435,7 @@ fi
  AC_CHECK_HEADERS(stdint.h stdlib.h string.h \
  	sys/select.h sys/utsname.h termcap.h fcntl.h \
  	sgtty.h sys/ioctl.h sys/time.h sys/types.h \
@@ -114,7 +114,7 @@ index fa6757d69..d20d0a8fd 100644
  	unistd.h stropts.h errno.h sys/resource.h \
  	sys/systeminfo.h locale.h sys/stream.h termios.h \
  	libc.h sys/statfs.h poll.h sys/poll.h pwd.h \
-@@ -4689,6 +4689,19 @@ else
+@@ -4687,6 +4687,19 @@ else
    AC_MSG_RESULT(yes)
  fi
  
@@ -135,7 +135,7 @@ index fa6757d69..d20d0a8fd 100644
  AC_CHECK_HEADER(dlfcn.h, DLL=dlfcn.h, [AC_CHECK_HEADER(dl.h, DLL=dl.h)])
  if test x${DLL} = xdlfcn.h; then
 diff --git a/src/evalfunc.c b/src/evalfunc.c
-index 5aeca60d4..ff814a14a 100644
+index 5d074d44e..8469e7347 100644
 --- a/src/evalfunc.c
 +++ b/src/evalfunc.c
 @@ -115,6 +115,7 @@ static void f_matchstr(typval_T *argvars, typval_T *rettv);
@@ -206,7 +206,7 @@ index 5aeca60d4..ff814a14a 100644
   * "min()" function
   */
 diff --git a/src/ex_getln.c b/src/ex_getln.c
-index 4ebfbfc5e..c93ec80a3 100644
+index ce28088d5..2d13626ee 100644
 --- a/src/ex_getln.c
 +++ b/src/ex_getln.c
 @@ -440,6 +440,17 @@ may_do_incsearch_highlighting(
@@ -236,7 +236,7 @@ index 4ebfbfc5e..c93ec80a3 100644
 +	    search_flags += SEARCH_MIGEMO;
 +#endif
  	ccline.cmdbuff[skiplen + patlen] = NUL;
- #ifdef FEAT_RELTIME
+ # ifdef FEAT_RELTIME
  	CLEAR_FIELD(sia);
 @@ -622,6 +637,17 @@ may_adjust_incsearch_highlighting(
      int	    save;
@@ -268,10 +268,10 @@ index 4ebfbfc5e..c93ec80a3 100644
      save = pat[patlen];
      pat[patlen] = NUL;
 diff --git a/src/feature.h b/src/feature.h
-index cbb1875fd..a7d6e4c37 100644
+index 376e40994..a3fd7efaa 100644
 --- a/src/feature.h
 +++ b/src/feature.h
-@@ -1192,6 +1192,16 @@
+@@ -1191,6 +1191,16 @@
  # define FEAT_FILTERPIPE
  #endif
  
@@ -289,10 +289,10 @@ index cbb1875fd..a7d6e4c37 100644
   * +vtp: Win32 virtual console.
   */
 diff --git a/src/main.c b/src/main.c
-index e42aafaa9..e06272ded 100644
+index c31b14d0c..0abcc91b6 100644
 --- a/src/main.c
 +++ b/src/main.c
-@@ -1841,6 +1841,9 @@ getout(int exitval)
+@@ -1838,6 +1838,9 @@ getout(int exitval)
  #ifdef FEAT_PERL
      perl_end();
  #endif
@@ -303,10 +303,10 @@ index e42aafaa9..e06272ded 100644
      iconv_end();
  #endif
 diff --git a/src/normal.c b/src/normal.c
-index 2f2a56017..8b4ca50d0 100644
+index 1534ab3c5..1cbfb1ab1 100644
 --- a/src/normal.c
 +++ b/src/normal.c
-@@ -4154,7 +4154,12 @@ nv_search(cmdarg_T *cap)
+@@ -4155,7 +4155,12 @@ nv_search(cmdarg_T *cap)
  
      // When using 'incsearch' the cursor may be moved to set a different search
      // start position.
@@ -319,7 +319,7 @@ index 2f2a56017..8b4ca50d0 100644
  
      if (cap->searchbuf == NULL)
      {
-@@ -4163,8 +4168,11 @@ nv_search(cmdarg_T *cap)
+@@ -4164,8 +4169,11 @@ nv_search(cmdarg_T *cap)
      }
  
      (void)normal_search(cap, cap->cmdchar, cap->searchbuf, STRLEN(cap->searchbuf),
@@ -333,7 +333,7 @@ index 2f2a56017..8b4ca50d0 100644
  }
  
  
-@@ -6218,7 +6226,9 @@ nv_g_cmd(cmdarg_T *cap)
+@@ -6219,7 +6227,9 @@ nv_g_cmd(cmdarg_T *cap)
      case '~':
      case 'u':
      case 'U':
@@ -343,7 +343,7 @@ index 2f2a56017..8b4ca50d0 100644
      case '@':
  	nv_operator(cap);
  	break;
-@@ -6305,6 +6315,25 @@ nv_g_cmd(cmdarg_T *cap)
+@@ -6306,6 +6316,25 @@ nv_g_cmd(cmdarg_T *cap)
  							 FALSE, FALSE, FALSE);
  	break;
  
@@ -370,10 +370,10 @@ index 2f2a56017..8b4ca50d0 100644
  	clearopbeep(oap);
  	break;
 diff --git a/src/option.c b/src/option.c
-index 7f66cbd1a..80a58ff20 100644
+index dbf0f8378..e856c7e14 100644
 --- a/src/option.c
 +++ b/src/option.c
-@@ -6939,6 +6939,9 @@ get_varp(struct vimoption *p)
+@@ -6941,6 +6941,9 @@ get_varp(struct vimoption *p)
  	case PV_ML:	return (char_u *)&(curbuf->b_p_ml);
  	case PV_MPS:	return (char_u *)&(curbuf->b_p_mps);
  	case PV_MA:	return (char_u *)&(curbuf->b_p_ma);
@@ -383,7 +383,7 @@ index 7f66cbd1a..80a58ff20 100644
  	case PV_MOD:	return (char_u *)&(curbuf->b_changed);
  	case PV_NF:	return (char_u *)&(curbuf->b_p_nf);
  	case PV_PI:	return (char_u *)&(curbuf->b_p_pi);
-@@ -7570,6 +7573,12 @@ buf_copy_options(buf_T *buf, int flags)
+@@ -7572,6 +7575,12 @@ buf_copy_options(buf_T *buf, int flags)
  	    buf->b_p_imsearch = p_imsearch;
  	    COPY_OPT_SCTX(buf, BV_IMS);
  
@@ -397,7 +397,7 @@ index 7f66cbd1a..80a58ff20 100644
  	    // are not copied, start using the global value
  	    buf->b_p_ac = -1;
 diff --git a/src/option.h b/src/option.h
-index a298e1932..d5bf59982 100644
+index 85ed67be8..dd574db8e 100644
 --- a/src/option.h
 +++ b/src/option.h
 @@ -978,6 +978,10 @@ EXTERN char_u	*p_tal;		// 'tabline'
@@ -422,7 +422,7 @@ index a298e1932..d5bf59982 100644
      , BV_MOD
      , BV_MPS
 diff --git a/src/optiondefs.h b/src/optiondefs.h
-index 6d8c3b5b4..210a4cba4 100644
+index b5e372421..3a6f20b40 100644
 --- a/src/optiondefs.h
 +++ b/src/optiondefs.h
 @@ -109,6 +109,9 @@
@@ -459,10 +459,10 @@ index 6d8c3b5b4..210a4cba4 100644
  #ifdef FEAT_SPELL
  			    (char_u *)&p_msm, PV_NONE, did_set_mkspellmem, NULL,
 diff --git a/src/optionstr.c b/src/optionstr.c
-index 24444a53f..abd808901 100644
+index 2afdc59dc..a7dd82ebb 100644
 --- a/src/optionstr.c
 +++ b/src/optionstr.c
-@@ -5112,6 +5112,11 @@ did_set_string_option(
+@@ -5114,6 +5114,11 @@ did_set_string_option(
  	redraw_all_later(UPD_NOT_VALID);
  #endif
  
@@ -489,7 +489,7 @@ index 445817762..683f773e2 100644
  int search_for_exact_line(buf_T *buf, pos_T *pos, int dir, char_u *pat);
  int searchc(cmdarg_T *cap, int t_cmd);
 diff --git a/src/search.c b/src/search.c
-index 0855891b0..1a8300e04 100644
+index 5d50b1fc5..0593c82ad 100644
 --- a/src/search.c
 +++ b/src/search.c
 @@ -651,8 +651,8 @@ last_pat_prog(regmmatch_T *regmatch)
@@ -856,10 +856,10 @@ index 0855891b0..1a8300e04 100644
  		RE_LAST, sia);
  
 diff --git a/src/structs.h b/src/structs.h
-index 6513f2b89..ae7c0fd5c 100644
+index df296b35d..7b89cfbd6 100644
 --- a/src/structs.h
 +++ b/src/structs.h
-@@ -3397,6 +3397,9 @@ struct file_buffer
+@@ -3402,6 +3402,9 @@ struct file_buffer
      char_u	*b_p_lop;	// 'lispoptions'
      char_u	*b_p_menc;	// 'makeencoding'
      char_u	*b_p_mps;	// 'matchpairs'
@@ -870,7 +870,7 @@ index 6513f2b89..ae7c0fd5c 100644
      int		b_p_ml_nobin;	// b_p_ml saved for binary mode
      int		b_p_ma;		// 'modifiable'
 diff --git a/src/version.c b/src/version.c
-index bca913e99..0aea94b65 100644
+index ad4b50cf7..19fe193f3 100644
 --- a/src/version.c
 +++ b/src/version.c
 @@ -329,6 +329,15 @@ static char *(features[]) =
@@ -890,7 +890,7 @@ index bca913e99..0aea94b65 100644
  	"+mksession",
  #else
 diff --git a/src/vim.h b/src/vim.h
-index daf3c5971..9703840dc 100644
+index d9ddf2c52..87ffb9ced 100644
 --- a/src/vim.h
 +++ b/src/vim.h
 @@ -1024,6 +1024,9 @@ extern int (*dyn_libintl_wputenv)(const wchar_t *envstring);

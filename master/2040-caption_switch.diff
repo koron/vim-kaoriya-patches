@@ -1,10 +1,10 @@
 add 'C' flag to 'guioptions' which control to show the caption of window
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index 4e422a7c7..14ea75e90 100644
+index 60a93799e..94907f8e9 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
-@@ -4635,6 +4635,9 @@ A jump table for the options with a short description can be found at |Q_op|.
+@@ -4637,6 +4637,9 @@ A jump table for the options with a short description can be found at |Q_op|.
  		try to keep 'lines' and 'columns' the same when adding and
  		removing GUI components.
  
@@ -15,10 +15,10 @@ index 4e422a7c7..14ea75e90 100644
  'guipty'		boolean	(default on)
  			global
 diff --git a/src/gui.c b/src/gui.c
-index aeb46c5af..4e637a698 100644
+index 9eef90f92..7fc368d65 100644
 --- a/src/gui.c
 +++ b/src/gui.c
-@@ -3512,6 +3512,8 @@ gui_init_which_components(char_u *oldval UNUSED)
+@@ -3514,6 +3514,8 @@ gui_init_which_components(char_u *oldval UNUSED)
      static int	prev_tearoff = -1;
      int		using_tearoff = FALSE;
  #endif
@@ -27,7 +27,7 @@ index aeb46c5af..4e637a698 100644
  
      char_u	*p;
      int		i;
-@@ -3595,6 +3597,9 @@ gui_init_which_components(char_u *oldval UNUSED)
+@@ -3597,6 +3599,9 @@ gui_init_which_components(char_u *oldval UNUSED)
  		using_tearoff = TRUE;
  #endif
  		break;
@@ -37,7 +37,7 @@ index aeb46c5af..4e637a698 100644
  	    default:
  		// Ignore options that are not supported
  		break;
-@@ -3711,6 +3716,14 @@ gui_init_which_components(char_u *oldval UNUSED)
+@@ -3713,6 +3718,14 @@ gui_init_which_components(char_u *oldval UNUSED)
  	prev_tearoff = using_tearoff;
      }
  #endif
@@ -53,7 +53,7 @@ index aeb46c5af..4e637a698 100644
      {
  #ifdef FEAT_GUI_GTK
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index f04709e28..7765eccbd 100644
+index e40011c4e..aef575077 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
 @@ -1360,6 +1360,55 @@ _OnSizeTextArea(
@@ -142,7 +142,7 @@ index f04709e28..7765eccbd 100644
  	    - gui_mswin_get_menu_height(FALSE));
      }
      else
-@@ -6087,10 +6138,11 @@ gui_mch_set_shellsize(
+@@ -6086,10 +6137,11 @@ gui_mch_set_shellsize(
  
      // compute the size of the outside of the window
      win_width = width + (pGetSystemMetricsForDpi(SM_CXFRAME, s_dpi) +
@@ -156,7 +156,7 @@ index f04709e28..7765eccbd 100644
  			+ gui_mswin_get_menu_height(FALSE);
  
      // The following should take care of keeping Vim on the same monitor, no
-@@ -6972,7 +7024,8 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
+@@ -6971,7 +7023,8 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
  
      *screen_w = workarea_rect.right - workarea_rect.left
  		- (pGetSystemMetricsForDpi(SM_CXFRAME, s_dpi) +
@@ -166,7 +166,7 @@ index f04709e28..7765eccbd 100644
  
      // FIXME: dirty trick: Because the gui_get_base_height() doesn't include
      // the menubar for MSwin, we subtract it from the screen height, so that
-@@ -6980,7 +7033,7 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
+@@ -6979,7 +7032,7 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
      *screen_h = workarea_rect.bottom - workarea_rect.top
  		- (pGetSystemMetricsForDpi(SM_CYFRAME, s_dpi) +
  		   pGetSystemMetricsForDpi(SM_CXPADDEDBORDER, s_dpi)) * 2
@@ -176,7 +176,7 @@ index f04709e28..7765eccbd 100644
  }
  
 diff --git a/src/option.h b/src/option.h
-index fbf8a8f12..a298e1932 100644
+index 506ba9404..85ed67be8 100644
 --- a/src/option.h
 +++ b/src/option.h
 @@ -309,8 +309,9 @@ typedef enum {

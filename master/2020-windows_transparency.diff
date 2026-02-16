@@ -1,7 +1,7 @@
 implement 'transparency' for Windows GUI
 
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index 6e12b9458..695791ee4 100644
+index 3c5178067..576f5994f 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
 @@ -50,6 +50,14 @@ static int gui_mswin_get_menu_height(int fix_window);
@@ -19,7 +19,7 @@ index 6e12b9458..695791ee4 100644
  typedef struct keycode_trans_strategy {
      void (*ptr_on_char) (HWND /*hwnd UNUSED*/, UINT /*cch*/, int /*cRepeat UNUSED*/);
      void (*ptr_on_sys_char) (HWND /*hwnd UNUSED*/, UINT /*cch*/, int /*cRepeat UNUSED*/);
-@@ -6004,6 +6012,8 @@ gui_mch_init(void)
+@@ -6003,6 +6011,8 @@ gui_mch_init(void)
  	(void)gui_mch_set_rendering_options(p_rop);
  #endif
  
@@ -28,7 +28,7 @@ index 6e12b9458..695791ee4 100644
  theend:
      // Display any pending error messages
      display_errors();
-@@ -6192,6 +6202,44 @@ gui_mch_set_sp_color(guicolor_T color)
+@@ -6191,6 +6201,44 @@ gui_mch_set_sp_color(guicolor_T color)
      gui.currSpColor = color;
  }
  
@@ -74,7 +74,7 @@ index 6e12b9458..695791ee4 100644
  /*
   * Multi-byte handling, originally by Sung-Hoon Baek.
 diff --git a/src/option.c b/src/option.c
-index 1ec7efbf8..d2e7bf785 100644
+index e4a94e1c6..dbf0f8378 100644
 --- a/src/option.c
 +++ b/src/option.c
 @@ -4542,6 +4542,23 @@ did_set_titlelen(optset_T *args)
@@ -102,7 +102,7 @@ index 1ec7efbf8..d2e7bf785 100644
  /*
   * Process the updated 'undofile' option value.
 diff --git a/src/option.h b/src/option.h
-index 7372ba924..67ebdca81 100644
+index e482b8666..fae3f02c6 100644
 --- a/src/option.h
 +++ b/src/option.h
 @@ -1051,6 +1051,7 @@ EXTERN long	p_titlelen;	// 'titlelen'
@@ -114,7 +114,7 @@ index 7372ba924..67ebdca81 100644
  EXTERN long	p_ttm;		// 'ttimeoutlen'
  EXTERN int	p_tbi;		// 'ttybuiltin'
 diff --git a/src/optiondefs.h b/src/optiondefs.h
-index 9e5612470..29f7a4096 100644
+index 70dba7601..e88b5cc49 100644
 --- a/src/optiondefs.h
 +++ b/src/optiondefs.h
 @@ -2763,6 +2763,11 @@ static struct vimoption options[] =

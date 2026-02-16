@@ -1,10 +1,10 @@
 ambiwidth=auto supports DirectWrite
 
 diff --git a/src/gui_dwrite.cpp b/src/gui_dwrite.cpp
-index 4f2439077..55119bd60 100644
+index c71358717..7b8f51708 100644
 --- a/src/gui_dwrite.cpp
 +++ b/src/gui_dwrite.cpp
-@@ -349,6 +349,8 @@ struct DWriteContext {
+@@ -352,6 +352,8 @@ struct DWriteContext {
  
      void Flush();
  
@@ -13,7 +13,7 @@ index 4f2439077..55119bd60 100644
      void SetRenderingParams(
  	    const DWriteRenderingParams *params);
  
-@@ -392,9 +394,11 @@ public:
+@@ -409,9 +411,11 @@ public:
  
      static FLOAT adjustToCell(FLOAT value, FLOAT cellWidth)
      {
@@ -26,7 +26,7 @@ index 4f2439077..55119bd60 100644
  	return cellCount * cellWidth;
      }
  };
-@@ -1161,6 +1165,60 @@ DWriteContext::Flush()
+@@ -1221,6 +1225,60 @@ DWriteContext::Flush()
      SetDrawingMode(DM_GDI);
  }
  
@@ -87,7 +87,7 @@ index 4f2439077..55119bd60 100644
      void
  DWriteContext::SetRenderingParams(
  	const DWriteRenderingParams *params)
-@@ -1328,6 +1386,14 @@ DWriteContext_Flush(DWriteContext *ctx)
+@@ -1388,6 +1446,14 @@ DWriteContext_Flush(DWriteContext *ctx)
  	ctx->Flush();
  }
  
@@ -115,10 +115,10 @@ index 5de06f92b..336d8f3c7 100644
  
  void DWriteContext_SetRenderingParams(
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index c1d7ce92a..86c78d6e5 100644
+index 8615352a1..201a8cc43 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
-@@ -5671,13 +5671,13 @@ error:
+@@ -5670,13 +5670,13 @@ error:
  #endif
  
  #ifdef USE_AMBIWIDTH_AUTO
@@ -135,7 +135,7 @@ index c1d7ce92a..86c78d6e5 100644
      GuiFont usingfont = gui.wide_font ? gui.wide_font : gui.norm_font;
  
      // Check validity of charwide cache
-@@ -5686,34 +5686,53 @@ gui_mch_get_charwidth(int c)
+@@ -5685,34 +5685,53 @@ gui_mch_get_charwidth(int c)
  	// Update cache. -1 is mark for uninitialized cell
  	int i;
  

@@ -1,4 +1,5 @@
 1000-fix-unhandled-setfocus-19167.patch
+1001-directx-consider-baseline-subpixels
 2010-improve_modelines.diff
 2020-windows_transparency.diff
 2030-charspace.diff

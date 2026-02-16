@@ -1,0 +1,19 @@
+Stop rounding the baseline to use subpixels
+
+Signed-off-by: MURAOKA Taro <koron.kaoriya@gmail.com>
+
+diff --git a/src/gui_dwrite.cpp b/src/gui_dwrite.cpp
+index c71358717..4461b2b89 100644
+--- a/src/gui_dwrite.cpp
++++ b/src/gui_dwrite.cpp
+@@ -1092,7 +1092,9 @@ DWriteContext::DrawText(const WCHAR *text, int len,
+ 	// font fallback, the metrics change).
+ 	// Use the pre-calculated font ascent for all text to prevent
+ 	// vertical shifts during redraw.
+-	FLOAT baselineY = roundf(FLOAT(y) + FLOAT(h) * mFontAscent + 0.5);
++	// The baseline should not be rounded to take floating point values
++	// into account.
++	FLOAT baselineY = FLOAT(y) + FLOAT(h) * mFontAscent;
+ 
+ 	TextRenderer renderer(this);
+ 	TextRendererContext context = { color, FLOAT(cellWidth), lpDx, len,

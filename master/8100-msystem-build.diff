@@ -1,0 +1,325 @@
+Enable building using MSYSTEM packages
+
+Signed-off-by: MURAOKA Taro <koron.kaoriya@gmail.com>
+
+diff --git a/src/GvimExt/Make_ming.mak b/src/GvimExt/Make_ming.mak
+index b73e6fd92..ac52e09dc 100644
+--- a/src/GvimExt/Make_ming.mak
++++ b/src/GvimExt/Make_ming.mak
+@@ -17,6 +17,16 @@ CROSS = no
+ # check also the executables
+ MINGWOLD = no
+ 
++ifdef MSYSTEM
++  ifeq (CLANG64, $(MSYSTEM))
++USING_CLANG64:=yes
++CC:=clang
++  endif
++endif
++ifndef USING_CLANG64
++USING_CLANG64:=no
++endif
++
+ # Link against the shared versions of libgcc/libstdc++ by default.  Set
+ # STATIC_STDCPLUS to "yes" to link against static versions instead.
+ STATIC_STDCPLUS=no
+@@ -31,13 +41,17 @@ STATIC_LIBS=
+ # Note: -static-libstdc++ is not available until gcc 4.5.x.
+ LDFLAGS += -shared
+ ifeq (yes, $(STATIC_STDCPLUS))
++ ifeq (yes, $(USING_CLANG64))
++STATIC_LIBS += -lc++
++ else
+ LDFLAGS += -static-libgcc -static-libstdc++
+ # Order important: gcc_eh must be placed before winpthread
+ STATIC_LIBS += -lstdc++ -lgcc
+- ifeq (yes, $(HAS_GCC_EH))
++  ifeq (yes, $(HAS_GCC_EH))
+ STATIC_LIBS += -lgcc_eh
+- endif
++  endif
+ STATIC_LIBS += -lwinpthread
++ endif
+ endif
+ 
+ ifeq ($(CROSS),yes)
+diff --git a/src/Make_cyg_ming.mak b/src/Make_cyg_ming.mak
+index 9ec5ef8e0..9688a2182 100644
+--- a/src/Make_cyg_ming.mak
++++ b/src/Make_cyg_ming.mak
+@@ -27,6 +27,13 @@
+ # Maintained by Ron Aaron <ronaharon@yahoo.com> et al.
+ # Last Update: 2025 May 14.
+ 
++# If you want to build some optional features without modifying the source, you
++# can set EXTRA_DEFINES on the command line. Here's an example of setting
++# MODIFIED_BY:
++#
++#	mingw-make -f Make_ming.mvc \
++#	  'EXTRA_DEFINES=-DMODIFIED_BY=\"yourmail@example.com\"'
++
+ #>>>>> choose options:
+ # FEATURES=[TINY | NORMAL | HUGE]
+ # Set to TINY to make a minimal version (no optional features).
+@@ -73,6 +80,42 @@ DIRECTX=yes
+ # Set to yes to cross-compile from unix; no=native Windows (and Cygwin).
+ CROSS=no
+ 
++# Specify yes or static if you want to use MSYSTEM (MSYS2) packages for some of
++# the libraries needed to build the Vim. If you specify "yes", it will link to
++# DLLs, and those packages will need to be installed at runtime. If you specify
++# "static", it will link to static libraries, and those packages will not be
++# required at runtime.
++#
++# Currently, the libraries that are targeted are ICONV, GETTEXT, and XPM. If
++# you specify "yes", all will be set to "msystem", and if you specify "static",
++# all will be set to "msystem-static".
++#
++# The default is no, so the previous configuration method can be used as is.
++#
++# The required MSYS2 packages depend on the value of the environment variable
++# MSYSTEM. See below for details:
++#
++#   If MSYSTEM=UCRT64 (recommended):
++#     ICONV:   mingw-w64-ucrt-x86_64-libiconv
++#     GETTEXT: mingw-w64-ucrt-x86_64-gettext-runtime
++#     XPM:     mingw-w64-ucrt-x86_64-xpm-nox
++#
++#   If MSYSTEM=CLANG64:
++#     ICONV:   mingw-w64-clang-x86_64-libiconv
++#     GETTEXT: mingw-w64-clang-x86_64-gettext-runtime
++#     XPM:     mingw-w64-clang-x86_64-xpm-nox
++#
++#   If MSYSTEM=MINGW64:
++#     ICONV:   mingw-w64-x86_64-libiconv
++#     GETTEXT: mingw-w64-x86_64-gettext-runtime
++#     XPM:     mingw-w64-x86_64-xpm-nox
++#
++#   If MSYSTEM=MINGW32 (not recommended):
++#     ICONV:   mingw-w64-i686-libiconv
++#     GETTEXT: mingw-w64-i686-gettext-runtime
++#     XPM:     mingw-w64-i686-xpm-nox
++USE_MSYSTEM_PACKAGES=no
++
+ # Set to path to iconv.h and libiconv.a to enable using 'iconv.dll'.
+ # Use "yes" when the path does not need to be define.
+ #ICONV="."
+@@ -100,6 +143,18 @@ CSCOPE=yes
+ # Set to yes to enable Netbeans support (requires CHANNEL).
+ NETBEANS=$(GUI)
+ 
++ifdef MSYSTEM
++  ifeq (CLANG64, $(MSYSTEM))
++USING_CLANG64:=yes
++# The only C/C++ compiler for MSYSTEM=CLANG64 is clang. gcc is an alias for
++# clang.
++CC:=clang
++  endif
++endif
++ifndef USING_CLANG64
++USING_CLANG64:=no
++endif
++
+ # Set to yes to enable inter process communication.
+ ifeq (HUGE, $(FEATURES))
+ CHANNEL=yes
+@@ -135,7 +190,13 @@ endif
+ # Link against the shared version of libwinpthread by default.  Set
+ # STATIC_WINPTHREAD to "yes" to link against static version instead.
+ ifndef STATIC_WINPTHREAD
++ ifeq (yes, $(USING_CLANG64))
++# In the MSYSTEM=CLANG64 environment, winpthread is not required because it
++# links with libc++
++STATIC_WINPTHREAD=no
++ else
+ STATIC_WINPTHREAD=$(STATIC_STDCPLUS)
++ endif
+ endif
+ # If you use TDM-GCC(-64), change HAS_GCC_EH to "no".
+ # This is used when STATIC_STDCPLUS=yes.
+@@ -256,6 +317,17 @@ ARCH := $(shell $(CC) -dumpmachine | sed -e "s/-.*//" -e "s/_/-/" -e "s/^mingw32
+  endif
+ endif
+ 
++# Configure libraries according to the value of USE_MSYSTEM_PACKAGES
++ifeq (yes, $(USE_MSYSTEM_PACKAGES))
++ICONV=msystem
++GETTEXT=msystem
++XPM=msystem
++else ifeq (static, $(USE_MSYSTEM_PACKAGES))
++ICONV=msystem-static
++GETTEXT=msystem-static
++XPM=msystem-static
++endif
++
+ 
+ #	Perl interface:
+ #	  PERL=[Path to Perl directory] (Set inside Make_cyg.mak or Make_ming.mak)
+@@ -536,7 +608,8 @@ endif # RUBY
+ # Any other defines can be included here.
+ DEF_GUI=-DFEAT_GUI_MSWIN -DFEAT_CLIPBOARD
+ DEFINES=-DWIN32 -DWINVER=$(WINVER) -D_WIN32_WINNT=$(WINVER) \
+-	-DHAVE_PATHDEF -DFEAT_$(FEATURES) -DHAVE_STDINT_H
++	-DHAVE_PATHDEF -DFEAT_$(FEATURES) -DHAVE_STDINT_H \
++	$(EXTRA_DEFINES)
+ 
+ #>>>>> end of choices
+ ###########################################################################
+@@ -549,16 +622,26 @@ CXXFLAGS = -std=gnu++11
+ WINDRES_FLAGS =
+ EXTRA_LIBS =
+ 
++# Tell C/C++ source files that they are built with MSYSTEM=CLANG64
++ifeq (yes, $(USING_CLANG64))
++DEFINES += -DMSYSTEM_CLANG64
++endif
++
+ ifdef GETTEXT
++  # Using gettext (libintl) from MSYSTEM
++ ifeq ($(findstring msystem, $(GETTEXT)),msystem)
++DEFINES += -DHAVE_GETTEXT=1 -DHAVE_BIND_TEXTDOMAIN_CODESET=1 -DHAVE_LOCALE_H=1
++ else
+ DEFINES += -DHAVE_GETTEXT -DHAVE_LOCALE_H
+ GETTEXTINCLUDE = $(GETTEXT)/include
+ GETTEXTLIB = $(INTLPATH)
+- ifeq (yes, $(GETTEXT))
++  ifeq (yes, $(GETTEXT))
+ DEFINES += -DDYNAMIC_GETTEXT
+- else ifdef DYNAMIC_GETTEXT
++  else ifdef DYNAMIC_GETTEXT
+ DEFINES += -D$(DYNAMIC_GETTEXT)
+-  ifdef GETTEXT_DYNAMIC
++   ifdef GETTEXT_DYNAMIC
+ DEFINES += -DGETTEXT_DYNAMIC -DGETTEXT_DLL=\"$(GETTEXT_DYNAMIC)\"
++   endif
+   endif
+  endif
+ endif
+@@ -735,7 +818,9 @@ XPM = no
+   endif
+  endif
+  ifdef XPM
+-  ifneq ($(XPM),no)
++  ifeq ($(findstring msystem, $(XPM)),msystem)
++CFLAGS += -DFEAT_XPM_W32 -DHAVE_X11_XPM_H=1
++  else ifneq ($(XPM),no)
+ CFLAGS += -DFEAT_XPM_W32 -I $(XPM)/include -I $(XPM)/../include
+   endif
+  endif
+@@ -969,8 +1054,17 @@ ifneq ($(XPM),no)
+ # Only allow XPM for a GUI build.
+  ifeq (yes, $(GUI))
+ OBJ += $(OUTDIR)/xpm_w32.o
++  # Using XPM from MSYSTEM
++  ifeq ($(findstring msystem, $(XPM)),msystem)
++   ifeq ($(XPM),msystem-static)
++LIB += -Wl,-Bstatic -lXpm -Wl,-Bdynamic
++   else
++LIB += -lXpm
++   endif
++  else
+ # You'll need libXpm.a from http://gnuwin32.sf.net
+ LIB += -L$(XPM)/lib -lXpm
++  endif
+  endif
+ endif
+ 
+@@ -1054,15 +1148,23 @@ MAIN_TARGET = $(TARGET)
+ endif
+ 
+ ifdef GETTEXT
+- ifneq (yes, $(GETTEXT))
++ ifeq ($(findstring msystem, $(GETTEXT)),msystem)
++  ifeq ($(GETTEXT),msystem-static)
++LIB += -Wl,-Bstatic -lintl -Wl,-Bdynamic
++  else
++LIB += -lintl
++  endif
++ else
++  ifneq (yes, $(GETTEXT))
+ CFLAGS += -I$(GETTEXTINCLUDE)
+-  ifndef STATIC_GETTEXT
++   ifndef STATIC_GETTEXT
+ LIB += -L$(GETTEXTLIB) -l$(INTLLIB)
+-   ifeq (USE_SAFE_GETTEXT_DLL, $(DYNAMIC_GETTEXT))
++    ifeq (USE_SAFE_GETTEXT_DLL, $(DYNAMIC_GETTEXT))
+ OBJ+=$(SAFE_GETTEXT_DLL_OBJ)
+-   endif
+-  else
++    endif
++   else
+ LIB += -L$(GETTEXTLIB) -lintl
++   endif
+   endif
+  endif
+ endif
+@@ -1098,11 +1200,21 @@ LIB += -limm32
+ endif
+ 
+ ifdef ICONV
+- ifneq (yes, $(ICONV))
++ # Using iconv from MSYSTEM
++ ifeq ($(findstring msystem, $(ICONV)),msystem)
++DEFINES += -DHAVE_ICONV_H=1 -DHAVE_ICONV=1
++  ifeq ($(ICONV),msystem-static)
++LIB += -Wl,-Bstatic -liconv -Wl,-Bdynamic
++  else
++LIB += -liconv
++  endif
++ else
++  ifneq (yes, $(ICONV))
+ LIB += -L$(ICONV)
+ CFLAGS += -I$(ICONV)
+- endif
++  endif
+ DEFINES+=-DDYNAMIC_ICONV
++ endif
+ endif
+ 
+ ifeq (yes, $(SOUND))
+@@ -1112,8 +1224,12 @@ endif
+ ifeq (yes, $(USE_STDCPLUS))
+ LINK = $(CXX)
+  ifeq (yes, $(STATIC_STDCPLUS))
++  ifeq (yes, $(USING_CLANG64))
++LIB += -Wl,-Bstatic -lc++ -Wl,-Bdynamic
++  else
+ #LIB += -static-libstdc++ -static-libgcc
+ LIB += -Wl,-Bstatic -lstdc++ -lgcc -Wl,-Bdynamic
++  endif
+  endif
+ else
+ LINK = $(CC)
+diff --git a/src/eval.c b/src/eval.c
+index ba18a4159..1c7a01343 100644
+--- a/src/eval.c
++++ b/src/eval.c
+@@ -5277,9 +5277,9 @@ eval9(
+     }
+ 
+     // Limit recursion to 1000 levels.  At least at 10000 we run out of stack
+-    // and crash.  With MSVC the stack is smaller.
++    // and crash.  MSVC and MSYSTEM=CLANG64 have a smaller stack.
+     if (recurse ==
+-#ifdef _MSC_VER
++#if defined(_MSC_VER) || defined(MSYSTEM_CLANG64)
+ 		    300
+ #else
+ 		    1000
+diff --git a/src/xpm_w32.c b/src/xpm_w32.c
+index 8f055717b..232713395 100644
+--- a/src/xpm_w32.c
++++ b/src/xpm_w32.c
+@@ -19,7 +19,11 @@
+ // Engage Windows support in libXpm
+ #define FOR_MSW
+ 
+-#include "xpm.h"
++#ifdef HAVE_X11_XPM_H
++# include <X11/xpm.h>
++#else
++# include "xpm.h"
++#endif
+ 
+ /*
+  * Tries to load an Xpm image from the file "filename".

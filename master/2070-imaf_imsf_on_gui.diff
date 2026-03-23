@@ -1,10 +1,10 @@
 support 'imaf' and 'imsf' on GTK
 
 diff --git a/src/gui.c b/src/gui.c
-index 7fc368d65..6c9dc7ff0 100644
+index 66462b918..e2b0903d1 100644
 --- a/src/gui.c
 +++ b/src/gui.c
-@@ -1272,7 +1272,7 @@ gui_update_cursor(
+@@ -1274,7 +1274,7 @@ gui_update_cursor(
  		guicolor_T fg, bg;
  
  		if (

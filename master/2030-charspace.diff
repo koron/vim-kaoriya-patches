@@ -1,7 +1,7 @@
 implement 'charspace' for Windows GUI
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index d28646778..bc5825239 100644
+index c02d40eaa..abef0e93f 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
 @@ -1783,6 +1783,20 @@ A jump table for the options with a short description can be found at |Q_op|.
@@ -26,10 +26,10 @@ index d28646778..bc5825239 100644
  'cindent' 'cin'		boolean	(default off)
  			local to buffer
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index df11d418a..043ac65fd 100644
+index c40bc4ef7..efcd39ad3 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
-@@ -1863,7 +1863,11 @@ GetFontSize(GuiFont font, int *char_width, int *char_height)
+@@ -1862,7 +1862,11 @@ GetFontSize(GuiFont font, int *char_width, int *char_height)
      GetAverageFontSize(hdc, &size);
  
      if (char_width)
@@ -42,10 +42,10 @@ index df11d418a..043ac65fd 100644
  	*char_height = tm.tmHeight + p_linespace;
  
 diff --git a/src/option.h b/src/option.h
-index c314b3f92..b3c01500f 100644
+index ab431ef43..631b0a27d 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -504,6 +504,9 @@ EXTERN int	p_deco;		// 'delcombine'
+@@ -505,6 +505,9 @@ EXTERN int	p_deco;		// 'delcombine'
  EXTERN char_u	*p_ccv;		// 'charconvert'
  #endif
  EXTERN int	p_cdh;		// 'cdhome'
@@ -56,10 +56,10 @@ index c314b3f92..b3c01500f 100644
  EXTERN char_u	*p_cedit;	// 'cedit'
  EXTERN long	p_cwh;		// 'cmdwinheight'
 diff --git a/src/optiondefs.h b/src/optiondefs.h
-index 0a12f167b..3707ba71b 100644
+index 0a7002884..bc6da6d78 100644
 --- a/src/optiondefs.h
 +++ b/src/optiondefs.h
-@@ -595,6 +595,14 @@ static struct vimoption options[] =
+@@ -596,6 +596,14 @@ static struct vimoption options[] =
  			    {(char_u *)0L, (char_u *)0L}
  #endif
  			    SCTX_INIT},

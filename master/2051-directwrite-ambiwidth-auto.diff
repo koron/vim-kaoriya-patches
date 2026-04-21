@@ -1,10 +1,10 @@
 ambiwidth=auto supports DirectWrite
 
 diff --git a/src/gui_dwrite.cpp b/src/gui_dwrite.cpp
-index 4461b2b89..41247eebc 100644
+index ae8d2e03e..a9ec0a871 100644
 --- a/src/gui_dwrite.cpp
 +++ b/src/gui_dwrite.cpp
-@@ -352,6 +352,8 @@ struct DWriteContext {
+@@ -355,6 +355,8 @@ struct DWriteContext {
  
      void Flush();
  
@@ -13,7 +13,7 @@ index 4461b2b89..41247eebc 100644
      void SetRenderingParams(
  	    const DWriteRenderingParams *params);
  
-@@ -409,9 +411,11 @@ public:
+@@ -414,9 +416,11 @@ public:
  
      static FLOAT adjustToCell(FLOAT value, FLOAT cellWidth)
      {
@@ -26,7 +26,7 @@ index 4461b2b89..41247eebc 100644
  	return cellCount * cellWidth;
      }
  };
-@@ -1223,6 +1227,60 @@ DWriteContext::Flush()
+@@ -1280,6 +1284,60 @@ DWriteContext::Flush()
      SetDrawingMode(DM_GDI);
  }
  
@@ -87,7 +87,7 @@ index 4461b2b89..41247eebc 100644
      void
  DWriteContext::SetRenderingParams(
  	const DWriteRenderingParams *params)
-@@ -1390,6 +1448,14 @@ DWriteContext_Flush(DWriteContext *ctx)
+@@ -1447,6 +1505,14 @@ DWriteContext_Flush(DWriteContext *ctx)
  	ctx->Flush();
  }
  
@@ -103,10 +103,10 @@ index 4461b2b89..41247eebc 100644
  DWriteContext_Close(DWriteContext *ctx)
  {
 diff --git a/src/gui_dwrite.h b/src/gui_dwrite.h
-index 5de06f92b..336d8f3c7 100644
+index 4c4777764..fa9b99692 100644
 --- a/src/gui_dwrite.h
 +++ b/src/gui_dwrite.h
-@@ -76,6 +76,7 @@ void DWriteContext_DrawLine(DWriteContext *ctx, int x1, int y1, int x2, int y2,
+@@ -83,6 +83,7 @@ void DWriteContext_DrawLine(DWriteContext *ctx, int x1, int y1, int x2, int y2,
  void DWriteContext_SetPixel(DWriteContext *ctx, int x, int y, COLORREF color);
  void DWriteContext_Scroll(DWriteContext *ctx, int x, int y, const RECT *rc);
  void DWriteContext_Flush(DWriteContext *ctx);
@@ -115,10 +115,10 @@ index 5de06f92b..336d8f3c7 100644
  
  void DWriteContext_SetRenderingParams(
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index 37526f2b0..90a6dba01 100644
+index bc8bb9afa..dc9f9877d 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
-@@ -5667,13 +5667,13 @@ error:
+@@ -5720,13 +5720,13 @@ error:
  #endif
  
  #ifdef USE_AMBIWIDTH_AUTO
@@ -135,7 +135,7 @@ index 37526f2b0..90a6dba01 100644
      GuiFont usingfont = gui.wide_font ? gui.wide_font : gui.norm_font;
  
      // Check validity of charwide cache
-@@ -5682,34 +5682,53 @@ gui_mch_get_charwidth(int c)
+@@ -5735,34 +5735,53 @@ gui_mch_get_charwidth(int c)
  	// Update cache. -1 is mark for uninitialized cell
  	int i;
  

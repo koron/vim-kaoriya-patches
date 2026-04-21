@@ -3,10 +3,10 @@ Stop rounding the baseline to use subpixels
 Signed-off-by: MURAOKA Taro <koron.kaoriya@gmail.com>
 
 diff --git a/src/gui_dwrite.cpp b/src/gui_dwrite.cpp
-index c71358717..4461b2b89 100644
+index 673b6d539..ae8d2e03e 100644
 --- a/src/gui_dwrite.cpp
 +++ b/src/gui_dwrite.cpp
-@@ -1092,7 +1092,9 @@ DWriteContext::DrawText(const WCHAR *text, int len,
+@@ -1149,7 +1149,9 @@ DWriteContext::DrawText(const WCHAR *text, int len,
  	// font fallback, the metrics change).
  	// Use the pre-calculated font ascent for all text to prevent
  	// vertical shifts during redraw.

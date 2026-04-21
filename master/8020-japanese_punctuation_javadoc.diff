@@ -1,7 +1,7 @@
 add Japanese punctuation character as terminator for javadoc comment title.
 
 diff --git a/runtime/syntax/java.vim b/runtime/syntax/java.vim
-index bc874904f..f823dda50 100644
+index ee2b06ffd..14e2adf3d 100644
 --- a/runtime/syntax/java.vim
 +++ b/runtime/syntax/java.vim
 @@ -1,3 +1,4 @@

@@ -1,7 +1,7 @@
 add 'auto' for 'ambiwidth'
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index e123ae9b2..80e0b1683 100644
+index 6f4c1b97c..f91b94770 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
 @@ -839,6 +839,9 @@ A jump table for the options with a short description can be found at |Q_op|.
@@ -26,10 +26,10 @@ index e123ae9b2..80e0b1683 100644
  'antialias' 'anti'	boolean (default: off)
  			global
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index 5940c63ee..37526f2b0 100644
+index f23042261..bc8bb9afa 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
-@@ -5666,6 +5666,56 @@ error:
+@@ -5719,6 +5719,56 @@ error:
  }
  #endif
  
@@ -111,7 +111,7 @@ index 8370c3fa2..898292f12 100644
      {
  	if (!utf_printable(c))
 diff --git a/src/optionstr.c b/src/optionstr.c
-index 8fefcb035..2f8d6f267 100644
+index ab7c5ffff..1fc35058d 100644
 --- a/src/optionstr.c
 +++ b/src/optionstr.c
 @@ -16,7 +16,11 @@
@@ -140,7 +140,7 @@ index 89443b0f6..a348ed94d 100644
  void gui_mch_add_menu(vimmenu_T *menu, int pos);
  void gui_mch_show_popupmenu(vimmenu_T *menu);
 diff --git a/src/vim.h b/src/vim.h
-index f2e3a1610..d64518003 100644
+index 143642d04..99cffe7f4 100644
 --- a/src/vim.h
 +++ b/src/vim.h
 @@ -560,6 +560,13 @@ typedef long long vimlong_T;

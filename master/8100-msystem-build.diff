@@ -267,7 +267,7 @@ index 0cb83ac48..bc5800f70 100644
  else
  LINK = $(CC)
 diff --git a/src/eval.c b/src/eval.c
-index ba18a4159..1c7a01343 100644
+index 7d212b5b3..385585955 100644
 --- a/src/eval.c
 +++ b/src/eval.c
 @@ -5277,9 +5277,9 @@ eval9(

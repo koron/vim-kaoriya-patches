@@ -44,7 +44,7 @@ index b73e6fd92..ac52e09dc 100644
  
  ifeq ($(CROSS),yes)
 diff --git a/src/Make_cyg_ming.mak b/src/Make_cyg_ming.mak
-index 0cb83ac48..bc5800f70 100644
+index 7f3d519bf..81d64d4d6 100644
 --- a/src/Make_cyg_ming.mak
 +++ b/src/Make_cyg_ming.mak
 @@ -80,6 +80,42 @@ DIRECTX=yes
@@ -171,18 +171,17 @@ index 0cb83ac48..bc5800f70 100644
    endif
   endif
  endif
-@@ -743,7 +818,9 @@ XPM = no
-   endif
+@@ -744,6 +819,9 @@ XPM = no
   endif
   ifdef XPM
--  ifneq ($(XPM),no)
+   ifneq ($(XPM),no)
 +  ifeq ($(findstring msystem, $(XPM)),msystem)
 +CFLAGS += -DFEAT_XPM_W32 -DHAVE_X11_XPM_H=1
 +  else ifneq ($(XPM),no)
- CFLAGS += -DFEAT_XPM_W32 -I $(XPM)/include -I $(XPM)/../include
+ CFLAGS += -DFEAT_XPM_W32 -I $(XPM)/include -I $(XPM)/include/X11 -I $(XPM)/../include
    endif
   endif
-@@ -977,8 +1054,17 @@ ifneq ($(XPM),no)
+@@ -978,8 +1056,17 @@ ifneq ($(XPM),no)
  # Only allow XPM for a GUI build.
   ifeq (yes, $(GUI))
  OBJ += $(OUTDIR)/xpm_w32.o
@@ -200,7 +199,7 @@ index 0cb83ac48..bc5800f70 100644
   endif
  endif
  
-@@ -1062,15 +1148,23 @@ MAIN_TARGET = $(TARGET)
+@@ -1063,15 +1150,23 @@ MAIN_TARGET = $(TARGET)
  endif
  
  ifdef GETTEXT
@@ -229,7 +228,7 @@ index 0cb83ac48..bc5800f70 100644
    endif
   endif
  endif
-@@ -1106,11 +1200,21 @@ LIB += -limm32
+@@ -1107,11 +1202,21 @@ LIB += -limm32
  endif
  
  ifdef ICONV
@@ -253,7 +252,7 @@ index 0cb83ac48..bc5800f70 100644
  endif
  
  ifeq (yes, $(SOUND))
-@@ -1120,8 +1224,12 @@ endif
+@@ -1121,8 +1226,12 @@ endif
  ifeq (yes, $(USE_STDCPLUS))
  LINK = $(CXX)
   ifeq (yes, $(STATIC_STDCPLUS))

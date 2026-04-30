@@ -1,10 +1,10 @@
 add guess encode feature
 
 diff --git a/src/evalfunc.c b/src/evalfunc.c
-index 67a88f853..6d4fa26d7 100644
+index 0bc79300f..00da8d881 100644
 --- a/src/evalfunc.c
 +++ b/src/evalfunc.c
-@@ -7099,6 +7099,7 @@ f_has(typval_T *argvars, typval_T *rettv)
+@@ -7108,6 +7108,7 @@ f_has(typval_T *argvars, typval_T *rettv)
  		0
  #endif
  		},
@@ -278,7 +278,7 @@ index 1a7ee9b94..bcfdc0686 100644
       * Conversion may be required when the encoding of the file is different
       * from 'encoding' or 'encoding' is UTF-16, UCS-2 or UCS-4.
 diff --git a/src/version.c b/src/version.c
-index 27fac2fa2..4b8dd6a0b 100644
+index b6119c339..f6d341d76 100644
 --- a/src/version.c
 +++ b/src/version.c
 @@ -265,6 +265,7 @@ static char *(features[]) =

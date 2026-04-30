@@ -1,7 +1,7 @@
 implement 'charspace' for Windows GUI
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index c02d40eaa..abef0e93f 100644
+index 3576e174b..6ef116cec 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
 @@ -1783,6 +1783,20 @@ A jump table for the options with a short description can be found at |Q_op|.
@@ -42,10 +42,10 @@ index c40bc4ef7..efcd39ad3 100644
  	*char_height = tm.tmHeight + p_linespace;
  
 diff --git a/src/option.h b/src/option.h
-index ab431ef43..631b0a27d 100644
+index 6b1ffe759..bfbbcc273 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -505,6 +505,9 @@ EXTERN int	p_deco;		// 'delcombine'
+@@ -506,6 +506,9 @@ EXTERN int	p_deco;		// 'delcombine'
  EXTERN char_u	*p_ccv;		// 'charconvert'
  #endif
  EXTERN int	p_cdh;		// 'cdhome'

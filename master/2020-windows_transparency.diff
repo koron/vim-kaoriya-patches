@@ -74,10 +74,10 @@ index 724266aeb..c40bc4ef7 100644
  /*
   * Multi-byte handling, originally by Sung-Hoon Baek.
 diff --git a/src/option.c b/src/option.c
-index a1138a0e1..5e8d40e36 100644
+index b44a3990a..e137d477c 100644
 --- a/src/option.c
 +++ b/src/option.c
-@@ -4860,6 +4860,23 @@ did_set_titlelen(optset_T *args)
+@@ -4861,6 +4861,23 @@ did_set_titlelen(optset_T *args)
      return errmsg;
  }
  
@@ -102,10 +102,10 @@ index a1138a0e1..5e8d40e36 100644
  /*
   * Process the updated 'undofile' option value.
 diff --git a/src/option.h b/src/option.h
-index c6607a626..ab431ef43 100644
+index cda49a4af..6b1ffe759 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -1061,6 +1061,7 @@ EXTERN long	p_titlelen;	// 'titlelen'
+@@ -1062,6 +1062,7 @@ EXTERN long	p_titlelen;	// 'titlelen'
  EXTERN char_u	*p_titleold;	// 'titleold'
  EXTERN char_u	*p_titlestring;	// 'titlestring'
  EXTERN char_u	*p_tsr;		// 'thesaurus'

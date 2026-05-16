@@ -13,7 +13,7 @@ index 00da8d881..2a1835eda 100644
  #ifdef FEAT_KEYMAP
  		1
 diff --git a/src/version.c b/src/version.c
-index f6d341d76..dd9ffc666 100644
+index 40af79714..94f2d5c64 100644
 --- a/src/version.c
 +++ b/src/version.c
 @@ -288,6 +288,7 @@ static char *(features[]) =

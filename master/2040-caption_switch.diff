@@ -1,10 +1,10 @@
 add 'C' flag to 'guioptions' which control to show the caption of window
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index 6ef116cec..d51244224 100644
+index 8b1cc68f2..8a4a1c4a8 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
-@@ -4667,6 +4667,9 @@ A jump table for the options with a short description can be found at |Q_op|.
+@@ -4672,6 +4672,9 @@ A jump table for the options with a short description can be found at |Q_op|.
  		try to keep 'lines' and 'columns' the same when adding and
  		removing GUI components.
  
@@ -176,10 +176,10 @@ index efcd39ad3..f23042261 100644
  }
  
 diff --git a/src/option.h b/src/option.h
-index bfbbcc273..de80b73b2 100644
+index 257af084c..b7c737dc0 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -309,8 +309,9 @@ typedef enum {
+@@ -310,8 +310,9 @@ typedef enum {
  #define GO_FOOTER	'F'		// add footer
  #define GO_VERTICAL	'v'		// arrange dialog buttons vertically
  #define GO_KEEPWINSIZE	'k'		// keep GUI window size

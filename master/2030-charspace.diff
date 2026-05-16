@@ -1,7 +1,7 @@
 implement 'charspace' for Windows GUI
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index 3576e174b..6ef116cec 100644
+index 99e4e70a3..8b1cc68f2 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
 @@ -1783,6 +1783,20 @@ A jump table for the options with a short description can be found at |Q_op|.
@@ -42,10 +42,10 @@ index c40bc4ef7..efcd39ad3 100644
  	*char_height = tm.tmHeight + p_linespace;
  
 diff --git a/src/option.h b/src/option.h
-index 6b1ffe759..bfbbcc273 100644
+index 34c8ce569..257af084c 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -506,6 +506,9 @@ EXTERN int	p_deco;		// 'delcombine'
+@@ -507,6 +507,9 @@ EXTERN int	p_deco;		// 'delcombine'
  EXTERN char_u	*p_ccv;		// 'charconvert'
  #endif
  EXTERN int	p_cdh;		// 'cdhome'
@@ -56,7 +56,7 @@ index 6b1ffe759..bfbbcc273 100644
  EXTERN char_u	*p_cedit;	// 'cedit'
  EXTERN long	p_cwh;		// 'cmdwinheight'
 diff --git a/src/optiondefs.h b/src/optiondefs.h
-index 0a7002884..bc6da6d78 100644
+index 46e966bda..0c6dd4b49 100644
 --- a/src/optiondefs.h
 +++ b/src/optiondefs.h
 @@ -596,6 +596,14 @@ static struct vimoption options[] =

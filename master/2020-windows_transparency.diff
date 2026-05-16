@@ -74,7 +74,7 @@ index 724266aeb..c40bc4ef7 100644
  /*
   * Multi-byte handling, originally by Sung-Hoon Baek.
 diff --git a/src/option.c b/src/option.c
-index b44a3990a..e137d477c 100644
+index 31f84c98d..649565dd7 100644
 --- a/src/option.c
 +++ b/src/option.c
 @@ -4861,6 +4861,23 @@ did_set_titlelen(optset_T *args)
@@ -102,10 +102,10 @@ index b44a3990a..e137d477c 100644
  /*
   * Process the updated 'undofile' option value.
 diff --git a/src/option.h b/src/option.h
-index cda49a4af..6b1ffe759 100644
+index a4359a259..34c8ce569 100644
 --- a/src/option.h
 +++ b/src/option.h
-@@ -1062,6 +1062,7 @@ EXTERN long	p_titlelen;	// 'titlelen'
+@@ -1063,6 +1063,7 @@ EXTERN long	p_titlelen;	// 'titlelen'
  EXTERN char_u	*p_titleold;	// 'titleold'
  EXTERN char_u	*p_titlestring;	// 'titlestring'
  EXTERN char_u	*p_tsr;		// 'thesaurus'
@@ -114,7 +114,7 @@ index cda49a4af..6b1ffe759 100644
  EXTERN long	p_ttm;		// 'ttimeoutlen'
  EXTERN int	p_tbi;		// 'ttybuiltin'
 diff --git a/src/optiondefs.h b/src/optiondefs.h
-index 0a93b70f8..0a7002884 100644
+index afcaf9631..46e966bda 100644
 --- a/src/optiondefs.h
 +++ b/src/optiondefs.h
 @@ -2796,6 +2796,11 @@ static struct vimoption options[] =

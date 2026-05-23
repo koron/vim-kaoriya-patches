@@ -1,0 +1,533 @@
+Add built-in functions to control the state of fcitx5
+
+- fcitx5_activate(): change activation status of fcitx5
+- fcitx5_status(): get activation status of fcitx5
+
+Signed-off-by: MURAOKA Taro <koron.kaoriya@gmail.com>
+
+diff --git a/src/Makefile b/src/Makefile
+index 4e00a2eb8..b74542bf2 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -1320,6 +1320,8 @@ TERM_DEPS = \
+ 
+ TERM_SRC = libvterm/src/*.c
+ 
++IMCTRL_SRC = imctrl_*.c
++
+ XDIFF_SRC = \
+ 	xdiff/xdiffi.c \
+ 	xdiff/xemit.c \
+@@ -1610,6 +1612,7 @@ BASIC_SRC = \
+ SRC =	$(BASIC_SRC) \
+ 	$(GUI_SRC) \
+ 	$(TERM_SRC) \
++	$(IMCTRL_SRC) \
+ 	$(XDIFF_SRC) \
+ 	$(LUA_SRC) \
+ 	$(MZSCHEME_SRC) \
+@@ -1785,6 +1788,7 @@ OBJ_COMMON = \
+ 	objects/bufwrite.o \
+ 	$(GUI_OBJ) \
+ 	$(TERM_OBJ) \
++	$(IMCTRL_OBJ) \
+ 	$(LUA_OBJ) \
+ 	$(MZSCHEME_OBJ) \
+ 	$(PERL_OBJ) \
+@@ -1908,6 +1912,7 @@ PROTO_FILES = \
+ 	proto/if_ruby.pro \
+ 	proto/if_tcl.pro \
+ 	proto/if_xcmdsrv.pro \
++	proto/imctrl_fcitx5.pro \
+ 	proto/indent.pro \
+ 	proto/insexpand.pro \
+ 	proto/job.pro \
+@@ -3442,6 +3447,9 @@ objects/if_ruby.o: if_ruby.c
+ objects/if_tcl.o: if_tcl.c
+ 	$(CCC_NF) $(TCL_CFLAGS) $(ALL_CFLAGS) $(TCL_CFLAGS_EXTRA) -o $@ if_tcl.c
+ 
++objects/imctrl_fcitx5.o: imctrl_fcitx5.c
++	$(CCC) -o $@ imctrl_fcitx5.c
++
+ objects/indent.o: indent.c
+ 	$(CCC) -o $@ indent.c
+ 
+@@ -4072,6 +4080,11 @@ objects/if_xcmdsrv.o: auto/osdef.h if_xcmdsrv.c vim.h protodef.h auto/config.h f
+  beval.h structs.h regexp.h gui.h \
+  libvterm/include/vterm.h libvterm/include/vterm_keycodes.h alloc.h \
+  ex_cmds.h spell.h proto.h globals.h errors.h version.h
++objects/imctrl_fcitx5.o: auto/osdef.h imctrl_fcitx5.c vim.h protodef.h auto/config.h feature.h \
++ os_unix.h ascii.h keymap.h termdefs.h macros.h option.h \
++ beval.h structs.h regexp.h gui.h \
++ libvterm/include/vterm.h libvterm/include/vterm_keycodes.h \
++ alloc.h ex_cmds.h spell.h proto.h globals.h errors.h
+ objects/indent.o: auto/osdef.h indent.c vim.h protodef.h auto/config.h feature.h os_unix.h \
+  ascii.h keymap.h termdefs.h macros.h option.h beval.h \
+  structs.h regexp.h gui.h libvterm/include/vterm.h \
+@@ -4747,6 +4760,7 @@ proto/if_python3.pro: if_python3.c
+ proto/if_ruby.pro: if_ruby.c
+ proto/if_tcl.pro: if_tcl.c
+ proto/if_xcmdsrv.pro: if_xcmdsrv.c
++proto/imctrl_fcitx5.pro: imctrl_fcitx5.c
+ proto/indent.pro: indent.c
+ proto/insexpand.pro: insexpand.c
+ proto/job.pro: job.c
+diff --git a/src/auto/configure b/src/auto/configure
+index 69b1a39ef..b12ce52f4 100755
+--- a/src/auto/configure
++++ b/src/auto/configure
+@@ -681,6 +681,8 @@ WAYLAND_SRC
+ WAYLAND_LIBS
+ WAYLAND_CFLAGS
+ WAYLAND_CPPFLAGS
++IMCTRL_OBJ
++IMCTRL_SRC
+ TERM_TEST
+ TERM_OBJ
+ TERM_SRC
+@@ -856,6 +858,7 @@ enable_rightleft
+ enable_arabic
+ enable_farsi
+ enable_xim
++enable_imctrl_fcitx5
+ enable_fontset
+ with_wayland
+ with_x
+@@ -1538,6 +1541,7 @@ Optional Features:
+   --disable-arabic        Do not include Arabic language support.
+   --disable-farsi         Deprecated.
+   --enable-xim            Include XIM input support.
++  --enable-imctrl-fcitx5  Include IM control for fcitx5 (need libdus-1).
+   --enable-fontset        Include X fontset output support.
+   --enable-gui=OPTS       X11 GUI. default=auto OPTS=auto/no/gtk2/gnome2/gtk3/gtk4/motif/haiku/photon/carbon
+   --enable-gtk2-check     If auto-select GUI, check for GTK+ 2 default=yes
+@@ -9188,6 +9192,87 @@ esac
+ fi
+ 
+ 
++{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking --enable-imctrl-fcitx5 argument" >&5
++printf %s "checking --enable-imctrl-fcitx5 argument... " >&6; }
++# Check whether --enable-imctrl-fcitx5 was given.
++if test ${enable_imctrl_fcitx5+y}
++then :
++  enableval=$enable_imctrl_fcitx5; { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $enable_imctrl_fcitx5" >&5
++printf "%s\n" "$enable_imctrl_fcitx5" >&6; }
++else case e in #(
++  e) enable_imctrl_fcitx5="no"; { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $enable_imctrl_fcitx5" >&5
++printf "%s\n" "$enable_imctrl_fcitx5" >&6; } ;;
++esac
++fi
++
++
++if test "$enable_imctrl_fcitx5" = "yes"; then
++  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for dbus_bus_get in -ldbus-1" >&5
++printf %s "checking for dbus_bus_get in -ldbus-1... " >&6; }
++if test ${ac_cv_lib_dbus_1_dbus_bus_get+y}
++then :
++  printf %s "(cached) " >&6
++else case e in #(
++  e) ac_check_lib_save_LIBS=$LIBS
++LIBS="-ldbus-1  $LIBS"
++cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++
++/* Override any GCC internal prototype to avoid an error.
++   Use char because int might match the return type of a GCC
++   builtin and then its argument prototype would still apply.
++   The 'extern "C"' is for builds by C++ compilers;
++   although this is not generally supported in C code supporting it here
++   has little cost and some practical benefit (sr 110532).  */
++#ifdef __cplusplus
++extern "C"
++#endif
++char dbus_bus_get (void);
++int
++main (void)
++{
++return dbus_bus_get ();
++  ;
++  return 0;
++}
++_ACEOF
++if ac_fn_c_try_link "$LINENO"
++then :
++  ac_cv_lib_dbus_1_dbus_bus_get=yes
++else case e in #(
++  e) ac_cv_lib_dbus_1_dbus_bus_get=no ;;
++esac
++fi
++rm -f core conftest.err conftest.$ac_objext conftest.beam \
++    conftest$ac_exeext conftest.$ac_ext
++LIBS=$ac_check_lib_save_LIBS ;;
++esac
++fi
++{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_dbus_1_dbus_bus_get" >&5
++printf "%s\n" "$ac_cv_lib_dbus_1_dbus_bus_get" >&6; }
++if test "x$ac_cv_lib_dbus_1_dbus_bus_get" = xyes
++then :
++  LIBS="$LIBS -ldbus-1"; dbus_ok=yes
++else case e in #(
++  e) { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: \"imctrl-fcitx5 DISABLED\"" >&5
++printf "%s\n" "\"imctrl-fcitx5 DISABLED\"" >&6; }; dbus_ok=no ;;
++esac
++fi
++
++  if test "$fail_if_missing" = "yes" -a "$dbus_ok" != "yes"; then
++    as_fn_error $? "could not configure imctrl-fcitx5" "$LINENO" 5
++  fi
++  if test "$dbus_ok" = "yes"; then
++    printf "%s\n" "#define FEAT_IMCTRL_FCITX5 1" >>confdefs.h
++
++    IMCTRL_SRC="imctrl_fcitx5.c"
++    IMCTRL_OBJ="objects/imctrl_fcitx5.o"
++  fi
++fi
++
++
++
++
+ { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking --enable-fontset argument" >&5
+ printf %s "checking --enable-fontset argument... " >&6; }
+ # Check whether --enable-fontset was given.
+diff --git a/src/config.h.in b/src/config.h.in
+index e4273f5b7..b37d72396 100644
+--- a/src/config.h.in
++++ b/src/config.h.in
+@@ -412,6 +412,9 @@
+ /* Define if you want to include XIM support. */
+ #undef FEAT_XIM
+ 
++/* Define if you want to include fcitx5 control support. */
++#undef FEAT_IMCTRL_FCITX5
++
+ /* Define if you use GTK and want GNOME support. */
+ #undef FEAT_GUI_GNOME
+ 
+diff --git a/src/config.mk.in b/src/config.mk.in
+index a46a140a7..0e227afc8 100644
+--- a/src/config.mk.in
++++ b/src/config.mk.in
+@@ -99,6 +99,9 @@ TERM_SRC	= @TERM_SRC@
+ TERM_OBJ	= @TERM_OBJ@
+ TERM_TEST	= @TERM_TEST@
+ 
++IMCTRL_SRC	= @IMCTRL_SRC@
++IMCTRL_OBJ	= @IMCTRL_OBJ@
++
+ RUBY		= @vi_cv_path_ruby@
+ RUBY_SRC	= @RUBY_SRC@
+ RUBY_OBJ	= @RUBY_OBJ@
+diff --git a/src/configure.ac b/src/configure.ac
+index a49c6d26b..4b7e38c1f 100644
+--- a/src/configure.ac
++++ b/src/configure.ac
+@@ -2425,6 +2425,30 @@ AC_ARG_ENABLE(xim,
+ 	AC_MSG_RESULT($enable_xim),
+ 	[enable_xim="auto"; AC_MSG_RESULT(defaulting to auto)])
+ 
++dnl IM control support for fcitx5
++AC_MSG_CHECKING(--enable-imctrl-fcitx5 argument)
++AC_ARG_ENABLE(imctrl-fcitx5,
++	[  --enable-imctrl-fcitx5  Include IM control for fcitx5 (need libdus-1).],
++	[AC_MSG_RESULT($enable_imctrl_fcitx5)],
++	[enable_imctrl_fcitx5="no"; AC_MSG_RESULT($enable_imctrl_fcitx5)])
++
++if test "$enable_imctrl_fcitx5" = "yes"; then
++  AC_CHECK_LIB(dbus-1, dbus_bus_get,
++               [LIBS="$LIBS -ldbus-1"; dbus_ok=yes],
++               [AC_MSG_RESULT("imctrl-fcitx5 DISABLED"); dbus_ok=no])
++  if test "$fail_if_missing" = "yes" -a "$dbus_ok" != "yes"; then
++    AC_MSG_ERROR([could not configure imctrl-fcitx5])
++  fi
++  if test "$dbus_ok" = "yes"; then
++    AC_DEFINE(FEAT_IMCTRL_FCITX5)
++    IMCTRL_SRC="imctrl_fcitx5.c"
++    IMCTRL_OBJ="objects/imctrl_fcitx5.o"
++  fi
++fi
++
++AC_SUBST(IMCTRL_SRC)
++AC_SUBST(IMCTRL_OBJ)
++
+ AC_MSG_CHECKING(--enable-fontset argument)
+ AC_ARG_ENABLE(fontset,
+ 	[  --enable-fontset        Include X fontset output support.], ,
+diff --git a/src/evalfunc.c b/src/evalfunc.c
+index 01c19298b..b0fecbc5f 100644
+--- a/src/evalfunc.c
++++ b/src/evalfunc.c
+@@ -2216,6 +2216,22 @@ static const funcentry_T global_functions[] =
+ 			ret_extend,	    f_extend},
+     {"extendnew",	2, 3, FEARG_1,	    arg23_extendnew,
+ 			ret_first_cont,	    f_extendnew},
++    {"fcitx5_activate",	1, 1, FEARG_1,	    arg1_number,
++			ret_void,
++#ifdef FEAT_IMCTRL_FCITX5
++		f_fcitx5_activate
++#else
++		NULL
++#endif
++			},
++    {"fcitx5_status",	0, 0, 0,	    NULL,
++			ret_number_bool,
++#ifdef FEAT_IMCTRL_FCITX5
++		f_fcitx5_status
++#else
++		NULL
++#endif
++			},
+     {"feedkeys",	1, 2, FEARG_1,	    arg2_string,
+ 			ret_void,	    f_feedkeys},
+     {"file_readable",	1, 1, FEARG_1,	    arg1_string,	// obsolete
+diff --git a/src/gui_xim.c b/src/gui_xim.c
+index acc635193..6ac6c587a 100644
+--- a/src/gui_xim.c
++++ b/src/gui_xim.c
+@@ -115,16 +115,19 @@ call_imactivatefunc(int active)
+     static int
+ call_imstatusfunc(void)
+ {
++    typval_T argv[1];
+     int is_active;
+     int save_KeyTyped = KeyTyped;
+ 
++    argv[0].v_type = VAR_UNKNOWN;
++
+     // FIXME: Don't execute user function in unsafe situation.
+     if (exiting || is_autocmd_blocked())
+ 	return FALSE;
+     // FIXME: :py print 'xxx' is shown duplicate result.
+     // Use silent to avoid it.
+     ++msg_silent;
+-    is_active = call_callback_retnr(&imsf_cb, 0, NULL);
++    is_active = call_callback_retnr(&imsf_cb, 0, argv);
+     --msg_silent;
+ 
+     KeyTyped = save_KeyTyped;
+diff --git a/src/imctrl_fcitx5.c b/src/imctrl_fcitx5.c
+new file mode 100644
+index 000000000..e2adbdcd2
+--- /dev/null
++++ b/src/imctrl_fcitx5.c
+@@ -0,0 +1,181 @@
++/* vi:set ts=8 sts=4 sw=4 noet:
++ *
++ * VIM - Vi IMproved	by Bram Moolenaar
++ *
++ * Do ":help uganda"  in Vim to read copying and usage conditions.
++ * Do ":help credits" in Vim to see a list of people who contributed.
++ * See README.txt for an overview of the Vim source code.
++ */
++
++#include "vim.h"
++
++#if defined(FEAT_IMCTRL_FCITX5)
++
++#include <dbus/dbus.h>
++
++static DBusConnection *fcitx5_conn = NULL;
++static DBusMessage *fcitx5_msg_activate = NULL;
++static DBusMessage *fcitx5_msg_deactivate = NULL;
++static DBusMessage *fcitx5_msg_state = NULL;
++
++static int fcitx5_open();
++static DBusMessage *fcitx5_create_msg(const char *method);
++static DBusMessage *fcitx5_send_msg(DBusMessage* request);
++
++    static int
++fcitx5_open()
++{
++    if (fcitx5_conn)
++	return 1;
++
++    DBusError err;
++    DBusConnection *conn = NULL;
++
++    dbus_error_init(&err);
++    conn = dbus_bus_get(DBUS_BUS_SESSION, &err);
++    if (dbus_error_is_set(&err))
++    {
++	ch_log(NULL, "fcitx: failed to connect D-Bus: %s", err.message);
++	dbus_error_free(&err);
++	return 0;
++    }
++    if (!conn)
++    {
++	ch_log(NULL, "fcitx: null connection without errors");
++	return 0;
++    }
++
++    // Prepare messages
++    fcitx5_msg_activate = fcitx5_create_msg("Activate");
++    fcitx5_msg_deactivate = fcitx5_create_msg("Deactivate");
++    fcitx5_msg_state = fcitx5_create_msg("State");
++    if (!fcitx5_msg_activate || !fcitx5_msg_deactivate || !fcitx5_msg_state)
++    {
++	fcitx5_close();
++	return 0;
++    }
++
++    fcitx5_conn = conn;
++    return 1;
++}
++
++    void
++fcitx5_close()
++{
++    if (fcitx5_msg_activate)
++    {
++	dbus_message_unref(fcitx5_msg_activate);
++	fcitx5_msg_activate = NULL;
++    }
++    if (fcitx5_msg_deactivate)
++    {
++	dbus_message_unref(fcitx5_msg_deactivate);
++	fcitx5_msg_deactivate = NULL;
++    }
++    if (fcitx5_msg_state)
++    {
++	dbus_message_unref(fcitx5_msg_state);
++	fcitx5_msg_state = NULL;
++    }
++    if (fcitx5_conn)
++    {
++	dbus_connection_unref(fcitx5_conn);
++	fcitx5_conn = NULL;
++    }
++}
++
++    static DBusMessage *
++fcitx5_create_msg(const char *method)
++{
++    DBusMessage *msg;
++    msg = dbus_message_new_method_call(
++	    "org.fcitx.Fcitx5",
++	    "/controller",
++	    "org.fcitx.Fcitx.Controller1",
++	    method);
++    if (!msg)
++	ch_log(NULL, "fcitx: failed to create \"%s\" message", method);
++    return msg;
++}
++
++    static DBusMessage *
++fcitx5_send_msg(DBusMessage* request)
++{
++    DBusError err;
++    DBusMessage *reply = NULL;
++
++    dbus_error_init(&err);
++
++    reply = dbus_connection_send_with_reply_and_block(fcitx5_conn,
++	    request, -1, &err);
++    if (dbus_error_is_set(&err))
++    {
++	ch_log(NULL, "fcitx: failed to %s method: %s", dbus_message_get_member(request), err.message);
++        dbus_error_free(&err);
++	if (reply)
++	    dbus_message_unref(reply);
++	return NULL;
++    }
++
++    return reply;
++}
++
++    static int
++fcitx5_get_state()
++{
++    if (!fcitx5_open())
++	return -1;
++
++    int state = -1;
++    DBusError err;
++    DBusMessage *reply;
++
++    dbus_error_init(&err);
++
++    reply = fcitx5_send_msg(fcitx5_msg_state);
++    if (!reply)
++	return -1;
++
++    if (!dbus_message_get_args(reply, &err, DBUS_TYPE_INT32, &state,
++		DBUS_TYPE_INVALID))
++    {
++	ch_log(NULL, "fcitx: failed to parse State response: %s", err.message);
++        dbus_error_free(&err);
++    }
++
++    dbus_message_unref(reply);
++    return state;
++}
++
++    static void
++fcitx5_set_state(int active)
++{
++    if (!fcitx5_open())
++	return;
++    DBusMessage *reply;
++    reply = fcitx5_send_msg(active ? fcitx5_msg_activate : fcitx5_msg_deactivate);
++    if (!reply)
++	return;
++    dbus_message_unref(reply);
++}
++
++    void
++f_fcitx5_status(typval_T *argvars, typval_T *rettv)
++{
++    rettv->vval.v_number = fcitx5_get_state() > 1 ? 1 : 0;
++}
++
++    void
++f_fcitx5_activate(typval_T *argvars, typval_T *rettv UNUSED)
++{
++    if (in_vim9script() && check_for_float_or_nr_arg(argvars, 0) == FAIL)
++	return;
++
++    if (argvars[0].v_type != VAR_NUMBER)
++	return;
++
++    varnumber_T active = tv_get_number_chk(&argvars[0], NULL);
++    fcitx5_set_state(active);
++}
++
++#endif // FEAT_IMCTRL_FCITX5
+diff --git a/src/os_unix.c b/src/os_unix.c
+index 5cfc422b7..aefaa0f46 100644
+--- a/src/os_unix.c
++++ b/src/os_unix.c
+@@ -3778,6 +3778,10 @@ mch_exit(int r)
+ {
+     exiting = TRUE;
+ 
++#ifdef FEAT_IMCTRL_FCITX5
++    fcitx5_close();
++#endif
++
+ #if defined(FEAT_X11) && defined(FEAT_CLIPBOARD)
+     x11_export_final_selection();
+ #endif
+diff --git a/src/proto.h b/src/proto.h
+index ed7a5a054..ef6bd6e06 100644
+--- a/src/proto.h
++++ b/src/proto.h
+@@ -101,6 +101,9 @@ extern int _stricoll(char *a, char *b);
+ # include "hashtab.pro"
+ # include "help.pro"
+ # include "highlight.pro"
++# ifdef FEAT_IMCTRL_FCITX5
++#  include "imctrl_fcitx5.pro"
++# endif
+ # include "indent.pro"
+ # include "insexpand.pro"
+ # include "json.pro"
+diff --git a/src/proto/imctrl_fcitx5.pro b/src/proto/imctrl_fcitx5.pro
+new file mode 100644
+index 000000000..205cb2d82
+--- /dev/null
++++ b/src/proto/imctrl_fcitx5.pro
+@@ -0,0 +1,5 @@
++/* imctrl_fcitx5.c */
++void fcitx5_close();
++void f_fcitx5_status(typval_T *argvars, typval_T *rettv);
++void f_fcitx5_activate(typval_T *argvars, typval_T *rettv);
++/* vim: set ft=c : */

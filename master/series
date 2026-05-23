@@ -7,6 +7,7 @@
 2051-directwrite-ambiwidth-auto.diff
 2060-sentence_until_punctuation.diff
 2070-imaf_imsf_on_gui.diff
+2080-imctrl-fcitx5.diff
 4010-migemo_feature.diff
 4020-guess_encode_feature.diff
 8010-ftp_autolink_2html.diff

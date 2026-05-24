@@ -1,10 +1,10 @@
 support 'imaf' and 'imsf' on GTK
 
 diff --git a/src/gui.c b/src/gui.c
-index d5fcf62f0..090da155d 100644
+index 68bb34e34..3641a889d 100644
 --- a/src/gui.c
 +++ b/src/gui.c
-@@ -1276,7 +1276,7 @@ gui_update_cursor(
+@@ -1270,7 +1270,7 @@ gui_update_cursor(
  		guicolor_T fg, bg;
  
  		if (
@@ -14,10 +14,10 @@ index d5fcf62f0..090da155d 100644
  # else
  			im_get_status()
 diff --git a/src/ui.c b/src/ui.c
-index aa985e4ee..992cc7e56 100644
+index f277ba407..1f1bb65dc 100644
 --- a/src/ui.c
 +++ b/src/ui.c
-@@ -1266,12 +1266,14 @@ im_save_status(long *psave)
+@@ -1256,12 +1256,14 @@ im_save_status(long *psave)
      // And don't save when the GUI is running but our window doesn't have
      // input focus (e.g., when a find dialog is open).
      if (!p_imdisable && KeyTyped && !KeyStuffed

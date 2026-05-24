@@ -1,7 +1,7 @@
 add 'auto' for 'ambiwidth'
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index 8a4a1c4a8..36555bd52 100644
+index d163a252f..00750bdba 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
 @@ -839,6 +839,9 @@ A jump table for the options with a short description can be found at |Q_op|.
@@ -140,7 +140,7 @@ index 89443b0f6..a348ed94d 100644
  void gui_mch_add_menu(vimmenu_T *menu, int pos);
  void gui_mch_show_popupmenu(vimmenu_T *menu);
 diff --git a/src/vim.h b/src/vim.h
-index 25c81f2f8..55c3f1aac 100644
+index 6906547c4..3524eaf67 100644
 --- a/src/vim.h
 +++ b/src/vim.h
 @@ -560,6 +560,13 @@ typedef long long vimlong_T;

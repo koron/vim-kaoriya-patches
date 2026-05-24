@@ -1,7 +1,7 @@
 add 'C' flag to 'guioptions' which control to show the caption of window
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index 8b1cc68f2..8a4a1c4a8 100644
+index 27ebb010a..d163a252f 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
 @@ -4672,6 +4672,9 @@ A jump table for the options with a short description can be found at |Q_op|.
@@ -15,7 +15,7 @@ index 8b1cc68f2..8a4a1c4a8 100644
  'guipty'		boolean	(default on)
  			global
 diff --git a/src/gui.c b/src/gui.c
-index bf277e2b9..d5fcf62f0 100644
+index b04f13216..68bb34e34 100644
 --- a/src/gui.c
 +++ b/src/gui.c
 @@ -3520,6 +3520,8 @@ gui_init_which_components(char_u *oldval UNUSED)
@@ -176,7 +176,7 @@ index efcd39ad3..f23042261 100644
  }
  
 diff --git a/src/option.h b/src/option.h
-index 257af084c..b7c737dc0 100644
+index 281eef40d..c414a3c81 100644
 --- a/src/option.h
 +++ b/src/option.h
 @@ -310,8 +310,9 @@ typedef enum {

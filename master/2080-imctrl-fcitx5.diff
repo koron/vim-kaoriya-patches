@@ -19,10 +19,10 @@ index 0268d158e..39c3afffa 100644
  filecopy({from}, {to})		Number	|TRUE| if copying file {from} to {to}
  					worked
 diff --git a/runtime/doc/tags b/runtime/doc/tags
-index 7cd0074a6..ddf5ced91 100644
+index 44fb21c5d..47015335f 100644
 --- a/runtime/doc/tags
 +++ b/runtime/doc/tags
-@@ -8678,6 +8678,7 @@ if_sniff.txt	if_sniff.txt	/*if_sniff.txt*
+@@ -8680,6 +8680,7 @@ if_sniff.txt	if_sniff.txt	/*if_sniff.txt*
  if_tcl.txt	if_tcl.txt	/*if_tcl.txt*
  ignore-errors	eval.txt	/*ignore-errors*
  ignore-timestamp	editing.txt	/*ignore-timestamp*

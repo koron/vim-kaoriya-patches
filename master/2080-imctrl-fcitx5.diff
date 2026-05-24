@@ -5,8 +5,48 @@ Add built-in functions to control the state of fcitx5
 
 Signed-off-by: MURAOKA Taro <koron.kaoriya@gmail.com>
 
+diff --git a/runtime/doc/builtin.txt b/runtime/doc/builtin.txt
+index 0268d158e..39c3afffa 100644
+--- a/runtime/doc/builtin.txt
++++ b/runtime/doc/builtin.txt
+@@ -193,6 +193,8 @@ extendnew({expr1}, {expr2} [, {expr3}])
+ 				List/Dict
+ 					like |extend()| but creates a new List
+ 					or Dictionary
++fcitx5_activate({active})	none	set fcitx5 active status
++fcitx5_status()			Number	TRUE if fcitx5 is active
+ feedkeys({string} [, {mode}])	none	add key sequence to typeahead buffer
+ filecopy({from}, {to})		Number	|TRUE| if copying file {from} to {to}
+ 					worked
+diff --git a/runtime/doc/tags b/runtime/doc/tags
+index 7cd0074a6..ddf5ced91 100644
+--- a/runtime/doc/tags
++++ b/runtime/doc/tags
+@@ -8678,6 +8678,7 @@ if_sniff.txt	if_sniff.txt	/*if_sniff.txt*
+ if_tcl.txt	if_tcl.txt	/*if_tcl.txt*
+ ignore-errors	eval.txt	/*ignore-errors*
+ ignore-timestamp	editing.txt	/*ignore-timestamp*
++im-control-functions	usr_41.txt	/*im-control-functions*
+ implements	vim9class.txt	/*implements*
+ import-autoload	vim9.txt	/*import-autoload*
+ import-legacy	vim9.txt	/*import-legacy*
+diff --git a/runtime/doc/usr_41.txt b/runtime/doc/usr_41.txt
+index 560f01c70..95921426f 100644
+--- a/runtime/doc/usr_41.txt
++++ b/runtime/doc/usr_41.txt
+@@ -1211,6 +1211,10 @@ GUI:						*gui-functions*
+ 	balloon_split()		split a message for a balloon
+ 	balloon_gettext()	get the text in the balloon
+ 
++IM control:					*im-control-functions*
++	fcitx5_activate()	set fcitx5 active status
++	fcitx5_status()		TRUE if fcitx5 is active
++
+ Vim server:					*server-functions*
+ 	serverlist()		return the list of server names
+ 	remote_startserver()	run a server
 diff --git a/src/Makefile b/src/Makefile
-index 4e00a2eb8..b74542bf2 100644
+index dd94e7418..4303713c3 100644
 --- a/src/Makefile
 +++ b/src/Makefile
 @@ -1320,6 +1320,8 @@ TERM_DEPS = \
@@ -18,7 +58,7 @@ index 4e00a2eb8..b74542bf2 100644
  XDIFF_SRC = \
  	xdiff/xdiffi.c \
  	xdiff/xemit.c \
-@@ -1610,6 +1612,7 @@ BASIC_SRC = \
+@@ -1611,6 +1613,7 @@ BASIC_SRC = \
  SRC =	$(BASIC_SRC) \
  	$(GUI_SRC) \
  	$(TERM_SRC) \
@@ -26,7 +66,7 @@ index 4e00a2eb8..b74542bf2 100644
  	$(XDIFF_SRC) \
  	$(LUA_SRC) \
  	$(MZSCHEME_SRC) \
-@@ -1785,6 +1788,7 @@ OBJ_COMMON = \
+@@ -1787,6 +1790,7 @@ OBJ_COMMON = \
  	objects/bufwrite.o \
  	$(GUI_OBJ) \
  	$(TERM_OBJ) \
@@ -34,7 +74,7 @@ index 4e00a2eb8..b74542bf2 100644
  	$(LUA_OBJ) \
  	$(MZSCHEME_OBJ) \
  	$(PERL_OBJ) \
-@@ -1908,6 +1912,7 @@ PROTO_FILES = \
+@@ -1910,6 +1914,7 @@ PROTO_FILES = \
  	proto/if_ruby.pro \
  	proto/if_tcl.pro \
  	proto/if_xcmdsrv.pro \
@@ -42,7 +82,7 @@ index 4e00a2eb8..b74542bf2 100644
  	proto/indent.pro \
  	proto/insexpand.pro \
  	proto/job.pro \
-@@ -3442,6 +3447,9 @@ objects/if_ruby.o: if_ruby.c
+@@ -3444,6 +3449,9 @@ objects/if_ruby.o: if_ruby.c
  objects/if_tcl.o: if_tcl.c
  	$(CCC_NF) $(TCL_CFLAGS) $(ALL_CFLAGS) $(TCL_CFLAGS_EXTRA) -o $@ if_tcl.c
  
@@ -52,7 +92,7 @@ index 4e00a2eb8..b74542bf2 100644
  objects/indent.o: indent.c
  	$(CCC) -o $@ indent.c
  
-@@ -4072,6 +4080,11 @@ objects/if_xcmdsrv.o: auto/osdef.h if_xcmdsrv.c vim.h protodef.h auto/config.h f
+@@ -4077,6 +4085,11 @@ objects/if_xcmdsrv.o: auto/osdef.h if_xcmdsrv.c vim.h protodef.h auto/config.h f
   beval.h structs.h regexp.h gui.h \
   libvterm/include/vterm.h libvterm/include/vterm_keycodes.h alloc.h \
   ex_cmds.h spell.h proto.h globals.h errors.h version.h
@@ -64,7 +104,7 @@ index 4e00a2eb8..b74542bf2 100644
  objects/indent.o: auto/osdef.h indent.c vim.h protodef.h auto/config.h feature.h os_unix.h \
   ascii.h keymap.h termdefs.h macros.h option.h beval.h \
   structs.h regexp.h gui.h libvterm/include/vterm.h \
-@@ -4747,6 +4760,7 @@ proto/if_python3.pro: if_python3.c
+@@ -4757,6 +4770,7 @@ proto/if_python3.pro: if_python3.c
  proto/if_ruby.pro: if_ruby.c
  proto/if_tcl.pro: if_tcl.c
  proto/if_xcmdsrv.pro: if_xcmdsrv.c
@@ -73,7 +113,7 @@ index 4e00a2eb8..b74542bf2 100644
  proto/insexpand.pro: insexpand.c
  proto/job.pro: job.c
 diff --git a/src/auto/configure b/src/auto/configure
-index 69b1a39ef..b12ce52f4 100755
+index a65e2182f..b5dc6c7e9 100755
 --- a/src/auto/configure
 +++ b/src/auto/configure
 @@ -681,6 +681,8 @@ WAYLAND_SRC
@@ -85,7 +125,7 @@ index 69b1a39ef..b12ce52f4 100755
  TERM_TEST
  TERM_OBJ
  TERM_SRC
-@@ -856,6 +858,7 @@ enable_rightleft
+@@ -855,6 +857,7 @@ enable_rightleft
  enable_arabic
  enable_farsi
  enable_xim
@@ -93,7 +133,7 @@ index 69b1a39ef..b12ce52f4 100755
  enable_fontset
  with_wayland
  with_x
-@@ -1538,6 +1541,7 @@ Optional Features:
+@@ -1536,6 +1539,7 @@ Optional Features:
    --disable-arabic        Do not include Arabic language support.
    --disable-farsi         Deprecated.
    --enable-xim            Include XIM input support.
@@ -101,7 +141,7 @@ index 69b1a39ef..b12ce52f4 100755
    --enable-fontset        Include X fontset output support.
    --enable-gui=OPTS       X11 GUI. default=auto OPTS=auto/no/gtk2/gnome2/gtk3/gtk4/motif/haiku/photon/carbon
    --enable-gtk2-check     If auto-select GUI, check for GTK+ 2 default=yes
-@@ -9188,6 +9192,87 @@ esac
+@@ -9156,6 +9160,87 @@ esac
  fi
  
  
@@ -218,10 +258,10 @@ index a46a140a7..0e227afc8 100644
  RUBY_SRC	= @RUBY_SRC@
  RUBY_OBJ	= @RUBY_OBJ@
 diff --git a/src/configure.ac b/src/configure.ac
-index a49c6d26b..4b7e38c1f 100644
+index 27a8943bd..08aac3027 100644
 --- a/src/configure.ac
 +++ b/src/configure.ac
-@@ -2425,6 +2425,30 @@ AC_ARG_ENABLE(xim,
+@@ -2409,6 +2409,30 @@ AC_ARG_ENABLE(xim,
  	AC_MSG_RESULT($enable_xim),
  	[enable_xim="auto"; AC_MSG_RESULT(defaulting to auto)])
  
@@ -280,7 +320,7 @@ index 01c19298b..b0fecbc5f 100644
  			ret_void,	    f_feedkeys},
      {"file_readable",	1, 1, FEARG_1,	    arg1_string,	// obsolete
 diff --git a/src/gui_xim.c b/src/gui_xim.c
-index acc635193..6ac6c587a 100644
+index ec4620f38..dd4780c31 100644
 --- a/src/gui_xim.c
 +++ b/src/gui_xim.c
 @@ -115,16 +115,19 @@ call_imactivatefunc(int active)
@@ -492,10 +532,10 @@ index 000000000..e2adbdcd2
 +
 +#endif // FEAT_IMCTRL_FCITX5
 diff --git a/src/os_unix.c b/src/os_unix.c
-index 5cfc422b7..aefaa0f46 100644
+index ab58dda7e..45974fdf7 100644
 --- a/src/os_unix.c
 +++ b/src/os_unix.c
-@@ -3778,6 +3778,10 @@ mch_exit(int r)
+@@ -3661,6 +3661,10 @@ mch_exit(int r)
  {
      exiting = TRUE;
  
@@ -507,7 +547,7 @@ index 5cfc422b7..aefaa0f46 100644
      x11_export_final_selection();
  #endif
 diff --git a/src/proto.h b/src/proto.h
-index ed7a5a054..ef6bd6e06 100644
+index 8dd9c30cb..24c279f76 100644
 --- a/src/proto.h
 +++ b/src/proto.h
 @@ -101,6 +101,9 @@ extern int _stricoll(char *a, char *b);

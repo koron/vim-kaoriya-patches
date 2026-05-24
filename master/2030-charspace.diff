@@ -1,7 +1,7 @@
 implement 'charspace' for Windows GUI
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index 99e4e70a3..8b1cc68f2 100644
+index bfab0a87b..27ebb010a 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
 @@ -1783,6 +1783,20 @@ A jump table for the options with a short description can be found at |Q_op|.
@@ -25,6 +25,26 @@ index 99e4e70a3..8b1cc68f2 100644
  				   *'cindent'* *'cin'* *'nocindent'* *'nocin'*
  'cindent' 'cin'		boolean	(default off)
  			local to buffer
+diff --git a/runtime/doc/tags b/runtime/doc/tags
+index 7cd0074a6..44fb21c5d 100644
+--- a/runtime/doc/tags
++++ b/runtime/doc/tags
+@@ -141,6 +141,7 @@ $quote	eval.txt	/*$quote*
+ 'ch'	options.txt	/*'ch'*
+ 'character'	intro.txt	/*'character'*
+ 'charconvert'	options.txt	/*'charconvert'*
++'charspace'	options.txt	/*'charspace'*
+ 'chi'	options.txt	/*'chi'*
+ 'chistory'	options.txt	/*'chistory'*
+ 'ci'	options.txt	/*'ci'*
+@@ -202,6 +203,7 @@ $quote	eval.txt	/*$quote*
+ 'cscopetagorder'	options.txt	/*'cscopetagorder'*
+ 'cscopeverbose'	options.txt	/*'cscopeverbose'*
+ 'csl'	options.txt	/*'csl'*
++'csp'	options.txt	/*'csp'*
+ 'cspc'	options.txt	/*'cspc'*
+ 'csprg'	options.txt	/*'csprg'*
+ 'csqf'	options.txt	/*'csqf'*
 diff --git a/src/gui_w32.c b/src/gui_w32.c
 index c40bc4ef7..efcd39ad3 100644
 --- a/src/gui_w32.c
@@ -42,7 +62,7 @@ index c40bc4ef7..efcd39ad3 100644
  	*char_height = tm.tmHeight + p_linespace;
  
 diff --git a/src/option.h b/src/option.h
-index 34c8ce569..257af084c 100644
+index 3b45a532b..281eef40d 100644
 --- a/src/option.h
 +++ b/src/option.h
 @@ -507,6 +507,9 @@ EXTERN int	p_deco;		// 'delcombine'
@@ -56,7 +76,7 @@ index 34c8ce569..257af084c 100644
  EXTERN char_u	*p_cedit;	// 'cedit'
  EXTERN long	p_cwh;		// 'cmdwinheight'
 diff --git a/src/optiondefs.h b/src/optiondefs.h
-index 46e966bda..0c6dd4b49 100644
+index ba2c993bd..5a166312c 100644
 --- a/src/optiondefs.h
 +++ b/src/optiondefs.h
 @@ -596,6 +596,14 @@ static struct vimoption options[] =

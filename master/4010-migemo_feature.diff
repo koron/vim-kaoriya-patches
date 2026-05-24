@@ -1,10 +1,10 @@
 C/Migemo feature
 
 diff --git a/runtime/doc/builtin.txt b/runtime/doc/builtin.txt
-index e9036c18f..41e5f548c 100644
+index 39c3afffa..a2adb2630 100644
 --- a/runtime/doc/builtin.txt
 +++ b/runtime/doc/builtin.txt
-@@ -436,6 +436,7 @@ matchstrpos({expr}, {pat} [, {start} [, {count}]])
+@@ -438,6 +438,7 @@ matchstrpos({expr}, {pat} [, {start} [, {count}]])
  				List	{count}'th match of {pat} in {expr}
  max({expr})			Number	maximum value of items in {expr}
  menu_info({name} [, {mode}])	Dict	get menu item information
@@ -13,10 +13,10 @@ index e9036c18f..41e5f548c 100644
  mkdir({name} [, {flags} [, {prot}]])
  				Number	create directory {name}
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index 36555bd52..468092ffc 100644
+index 00750bdba..94708e8a2 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
-@@ -6161,6 +6161,32 @@ A jump table for the options with a short description can be found at |Q_op|.
+@@ -6165,6 +6165,32 @@ A jump table for the options with a short description can be found at |Q_op|.
  			Setting it to zero clears the message history.
  			This item must always be present.
  
@@ -49,11 +49,27 @@ index 36555bd52..468092ffc 100644
  						*'mkspellmem'* *'msm'*
  'mkspellmem' 'msm'	string	(default "460000,2000,500")
  			global
+diff --git a/runtime/doc/tags b/runtime/doc/tags
+index 47015335f..15816f18c 100644
+--- a/runtime/doc/tags
++++ b/runtime/doc/tags
+@@ -527,7 +527,11 @@ $quote	eval.txt	/*$quote*
+ 'mesg'	vi_diff.txt	/*'mesg'*
+ 'messagesopt'	options.txt	/*'messagesopt'*
+ 'mfd'	options.txt	/*'mfd'*
++'mgd'	options.txt	/*'mgd'*
++'mgm'	options.txt	/*'mgm'*
+ 'mh'	options.txt	/*'mh'*
++'migemo'	options.txt	/*'migemo'*
++'migemodict'	options.txt	/*'migemodict'*
+ 'mis'	options.txt	/*'mis'*
+ 'mkspellmem'	options.txt	/*'mkspellmem'*
+ 'ml'	options.txt	/*'ml'*
 diff --git a/runtime/doc/usr_41.txt b/runtime/doc/usr_41.txt
-index 560f01c70..13b339eb1 100644
+index 95921426f..ef486326e 100644
 --- a/runtime/doc/usr_41.txt
 +++ b/runtime/doc/usr_41.txt
-@@ -1474,6 +1474,8 @@ Various:					*various-functions*
+@@ -1478,6 +1478,8 @@ Various:					*various-functions*
  	pyxeval()		evaluate |python_x| expression
  	rubyeval()		evaluate |Ruby| expression
  
@@ -63,10 +79,10 @@ index 560f01c70..13b339eb1 100644
  
  	redraw_listener_add()   add callbacks to listen for redraws
 diff --git a/src/Make_mvc.mak b/src/Make_mvc.mak
-index 8994143c9..2f1d0c72d 100644
+index 3b9ccb98f..a819ce967 100644
 --- a/src/Make_mvc.mak
 +++ b/src/Make_mvc.mak
-@@ -923,6 +923,14 @@ GETTEXT = yes
+@@ -924,6 +924,14 @@ GETTEXT = yes
  CFLAGS = $(CFLAGS) -DDYNAMIC_GETTEXT
  !ENDIF
  
@@ -82,7 +98,7 @@ index 8994143c9..2f1d0c72d 100644
  !IFDEF TCL
  ! IFNDEF TCL_VER
 diff --git a/src/config.h.in b/src/config.h.in
-index 699fde7ae..38b907e48 100644
+index b37d72396..dba8c8e1f 100644
 --- a/src/config.h.in
 +++ b/src/config.h.in
 @@ -177,6 +177,7 @@
@@ -102,10 +118,10 @@ index 699fde7ae..38b907e48 100644
  #undef HAVE_NDIR_H
  #undef HAVE_POLL_H
 diff --git a/src/configure.ac b/src/configure.ac
-index 5f79bb6a0..fd2c03266 100644
+index 08aac3027..0a87eed16 100644
 --- a/src/configure.ac
 +++ b/src/configure.ac
-@@ -3406,7 +3406,7 @@ AC_CHECK_FUNCS([waitpid])
+@@ -3481,7 +3481,7 @@ AC_CHECK_FUNCS([waitpid])
  AC_CHECK_HEADERS(stdint.h stdlib.h string.h \
  	sys/select.h sys/utsname.h termcap.h fcntl.h \
  	sgtty.h sys/ioctl.h sys/time.h sys/types.h \
@@ -114,7 +130,7 @@ index 5f79bb6a0..fd2c03266 100644
  	unistd.h stropts.h errno.h sys/resource.h \
  	sys/systeminfo.h locale.h sys/stream.h termios.h \
  	libc.h sys/statfs.h poll.h sys/poll.h pwd.h \
-@@ -4658,6 +4658,19 @@ else
+@@ -4733,6 +4733,19 @@ else
    AC_MSG_RESULT(yes)
  fi
  
@@ -135,7 +151,7 @@ index 5f79bb6a0..fd2c03266 100644
  AC_CHECK_HEADER(dlfcn.h, DLL=dlfcn.h, [AC_CHECK_HEADER(dl.h, DLL=dl.h)])
  if test x${DLL} = xdlfcn.h; then
 diff --git a/src/evalfunc.c b/src/evalfunc.c
-index ed0359263..0bc79300f 100644
+index b0fecbc5f..756dc2ede 100644
 --- a/src/evalfunc.c
 +++ b/src/evalfunc.c
 @@ -115,6 +115,7 @@ static void f_matchstr(typval_T *argvars, typval_T *rettv);
@@ -146,7 +162,7 @@ index ed0359263..0bc79300f 100644
  static void f_min(typval_T *argvars, typval_T *rettv);
  #ifdef FEAT_MZSCHEME
  static void f_mzeval(typval_T *argvars, typval_T *rettv);
-@@ -2580,6 +2581,8 @@ static const funcentry_T global_functions[] =
+@@ -2596,6 +2597,8 @@ static const funcentry_T global_functions[] =
  	    NULL
  #endif
  			},
@@ -155,7 +171,7 @@ index ed0359263..0bc79300f 100644
      {"min",		1, 1, FEARG_1,	    arg1_list_or_tuple_or_dict,
  			ret_max_min,	    f_min},
      {"mkdir",		1, 3, FEARG_1,	    arg3_string_string_number,
-@@ -7238,6 +7241,13 @@ f_has(typval_T *argvars, typval_T *rettv)
+@@ -7261,6 +7264,13 @@ f_has(typval_T *argvars, typval_T *rettv)
  		1
  #else
  		0
@@ -169,7 +185,7 @@ index ed0359263..0bc79300f 100644
  #endif
  		},
  	{"mksession",
-@@ -8000,6 +8010,10 @@ f_has(typval_T *argvars, typval_T *rettv)
+@@ -8023,6 +8033,10 @@ f_has(typval_T *argvars, typval_T *rettv)
  	    else if (STRICMP(name, "sodium") == 0)
  		n = sodium_enabled(FALSE);
  #endif
@@ -180,7 +196,7 @@ index ed0359263..0bc79300f 100644
  #if defined(FEAT_TERMINAL) && defined(MSWIN)
  	    else if (STRICMP(name, "terminal") == 0)
  		n = terminal_enabled();
-@@ -9759,6 +9773,22 @@ f_max(typval_T *argvars, typval_T *rettv)
+@@ -9782,6 +9796,22 @@ f_max(typval_T *argvars, typval_T *rettv)
      max_min(argvars, rettv, TRUE);
  }
  
@@ -266,10 +282,10 @@ index 7e26d6cdb..5c40dbfd3 100644
      i = searchit(curwin, curbuf, &t, NULL,
  		 c == Ctrl_G ? FORWARD : BACKWARD,
 diff --git a/src/feature.h b/src/feature.h
-index 3f3c67a17..60e8ea274 100644
+index 46508f74b..8aa5f336e 100644
 --- a/src/feature.h
 +++ b/src/feature.h
-@@ -1181,6 +1181,16 @@
+@@ -1193,6 +1193,16 @@
  # define FEAT_FILTERPIPE
  #endif
  
@@ -287,7 +303,7 @@ index 3f3c67a17..60e8ea274 100644
   * +vtp: Win32 virtual console.
   */
 diff --git a/src/main.c b/src/main.c
-index cac5db145..015913164 100644
+index d2fe22ebe..fceb1a7bd 100644
 --- a/src/main.c
 +++ b/src/main.c
 @@ -1838,6 +1838,9 @@ getout(int exitval)
@@ -368,10 +384,10 @@ index b74c937c7..bf6244fcf 100644
  	clearopbeep(oap);
  	break;
 diff --git a/src/option.c b/src/option.c
-index 649565dd7..b65b132ad 100644
+index 9a1b3a01d..effe1bce5 100644
 --- a/src/option.c
 +++ b/src/option.c
-@@ -7279,6 +7279,9 @@ get_varp(struct vimoption *p)
+@@ -7289,6 +7289,9 @@ get_varp(struct vimoption *p)
  	case PV_ML:	return (char_u *)&(curbuf->b_p_ml);
  	case PV_MPS:	return (char_u *)&(curbuf->b_p_mps);
  	case PV_MA:	return (char_u *)&(curbuf->b_p_ma);
@@ -381,7 +397,7 @@ index 649565dd7..b65b132ad 100644
  	case PV_MOD:	return (char_u *)&(curbuf->b_changed);
  	case PV_NF:	return (char_u *)&(curbuf->b_p_nf);
  	case PV_PI:	return (char_u *)&(curbuf->b_p_pi);
-@@ -7929,6 +7932,12 @@ buf_copy_options(buf_T *buf, int flags)
+@@ -7939,6 +7942,12 @@ buf_copy_options(buf_T *buf, int flags)
  	    buf->b_p_imsearch = p_imsearch;
  	    COPY_OPT_SCTX(buf, BV_IMS);
  
@@ -395,7 +411,7 @@ index 649565dd7..b65b132ad 100644
  	    // are not copied, start using the global value
  	    buf->b_p_ac = -1;
 diff --git a/src/option.h b/src/option.h
-index b7c737dc0..0bf7d269a 100644
+index c414a3c81..e179ff01a 100644
 --- a/src/option.h
 +++ b/src/option.h
 @@ -986,6 +986,10 @@ EXTERN char_u	*p_tal;		// 'tabline'
@@ -409,7 +425,7 @@ index b7c737dc0..0bf7d269a 100644
  #ifdef FEAT_SPELL
  EXTERN char_u	*p_spc;		// 'spellcapcheck'
  EXTERN char_u	*p_spf;		// 'spellfile'
-@@ -1265,6 +1269,9 @@ enum
+@@ -1266,6 +1270,9 @@ enum
      , BV_LW
      , BV_MENC
      , BV_MA
@@ -420,7 +436,7 @@ index b7c737dc0..0bf7d269a 100644
      , BV_MOD
      , BV_MPS
 diff --git a/src/optiondefs.h b/src/optiondefs.h
-index 0c6dd4b49..baf930610 100644
+index 5a166312c..dd4d43f53 100644
 --- a/src/optiondefs.h
 +++ b/src/optiondefs.h
 @@ -109,6 +109,9 @@
@@ -854,10 +870,10 @@ index 12977dc8f..d9a57d4ca 100644
  		RE_LAST, sia);
  
 diff --git a/src/structs.h b/src/structs.h
-index 6c6ea8c0e..809e7f3ea 100644
+index 8cb9b3f91..a06ef369f 100644
 --- a/src/structs.h
 +++ b/src/structs.h
-@@ -3491,6 +3491,9 @@ struct file_buffer
+@@ -3498,6 +3498,9 @@ struct file_buffer
      char_u	*b_p_lop;	// 'lispoptions'
      char_u	*b_p_menc;	// 'makeencoding'
      char_u	*b_p_mps;	// 'matchpairs'
@@ -868,7 +884,7 @@ index 6c6ea8c0e..809e7f3ea 100644
      int		b_p_ml_nobin;	// b_p_ml saved for binary mode
      int		b_p_ma;		// 'modifiable'
 diff --git a/src/version.c b/src/version.c
-index 982065514..277e0e3ac 100644
+index f3cfeb60a..2c21d756e 100644
 --- a/src/version.c
 +++ b/src/version.c
 @@ -329,6 +329,15 @@ static char *(features[]) =
@@ -888,7 +904,7 @@ index 982065514..277e0e3ac 100644
  	"+mksession",
  #else
 diff --git a/src/vim.h b/src/vim.h
-index 55c3f1aac..8d8c34fb4 100644
+index 3524eaf67..90742fa57 100644
 --- a/src/vim.h
 +++ b/src/vim.h
 @@ -1011,6 +1011,9 @@ extern int (*dyn_libintl_wputenv)(const wchar_t *envstring);

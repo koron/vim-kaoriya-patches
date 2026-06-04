@@ -1,14 +1,15 @@
 make 2html.vim auto link URL which starts 'ftp'
 
 diff --git a/runtime/syntax/2html.vim b/runtime/syntax/2html.vim
-index ca40810e8..01ba59268 100644
+index 527e7d38b..039c7dbe2 100644
 --- a/runtime/syntax/2html.vim
 +++ b/runtime/syntax/2html.vim
-@@ -1975,6 +1975,7 @@ endif
- " Add hyperlinks
- if !s:settings.no_links
-   %s+\(https\=://\S\{-}\)\(\([.,;:}]\=\(\s\|$\)\)\|[\\"'<>]\|&gt;\|&lt;\|&quot;\)+<a href="\1">\1</a>\2+ge
-+  %s+\(\%(https\=\|ftp\)://\S\{-}\)\(\([.,;:}]\=\(\s\|$\)\)\|[\\"'<>]\|&gt;\|&lt;\|&quot;\)+<a href="\1">\1</a>\2+ge
+@@ -2006,7 +2006,7 @@ endif
+ 
+ # Add hyperlinks
+ if !settings.no_links
+-  :%s+\(https\=://\S\{-}\)\(\([.,;:}]\=\(\s\|$\)\)\|[\\"'<>]\|&gt;\|&lt;\|&quot;\)+<a href="\1">\1</a>\2+ge
++  :%s+\(\%(https\=\|ftp\)://\S\{-}\)\(\([.,;:}]\=\(\s\|$\)\)\|[\\"'<>]\|&gt;\|&lt;\|&quot;\)+<a href="\1">\1</a>\2+ge
  endif
  
- " The DTD
+ # The DTD

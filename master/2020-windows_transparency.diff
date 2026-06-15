@@ -1,10 +1,10 @@
 implement 'transparency' for Windows GUI
 
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index 724266aeb..c40bc4ef7 100644
+index d84190091..129e1e1b4 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
-@@ -50,6 +50,14 @@ static int gui_mswin_get_menu_height(int fix_window);
+@@ -54,6 +54,14 @@ static int gui_mswin_get_menu_height(int fix_window);
  # define gui_mswin_get_menu_height(fix_window)	0
  #endif
  
@@ -19,7 +19,7 @@ index 724266aeb..c40bc4ef7 100644
  typedef struct keycode_trans_strategy {
      void (*ptr_on_char) (HWND /*hwnd UNUSED*/, UINT /*cch*/, int /*cRepeat UNUSED*/);
      void (*ptr_on_sys_char) (HWND /*hwnd UNUSED*/, UINT /*cch*/, int /*cRepeat UNUSED*/);
-@@ -6053,6 +6061,8 @@ gui_mch_init(void)
+@@ -6262,6 +6270,8 @@ gui_mch_init(void)
  	(void)gui_mch_set_rendering_options(p_rop);
  #endif
  
@@ -28,7 +28,7 @@ index 724266aeb..c40bc4ef7 100644
  theend:
      // Display any pending error messages
      display_errors();
-@@ -6241,6 +6251,44 @@ gui_mch_set_sp_color(guicolor_T color)
+@@ -6450,6 +6460,44 @@ gui_mch_set_sp_color(guicolor_T color)
      gui.currSpColor = color;
  }
  
@@ -130,10 +130,10 @@ index f238209a7..ba2c993bd 100644
  			    (char_u *)&p_ttimeout, PV_NONE, NULL, NULL,
  			    {(char_u *)FALSE, (char_u *)0L} SCTX_INIT},
 diff --git a/src/proto/gui_w32.pro b/src/proto/gui_w32.pro
-index a93df3672..acb87f1c5 100644
+index e6319e90c..c8b582a9a 100644
 --- a/src/proto/gui_w32.pro
 +++ b/src/proto/gui_w32.pro
-@@ -74,6 +74,7 @@ void gui_mch_set_font(GuiFont font);
+@@ -77,6 +77,7 @@ void gui_mch_set_font(GuiFont font);
  void gui_mch_set_fg_color(guicolor_T color);
  void gui_mch_set_bg_color(guicolor_T color);
  void gui_mch_set_sp_color(guicolor_T color);

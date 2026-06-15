@@ -1,7 +1,7 @@
 add 'auto' for 'ambiwidth'
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index d163a252f..00750bdba 100644
+index d3719279e..2bbc2378c 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
 @@ -839,6 +839,9 @@ A jump table for the options with a short description can be found at |Q_op|.
@@ -26,10 +26,10 @@ index d163a252f..00750bdba 100644
  'antialias' 'anti'	boolean (default: off)
  			global
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index f23042261..bc8bb9afa 100644
+index b736c41ee..2e1873403 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
-@@ -5719,6 +5719,56 @@ error:
+@@ -5928,6 +5928,56 @@ error:
  }
  #endif
  
@@ -128,10 +128,10 @@ index b60e59586..c3bef65ea 100644
  static char *(p_bkc_values[]) = {"yes", "auto", "no", "breaksymlink", "breakhardlink", NULL};
  static char *(p_bo_values[]) = {"all", "backspace", "cursor", "complete",
 diff --git a/src/proto/gui_w32.pro b/src/proto/gui_w32.pro
-index 89443b0f6..a348ed94d 100644
+index dfd6832ab..cd025560e 100644
 --- a/src/proto/gui_w32.pro
 +++ b/src/proto/gui_w32.pro
-@@ -82,6 +82,7 @@ void im_set_active(int active);
+@@ -85,6 +85,7 @@ void im_set_active(int active);
  int im_get_status(void);
  void gui_mch_draw_string(int row, int col, char_u *text, int len, int flags);
  void gui_mch_flush(void);
@@ -140,7 +140,7 @@ index 89443b0f6..a348ed94d 100644
  void gui_mch_add_menu(vimmenu_T *menu, int pos);
  void gui_mch_show_popupmenu(vimmenu_T *menu);
 diff --git a/src/vim.h b/src/vim.h
-index 6906547c4..3524eaf67 100644
+index 640afc62e..fd6e1a900 100644
 --- a/src/vim.h
 +++ b/src/vim.h
 @@ -560,6 +560,13 @@ typedef long long vimlong_T;

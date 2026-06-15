@@ -3,7 +3,7 @@ Enable building using MSYSTEM packages
 Signed-off-by: MURAOKA Taro <koron.kaoriya@gmail.com>
 
 diff --git a/src/GvimExt/Make_ming.mak b/src/GvimExt/Make_ming.mak
-index b73e6fd92..ac52e09dc 100644
+index 341f4add5..7a7e356ea 100644
 --- a/src/GvimExt/Make_ming.mak
 +++ b/src/GvimExt/Make_ming.mak
 @@ -17,6 +17,16 @@ CROSS = no
@@ -44,7 +44,7 @@ index b73e6fd92..ac52e09dc 100644
  
  ifeq ($(CROSS),yes)
 diff --git a/src/Make_cyg_ming.mak b/src/Make_cyg_ming.mak
-index 24db4ccff..8a8e9f61f 100644
+index 0fcfb94c2..26821de3e 100644
 --- a/src/Make_cyg_ming.mak
 +++ b/src/Make_cyg_ming.mak
 @@ -80,6 +80,42 @@ DIRECTX=yes
@@ -183,7 +183,7 @@ index 24db4ccff..8a8e9f61f 100644
    endif
   endif
  
-@@ -979,8 +1058,17 @@ ifneq ($(XPM),no)
+@@ -982,8 +1061,17 @@ ifneq ($(XPM),no)
  # Only allow XPM for a GUI build.
   ifeq (yes, $(GUI))
  OBJ += $(OUTDIR)/xpm_w32.o
@@ -201,7 +201,7 @@ index 24db4ccff..8a8e9f61f 100644
   endif
  endif
  
-@@ -1064,15 +1152,23 @@ MAIN_TARGET = $(TARGET)
+@@ -1067,15 +1155,23 @@ MAIN_TARGET = $(TARGET)
  endif
  
  ifdef GETTEXT
@@ -230,7 +230,7 @@ index 24db4ccff..8a8e9f61f 100644
    endif
   endif
  endif
-@@ -1108,11 +1204,21 @@ LIB += -limm32
+@@ -1111,11 +1207,21 @@ LIB += -limm32
  endif
  
  ifdef ICONV
@@ -254,7 +254,7 @@ index 24db4ccff..8a8e9f61f 100644
  endif
  
  ifeq (yes, $(SOUND))
-@@ -1122,8 +1228,12 @@ endif
+@@ -1125,8 +1231,12 @@ endif
  ifeq (yes, $(USE_STDCPLUS))
  LINK = $(CXX)
   ifeq (yes, $(STATIC_STDCPLUS))

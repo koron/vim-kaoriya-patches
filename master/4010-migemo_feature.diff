@@ -1,7 +1,7 @@
 C/Migemo feature
 
 diff --git a/runtime/doc/builtin.txt b/runtime/doc/builtin.txt
-index 5e0a279e9..821caf53e 100644
+index 114e1f7ac..ee8e3ae8f 100644
 --- a/runtime/doc/builtin.txt
 +++ b/runtime/doc/builtin.txt
 @@ -439,6 +439,7 @@ matchstrpos({expr}, {pat} [, {start} [, {count}]])
@@ -13,7 +13,7 @@ index 5e0a279e9..821caf53e 100644
  mkdir({name} [, {flags} [, {prot}]])
  				Number	create directory {name}
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index 2bbc2378c..ef56e7e7d 100644
+index 9096e9df8..64c4a91b0 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
 @@ -6165,6 +6165,32 @@ A jump table for the options with a short description can be found at |Q_op|.
@@ -50,7 +50,7 @@ index 2bbc2378c..ef56e7e7d 100644
  'mkspellmem' 'msm'	string	(default "460000,2000,500")
  			global
 diff --git a/runtime/doc/tags b/runtime/doc/tags
-index c147dcde1..60a3e0460 100644
+index b13cdce2a..c7e037be7 100644
 --- a/runtime/doc/tags
 +++ b/runtime/doc/tags
 @@ -528,7 +528,11 @@ $quote	eval.txt	/*$quote*
@@ -78,6 +78,24 @@ index 60bfaf0bd..367811b62 100644
  	debugbreak()		interrupt a program being debugged
  
  	redraw_listener_add()   add callbacks to listen for redraws
+diff --git a/src/Make_cyg_ming.mak b/src/Make_cyg_ming.mak
+index 26821de3e..f7e57d2e0 100644
+--- a/src/Make_cyg_ming.mak
++++ b/src/Make_cyg_ming.mak
+@@ -1176,6 +1176,13 @@ LIB += -L$(GETTEXTLIB) -lintl
+  endif
+ endif
+ 
++#
++# Support Migemo
++#
++ifdef MIGEMO
++CFLAGS += -DDYNAMIC_MIGEMO
++endif
++
+ ifdef PERL
+  ifeq (no, $(DYNAMIC_PERL))
+ LIB += -L$(PERLLIBS) -lperl$(PERL_VER)
 diff --git a/src/Make_mvc.mak b/src/Make_mvc.mak
 index c646f8ec3..21189bf4b 100644
 --- a/src/Make_mvc.mak
@@ -118,10 +136,10 @@ index cbb352b89..e48f370f7 100644
  #undef HAVE_NDIR_H
  #undef HAVE_POLL_H
 diff --git a/src/configure.ac b/src/configure.ac
-index 3ebaf68b4..6ffc51b22 100644
+index 1286f60f9..ab4387b6a 100644
 --- a/src/configure.ac
 +++ b/src/configure.ac
-@@ -3494,7 +3494,7 @@ AC_CHECK_FUNCS([waitpid])
+@@ -3503,7 +3503,7 @@ AC_CHECK_FUNCS([waitpid])
  AC_CHECK_HEADERS(stdint.h stdlib.h string.h \
  	sys/select.h sys/utsname.h termcap.h fcntl.h \
  	sgtty.h sys/ioctl.h sys/time.h sys/types.h \
@@ -130,7 +148,7 @@ index 3ebaf68b4..6ffc51b22 100644
  	unistd.h stropts.h errno.h sys/resource.h \
  	sys/systeminfo.h locale.h sys/stream.h termios.h \
  	libc.h sys/statfs.h poll.h sys/poll.h pwd.h \
-@@ -4746,6 +4746,19 @@ else
+@@ -4755,6 +4755,19 @@ else
    AC_MSG_RESULT(yes)
  fi
  
@@ -151,7 +169,7 @@ index 3ebaf68b4..6ffc51b22 100644
  AC_CHECK_HEADER(dlfcn.h, DLL=dlfcn.h, [AC_CHECK_HEADER(dl.h, DLL=dl.h)])
  if test x${DLL} = xdlfcn.h; then
 diff --git a/src/evalfunc.c b/src/evalfunc.c
-index 4569865be..f94f442f7 100644
+index c07986991..4e4d23e5c 100644
 --- a/src/evalfunc.c
 +++ b/src/evalfunc.c
 @@ -116,6 +116,7 @@ static void f_matchstr(typval_T *argvars, typval_T *rettv);
@@ -473,7 +491,7 @@ index 5a166312c..dd4d43f53 100644
  #ifdef FEAT_SPELL
  			    (char_u *)&p_msm, PV_NONE, did_set_mkspellmem, NULL,
 diff --git a/src/optionstr.c b/src/optionstr.c
-index c3bef65ea..94808c33f 100644
+index 78c8079ae..8a50c8923 100644
 --- a/src/optionstr.c
 +++ b/src/optionstr.c
 @@ -5595,6 +5595,11 @@ did_set_string_option(
@@ -489,7 +507,7 @@ index c3bef65ea..94808c33f 100644
  		   && (get_option_flags(opt_idx) & (P_CURSWANT | P_RALL)) != 0
  				&& (get_option_flags(opt_idx) & P_HLONLY) == 0)
 diff --git a/src/proto/search.pro b/src/proto/search.pro
-index 3e700a6d8..1865ebdff 100644
+index 8830c8646..5aac0a4f8 100644
 --- a/src/proto/search.pro
 +++ b/src/proto/search.pro
 @@ -24,6 +24,9 @@ void set_last_search_pat(char_u *s, int idx, int magic, int setlast);
@@ -503,7 +521,7 @@ index 3e700a6d8..1865ebdff 100644
  int do_search(oparg_T *oap, int dirc, int search_delim, char_u *pat, size_t patlen, long count, int options, searchit_arg_T *sia);
  int search_for_exact_line(buf_T *buf, pos_T *pos, int dir, char_u *pat);
 diff --git a/src/search.c b/src/search.c
-index 12977dc8f..d9a57d4ca 100644
+index 7db964f22..37f40d68b 100644
 --- a/src/search.c
 +++ b/src/search.c
 @@ -651,8 +651,8 @@ last_pat_prog(regmmatch_T *regmatch)
@@ -870,7 +888,7 @@ index 12977dc8f..d9a57d4ca 100644
  		RE_LAST, sia);
  
 diff --git a/src/structs.h b/src/structs.h
-index 5d6511a5a..3b338eb3f 100644
+index b112c6d18..21fa55dc1 100644
 --- a/src/structs.h
 +++ b/src/structs.h
 @@ -3502,6 +3502,9 @@ struct file_buffer
@@ -884,7 +902,7 @@ index 5d6511a5a..3b338eb3f 100644
      int		b_p_ml_nobin;	// b_p_ml saved for binary mode
      int		b_p_ma;		// 'modifiable'
 diff --git a/src/version.c b/src/version.c
-index 392bae84c..6e6daeadc 100644
+index 5a976ac57..14cb20d8b 100644
 --- a/src/version.c
 +++ b/src/version.c
 @@ -329,6 +329,15 @@ static char *(features[]) =
@@ -904,10 +922,10 @@ index 392bae84c..6e6daeadc 100644
  	"+mksession",
  #else
 diff --git a/src/vim.h b/src/vim.h
-index fd6e1a900..09c4edec0 100644
+index 7a3cea6c3..11caf9ce5 100644
 --- a/src/vim.h
 +++ b/src/vim.h
-@@ -1013,6 +1013,9 @@ extern int (*dyn_libintl_wputenv)(const wchar_t *envstring);
+@@ -1016,6 +1016,9 @@ extern int (*dyn_libintl_wputenv)(const wchar_t *envstring);
  #define SEARCH_KEEP  0x400  // keep previous search pattern
  #define SEARCH_PEEK  0x800  // peek for typed char, cancel search
  #define SEARCH_COL  0x1000  // start at specified column instead of zero

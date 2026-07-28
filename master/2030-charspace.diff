@@ -1,7 +1,7 @@
 implement 'charspace' for Windows GUI
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index 244a7510f..3a8f2ba22 100644
+index 84e4f30ae..1a3258970 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
 @@ -1783,6 +1783,20 @@ A jump table for the options with a short description can be found at |Q_op|.
@@ -26,7 +26,7 @@ index 244a7510f..3a8f2ba22 100644
  'cindent' 'cin'		boolean	(default off)
  			local to buffer
 diff --git a/runtime/doc/tags b/runtime/doc/tags
-index 7fbe14923..0b9920b5d 100644
+index b01ae4204..331e5cb9f 100644
 --- a/runtime/doc/tags
 +++ b/runtime/doc/tags
 @@ -142,6 +142,7 @@ $quote	eval.txt	/*$quote*
@@ -46,7 +46,7 @@ index 7fbe14923..0b9920b5d 100644
  'csprg'	options.txt	/*'csprg'*
  'csqf'	options.txt	/*'csqf'*
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index 129e1e1b4..d677ee55c 100644
+index c1e4ac99c..cd0076bb5 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
 @@ -1866,7 +1866,11 @@ GetFontSize(GuiFont font, int *char_width, int *char_height)

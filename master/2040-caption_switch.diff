@@ -1,7 +1,7 @@
 add 'C' flag to 'guioptions' which control to show the caption of window
 
 diff --git a/runtime/doc/options.txt b/runtime/doc/options.txt
-index 3a8f2ba22..d3719279e 100644
+index 1a3258970..c8e90433f 100644
 --- a/runtime/doc/options.txt
 +++ b/runtime/doc/options.txt
 @@ -4672,6 +4672,9 @@ A jump table for the options with a short description can be found at |Q_op|.
@@ -15,10 +15,10 @@ index 3a8f2ba22..d3719279e 100644
  'guipty'		boolean	(default on)
  			global
 diff --git a/src/gui.c b/src/gui.c
-index 406d80425..675199a0c 100644
+index 0c7b39be0..32092ea33 100644
 --- a/src/gui.c
 +++ b/src/gui.c
-@@ -3550,6 +3550,8 @@ gui_init_which_components(char_u *oldval UNUSED)
+@@ -3643,6 +3643,8 @@ gui_init_which_components(char_u *oldval UNUSED)
      static int	prev_tearoff = -1;
      int		using_tearoff = FALSE;
  #endif
@@ -27,7 +27,7 @@ index 406d80425..675199a0c 100644
  
      char_u	*p;
      int		i;
-@@ -3635,6 +3637,9 @@ gui_init_which_components(char_u *oldval UNUSED)
+@@ -3728,6 +3730,9 @@ gui_init_which_components(char_u *oldval UNUSED)
  		using_tearoff = TRUE;
  #endif
  		break;
@@ -37,7 +37,7 @@ index 406d80425..675199a0c 100644
  	    default:
  		// Ignore options that are not supported
  		break;
-@@ -3753,6 +3758,14 @@ gui_init_which_components(char_u *oldval UNUSED)
+@@ -3846,6 +3851,14 @@ gui_init_which_components(char_u *oldval UNUSED)
  	prev_tearoff = using_tearoff;
      }
  #endif
@@ -53,7 +53,7 @@ index 406d80425..675199a0c 100644
      {
  #ifdef FEAT_GUI_GTK
 diff --git a/src/gui_w32.c b/src/gui_w32.c
-index d677ee55c..b736c41ee 100644
+index cd0076bb5..361633fbf 100644
 --- a/src/gui_w32.c
 +++ b/src/gui_w32.c
 @@ -1364,6 +1364,55 @@ _OnSizeTextArea(
@@ -112,7 +112,7 @@ index d677ee55c..b736c41ee 100644
  #ifdef FEAT_MENU
  /*
   * Find the vimmenu_T with the given id
-@@ -3793,11 +3842,12 @@ gui_mswin_get_valid_dimensions(
+@@ -3837,11 +3886,12 @@ gui_mswin_get_valid_dimensions(
  
      base_width = gui_get_base_width()
  	+ (pGetSystemMetricsForDpi(SM_CXFRAME, s_dpi) +
@@ -127,7 +127,7 @@ index d677ee55c..b736c41ee 100644
  	+ gui_mswin_get_menu_height(FALSE);
      *cols = (w - base_width) / gui.char_width;
      *rows = (h - base_height) / gui.char_height;
-@@ -4330,12 +4380,13 @@ gui_mch_newfont(void)
+@@ -4374,12 +4424,13 @@ gui_mch_newfont(void)
      if (win_socket_id == 0)
      {
  	gui_resize_shell(rect.right - rect.left
@@ -142,7 +142,7 @@ index d677ee55c..b736c41ee 100644
  	    - gui_mswin_get_menu_height(FALSE));
      }
      else
-@@ -6345,10 +6396,11 @@ gui_mch_set_shellsize(
+@@ -6389,10 +6440,11 @@ gui_mch_set_shellsize(
  
      // compute the size of the outside of the window
      win_width = width + (pGetSystemMetricsForDpi(SM_CXFRAME, s_dpi) +
@@ -156,7 +156,7 @@ index d677ee55c..b736c41ee 100644
  			+ gui_mswin_get_menu_height(FALSE);
  
      // The following should take care of keeping Vim on the same monitor, no
-@@ -7240,7 +7292,8 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
+@@ -7284,7 +7336,8 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
  
      *screen_w = workarea_rect.right - workarea_rect.left
  		- (pGetSystemMetricsForDpi(SM_CXFRAME, s_dpi) +
@@ -166,7 +166,7 @@ index d677ee55c..b736c41ee 100644
  
      // FIXME: dirty trick: Because the gui_get_base_height() doesn't include
      // the menubar for MSwin, we subtract it from the screen height, so that
-@@ -7248,7 +7301,7 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
+@@ -7292,7 +7345,7 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
      *screen_h = workarea_rect.bottom - workarea_rect.top
  		- (pGetSystemMetricsForDpi(SM_CYFRAME, s_dpi) +
  		   pGetSystemMetricsForDpi(SM_CXPADDEDBORDER, s_dpi)) * 2
@@ -191,10 +191,10 @@ index 281eef40d..c414a3c81 100644
  // flags for 'comments' option
  #define COM_NEST	'n'		// comments strings nest
 diff --git a/src/proto/gui_w32.pro b/src/proto/gui_w32.pro
-index c8b582a9a..dfd6832ab 100644
+index 0a45a1aa8..1c5001f53 100644
 --- a/src/proto/gui_w32.pro
 +++ b/src/proto/gui_w32.pro
-@@ -67,6 +67,7 @@ void gui_mch_settitle(char_u *title, char_u *icon);
+@@ -68,6 +68,7 @@ void gui_mch_settitle(char_u *title, char_u *icon);
  void mch_set_mouse_shape(int shape);
  char_u *gui_mch_browse(int saving, char_u *title, char_u *dflt, char_u *ext, char_u *initdir, char_u *filter);
  char_u *gui_mch_browsedir(char_u *title, char_u *initdir);

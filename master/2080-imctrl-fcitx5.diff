@@ -6,7 +6,7 @@ Add built-in functions to control the state of fcitx5
 Signed-off-by: MURAOKA Taro <koron.kaoriya@gmail.com>
 
 diff --git a/runtime/doc/builtin.txt b/runtime/doc/builtin.txt
-index 06c258eaf..5e0a279e9 100644
+index 1f14e7528..00f24e560 100644
 --- a/runtime/doc/builtin.txt
 +++ b/runtime/doc/builtin.txt
 @@ -193,6 +193,8 @@ extendnew({expr1}, {expr2} [, {expr3}])
@@ -19,10 +19,10 @@ index 06c258eaf..5e0a279e9 100644
  filecopy({from}, {to})		Number	|TRUE| if copying file {from} to {to}
  					worked
 diff --git a/runtime/doc/tags b/runtime/doc/tags
-index 0b9920b5d..c147dcde1 100644
+index 331e5cb9f..6f0b9b76a 100644
 --- a/runtime/doc/tags
 +++ b/runtime/doc/tags
-@@ -8698,6 +8698,7 @@ if_sniff.txt	if_sniff.txt	/*if_sniff.txt*
+@@ -8697,6 +8697,7 @@ if_sniff.txt	if_sniff.txt	/*if_sniff.txt*
  if_tcl.txt	if_tcl.txt	/*if_tcl.txt*
  ignore-errors	eval.txt	/*ignore-errors*
  ignore-timestamp	editing.txt	/*ignore-timestamp*
@@ -46,10 +46,10 @@ index cb816a0cb..60bfaf0bd 100644
  	serverlist()		return the list of server names
  	remote_startserver()	run a server
 diff --git a/src/Makefile b/src/Makefile
-index 1a6fa1c66..559955e94 100644
+index a3878d0c8..b40ac0ee7 100644
 --- a/src/Makefile
 +++ b/src/Makefile
-@@ -1324,6 +1324,8 @@ TERM_DEPS = \
+@@ -1336,6 +1336,8 @@ TERM_DEPS = \
  
  TERM_SRC = libvterm/src/*.c
  
@@ -58,7 +58,7 @@ index 1a6fa1c66..559955e94 100644
  XDIFF_SRC = \
  	xdiff/xdiffi.c \
  	xdiff/xemit.c \
-@@ -1618,6 +1620,7 @@ BASIC_SRC = \
+@@ -1630,6 +1632,7 @@ BASIC_SRC = \
  SRC =	$(BASIC_SRC) \
  	$(GUI_SRC) \
  	$(TERM_SRC) \
@@ -66,7 +66,7 @@ index 1a6fa1c66..559955e94 100644
  	$(XDIFF_SRC) \
  	$(LUA_SRC) \
  	$(MZSCHEME_SRC) \
-@@ -1797,6 +1800,7 @@ OBJ_COMMON = \
+@@ -1809,6 +1812,7 @@ OBJ_COMMON = \
  	objects/bufwrite.o \
  	$(GUI_OBJ) \
  	$(TERM_OBJ) \
@@ -74,7 +74,7 @@ index 1a6fa1c66..559955e94 100644
  	$(LUA_OBJ) \
  	$(MZSCHEME_OBJ) \
  	$(PERL_OBJ) \
-@@ -1920,6 +1924,7 @@ PROTO_FILES = \
+@@ -1932,6 +1936,7 @@ PROTO_FILES = \
  	proto/if_ruby.pro \
  	proto/if_tcl.pro \
  	proto/if_xcmdsrv.pro \
@@ -82,7 +82,7 @@ index 1a6fa1c66..559955e94 100644
  	proto/indent.pro \
  	proto/insexpand.pro \
  	proto/job.pro \
-@@ -3463,6 +3468,9 @@ objects/if_ruby.o: if_ruby.c
+@@ -3481,6 +3486,9 @@ objects/if_ruby.o: if_ruby.c
  objects/if_tcl.o: if_tcl.c
  	$(CCC_NF) $(TCL_CFLAGS) $(ALL_CFLAGS) $(TCL_CFLAGS_EXTRA) -o $@ if_tcl.c
  
@@ -92,7 +92,7 @@ index 1a6fa1c66..559955e94 100644
  objects/indent.o: indent.c
  	$(CCC) -o $@ indent.c
  
-@@ -4105,6 +4113,11 @@ objects/if_xcmdsrv.o: auto/osdef.h if_xcmdsrv.c vim.h protodef.h auto/config.h f
+@@ -4123,6 +4131,11 @@ objects/if_xcmdsrv.o: auto/osdef.h if_xcmdsrv.c vim.h protodef.h auto/config.h f
   beval.h structs.h regexp.h gui.h \
   libvterm/include/vterm.h libvterm/include/vterm_keycodes.h alloc.h \
   ex_cmds.h spell.h proto.h globals.h errors.h version.h
@@ -104,7 +104,7 @@ index 1a6fa1c66..559955e94 100644
  objects/indent.o: auto/osdef.h indent.c vim.h protodef.h auto/config.h feature.h os_unix.h \
   ascii.h keymap.h termdefs.h macros.h option.h beval.h \
   structs.h regexp.h gui.h libvterm/include/vterm.h \
-@@ -4811,6 +4824,7 @@ proto/if_python3.pro: if_python3.c
+@@ -4839,6 +4852,7 @@ proto/if_python3.pro: if_python3.c
  proto/if_ruby.pro: if_ruby.c
  proto/if_tcl.pro: if_tcl.c
  proto/if_xcmdsrv.pro: if_xcmdsrv.c
@@ -113,7 +113,7 @@ index 1a6fa1c66..559955e94 100644
  proto/insexpand.pro: insexpand.c
  proto/job.pro: job.c
 diff --git a/src/auto/configure b/src/auto/configure
-index 483beff82..7c21bc003 100755
+index f5d6dea01..35b6c8172 100755
 --- a/src/auto/configure
 +++ b/src/auto/configure
 @@ -681,6 +681,8 @@ WAYLAND_SRC
@@ -141,7 +141,7 @@ index 483beff82..7c21bc003 100755
    --enable-fontset        Include X fontset output support.
    --enable-gui=OPTS       X11 GUI. default=auto OPTS=auto/no/gtk2/gnome2/gtk3/gtk4/motif/haiku/photon/carbon
    --enable-gtk2-check     If auto-select GUI, check for GTK+ 2 default=yes
-@@ -9158,6 +9162,87 @@ esac
+@@ -9163,6 +9167,87 @@ esac
  fi
  
  
@@ -258,10 +258,10 @@ index a46a140a7..0e227afc8 100644
  RUBY_SRC	= @RUBY_SRC@
  RUBY_OBJ	= @RUBY_OBJ@
 diff --git a/src/configure.ac b/src/configure.ac
-index 06f03344c..3ebaf68b4 100644
+index b71e55339..1286f60f9 100644
 --- a/src/configure.ac
 +++ b/src/configure.ac
-@@ -2409,6 +2409,30 @@ AC_ARG_ENABLE(xim,
+@@ -2418,6 +2418,30 @@ AC_ARG_ENABLE(xim,
  	AC_MSG_RESULT($enable_xim),
  	[enable_xim="auto"; AC_MSG_RESULT(defaulting to auto)])
  
@@ -293,7 +293,7 @@ index 06f03344c..3ebaf68b4 100644
  AC_ARG_ENABLE(fontset,
  	[  --enable-fontset        Include X fontset output support.], ,
 diff --git a/src/evalfunc.c b/src/evalfunc.c
-index 45002c5bf..4569865be 100644
+index bad28de7c..344b7f7e4 100644
 --- a/src/evalfunc.c
 +++ b/src/evalfunc.c
 @@ -2217,6 +2217,22 @@ static const funcentry_T global_functions[] =
@@ -532,7 +532,7 @@ index 000000000..e2adbdcd2
 +
 +#endif // FEAT_IMCTRL_FCITX5
 diff --git a/src/os_unix.c b/src/os_unix.c
-index 904421772..8649a8842 100644
+index 85b4353c4..4058059e7 100644
 --- a/src/os_unix.c
 +++ b/src/os_unix.c
 @@ -3661,6 +3661,10 @@ mch_exit(int r)

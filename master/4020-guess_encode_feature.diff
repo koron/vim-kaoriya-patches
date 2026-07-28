@@ -1,10 +1,10 @@
 add guess encode feature
 
 diff --git a/src/evalfunc.c b/src/evalfunc.c
-index f94f442f7..5f3c6b99a 100644
+index bdaa7b971..b896e3fdd 100644
 --- a/src/evalfunc.c
 +++ b/src/evalfunc.c
-@@ -7192,6 +7192,7 @@ f_has(typval_T *argvars, typval_T *rettv)
+@@ -7188,6 +7188,7 @@ f_has(typval_T *argvars, typval_T *rettv)
  		0
  #endif
  		},
@@ -13,10 +13,10 @@ index f94f442f7..5f3c6b99a 100644
  #ifdef FEAT_GUI
  		1
 diff --git a/src/fileio.c b/src/fileio.c
-index af0360dc8..84d808c78 100644
+index 255e1b33d..58879092c 100644
 --- a/src/fileio.c
 +++ b/src/fileio.c
-@@ -99,6 +99,242 @@ filemess(
+@@ -99,6 +99,244 @@ filemess(
      msg_scrolled_ign = FALSE;
  }
  
@@ -120,9 +120,11 @@ index af0360dc8..84d808c78 100644
 +    {
 +	if ((d & 0xc0) == 0x80)
 +	{
-+	    --state->mode;
-+	    if (!state->mode == 0)
++	    if (state->mode > 0)
++	    {
++		--state->mode;
 +		++state->score;
++	    }
 +	}
 +	else
 +	    return 1;
@@ -259,7 +261,7 @@ index af0360dc8..84d808c78 100644
  /*
   * Read lines from file "fname" into the buffer after line "from".
   *
-@@ -1009,6 +1245,17 @@ retry:
+@@ -1009,6 +1247,17 @@ retry:
  	}
      }
  
@@ -278,7 +280,7 @@ index af0360dc8..84d808c78 100644
       * Conversion may be required when the encoding of the file is different
       * from 'encoding' or 'encoding' is UTF-16, UCS-2 or UCS-4.
 diff --git a/src/version.c b/src/version.c
-index 6e6daeadc..42bd5cb81 100644
+index 32293bf65..c69bfc961 100644
 --- a/src/version.c
 +++ b/src/version.c
 @@ -265,6 +265,7 @@ static char *(features[]) =
